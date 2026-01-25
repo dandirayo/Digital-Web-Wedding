@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Wedding of Sri & Aditia</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body data-theme="modern">
+  <!-- PAGE 1 -->
+  <section id="pageCover" class="page cover is-shown" aria-label="Cover">
+    <div class="cover-inner card">
+      <div class="subtitle reveal">Our Wedding Invitation</div>
+
+      <h1 class="reveal" style="transition-delay:.08s">Sri &amp; Aditia</h1>
+
+      <div class="meta reveal" style="transition-delay:.14s">
+        <div><strong>Sabtu, 27 Desember 2025</strong></div>
+        <div>Grand Ballroom • Jakarta</div>
+      </div>
+
+      <div class="guest reveal" style="transition-delay:.20s">
+        Kepada Yth. Bapak/Ibu/Saudara/i
+        <strong id="guestName">Tamu Undangan</strong>
+      </div>
+
+      <div class="cta reveal" style="transition-delay:.26s">
+        <button id="openInviteBtn" class="btn btn-primary" type="button">Buka Undangan</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section id="pageMain" class="page main is-hidden" aria-label="Main Content">
+    <div class="main-wrap">
+
+      <!-- LEFT (sticky) -->
+      <aside class="hero">
+        <div class="hero-inner">
+          <span class="chip tag reveal">The Wedding of</span>
+
+          <h2 class="reveal" style="transition-delay:.06s">Sri &amp; Aditia</h2>
+
+          <p class="quote reveal" style="transition-delay:.12s">
+            “What counts in making a happy marriage is not so much how compatible you are,
+            but how you deal with incompatibility.”
+          </p>
+
+          <div class="guestline reveal" style="transition-delay:.18s">
+            Untuk: <strong id="guestName2">Tamu Undangan</strong>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT (scroll area) -->
+      <main class="scroll" id="scrollArea">
+
+        <section class="section reveal">
+          <h3>Assalamu’alaikum</h3>
+          <p>
+            Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i
+            untuk hadir pada acara pernikahan kami:
+          </p>
+          <div class="hr"></div>
+          <p>
+            <strong>Sri</strong> — Putri dari Bapak ____ &amp; Ibu ____ <br/>
+            <strong>Aditia</strong> — Putra dari Bapak ____ &amp; Ibu ____
+          </p>
+        </section>
+
+        <section class="section reveal">
+          <h3>Countdown</h3>
+          <p id="countdownNote">Menuju hari bahagia kami.</p>
+
+
+          <div class="countdown" aria-label="Countdown Timer">
+            <div class="cd-box">
+              <div class="cd-num" id="cdDays">0</div>
+              <div class="cd-label">Hari</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdHours">0</div>
+              <div class="cd-label">Jam</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdMinutes">0</div>
+              <div class="cd-label">Menit</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdSeconds">0</div>
+              <div class="cd-label">Detik</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Acara</h3>
+          <p>Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i.</p>
+
+          <div class="timeline">
+            <article class="event">
+              <div class="row">
+                <div class="title">Akad Nikah</div>
+                <div class="time">08.00 - 10.00 WIB</div>
+              </div>
+              <div class="loc">
+                Masjid ____ • Jl. ____ , Jakarta
+              </div>
+              <div class="actions">
+                <a class="btn-small" target="_blank" rel="noopener"
+                   href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
+                  Lihat Lokasi
+                </a>
+              </div>
+            </article>
+
+            <article class="event">
+              <div class="row">
+                <div class="title">Resepsi</div>
+                <div class="time">11.00 - 14.00 WIB</div>
+              </div>
+              <div class="loc">
+                Grand Ballroom ____ • Jl. ____ , Jakarta
+              </div>
+              <div class="actions">
+                <a class="btn-small" target="_blank" rel="noopener"
+                   href="https://maps.google.com/?q=Jakarta+Convention+Center">
+                  Lihat Lokasi
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Wedding Gallery</h3>
+          <p>Beberapa momen kecil sebelum hari besar.</p>
+          <div class="gallery" aria-label="Wedding Gallery">
+            <img src="assets/image/g1.jpg" alt="Gallery 1">
+            <img src="assets/image/g2.jpg" alt="Gallery 2">
+            <img src="assets/image/g3.jpg" alt="Gallery 3">
+            <img src="assets/image/g4.jpg" alt="Gallery 4">
+            <img src="assets/image/g5.jpg" alt="Gallery 5">
+            <img src="assets/image/g6.jpg" alt="Gallery 6">
+          </div>
+        </section>
+
+        <section class="section reveal" id="rsvpSection">
+          <h3>RSVP</h3>
+          <p>Konfirmasi kehadiran Anda untuk memudahkan kami mempersiapkan acara.</p>
+
+          <div class="rsvp-card">
+            <div class="rsvp-row">
+              <div>
+                <strong>Nama Tamu</strong>
+                <small id="rsvpGuest">Tamu Undangan</small>
+              </div>
+
+              <div class="rsvp-badge" id="rsvpBadge">Belum Konfirmasi</div>
+            </div>
+
+            <div class="rsvp-actions">
+              <button class="btn btn-primary" id="btnHadir" type="button">Hadir</button>
+              <button class="btn" id="btnTidakHadir" type="button">Tidak Hadir</button>
+              <button class="btn" id="btnResetRsvp" type="button">Reset</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="qr-wrap" id="qrWrap" hidden>
+              <p style="margin:0 0 10px;color:var(--muted)">
+                Tunjukkan QR ini saat check-in.
+              </p>
+
+              <!-- QR akan digambar ke canvas -->
+              <canvas id="qrCanvas" width="220" height="220" aria-label="QR Code"></canvas>
+
+              <div class="qr-meta">
+                <small id="qrCodeText" style="color:var(--muted)"></small>
+              </div>
+
+              <div class="qr-actions">
+                <button class="btn-small" id="btnCopyCode" type="button">Salin Kode</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="section reveal">
+          <h3>Ucapan &amp; Doa</h3>
+          <p>Tuliskan ucapan terbaikmu untuk kami.</p>
+
+          <form id="wishForm">
+            <input id="wishName" type="text" placeholder="Nama" required />
+            <textarea id="wishText" placeholder="Ucapan..." required></textarea>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Kirim Ucapan</button>
+              <button class="btn" id="fillGuestBtn" type="button">Pakai Nama Tamu</button>
+            </div>
+          </form>
+
+          <div class="hr"></div>
+
+          <h3>Ucapan Terbaru</h3>
+          <p>5 ucapan terakhir (scroll untuk lihat yang lain).</p>
+
+          <div id="wishList" class="wish-list" aria-label="Daftar Ucapan"></div>
+
+
+          <h3>Wedding Gift</h3>
+          <p>Doa restu sudah cukup. Namun bila berkenan mengirim hadiah:</p>
+
+          <div class="gift">
+            <div class="gift-item">
+              <div>
+                <strong>Bank BCA</strong>
+                <small>A/N Sri • 1234567890</small>
+              </div>
+              <button class="copy-btn" data-copy="1234567890" type="button">Salin</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Terima Kasih</h3>
+          <p>
+            Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i
+            berkenan hadir dan memberikan doa restu.
+          </p>
+          <p style="margin-top:12px;color:rgba(255,255,255,.85)">
+            Sampai jumpa di hari bahagia kami. <br/>
+            <strong>Sri &amp; Aditia</strong>
+          </p>
+        </section>
+
+      </main>
+    </div>
+  </section>
+
+  <!-- External JS -->
+  <script src="assets/js/main.js"></script>
+  <!-- QR generator library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+// =====================================================
+// Helpers
+// =====================================================
+const $ = (q, el = document) => el.querySelector(q);
+const $$ = (q, el = document) => [...el.querySelectorAll(q)];
+
+// Lock scroll saat pertama load (cover)
+document.body.classList.add("lock-scroll");
+
+// URL Params: ?to=Nama%20Tamu
+function getGuestName() {
+  const url = new URL(window.location.href);
+  const raw = url.searchParams.get("to");
+  if (!raw) return "Tamu Undangan";
+  return decodeURIComponent(raw).replace(/\s+/g, " ").trim() || "Tamu Undangan";
+}
+
+// =====================================================
+// Reveal (scroll-based)
+// =====================================================
+function setupReveal(root = document) {
+  const items = $$(".reveal", root);
+
+  // fallback kalau browser lama
+  if (!("IntersectionObserver" in window)) {
+    items.forEach((el, i) => {
+      el.style.transitionDelay = `${Math.min(i * 0.03, 0.25)}s`;
+      el.classList.add("is-in");
+    });
+    return;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const el = entry.target;
+        if (el.classList.contains("is-in")) {
+          io.unobserve(el);
+          return;
+        }
+
+        const parentSection = el.closest(".section") || root;
+        const siblings = $$(".reveal", parentSection);
+        const idx = siblings.indexOf(el);
+        const delay = Math.min(idx * 0.05, 0.35);
+
+        el.style.transitionDelay = `${delay}s`;
+        el.classList.add("is-in");
+        io.unobserve(el);
+      });
+    },
+    { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+  );
+
+  items.forEach((el) => io.observe(el));
+}
+
+// =====================================================
+// DOM READY
+// =====================================================
+window.addEventListener("DOMContentLoaded", () => {
+  const guest = getGuestName();
+
+  // Set guest name
+  const g1 = $("#guestName");
+  const g2 = $("#guestName2");
+  if (g1) g1.textContent = guest;
+  if (g2) g2.textContent = guest;
+
+  // ===================================================
+  // PAGE TRANSITION (Cover → Main)
+  // ===================================================
+  const pageCover = $("#pageCover");
+  const pageMain = $("#pageMain");
+  const openBtn = $("#openInviteBtn");
+
+  // reveal cover items
+  if (pageCover) setupReveal(pageCover);
+
+  if (openBtn && pageCover && pageMain) {
+    openBtn.addEventListener("click", () => {
+      pageCover.classList.add("is-hidden");
+      pageCover.classList.remove("is-shown");
+
+      pageMain.classList.remove("is-hidden");
+      pageMain.classList.add("is-shown");
+
+      document.body.classList.remove("lock-scroll");
+
+      requestAnimationFrame(() => setupReveal(pageMain));
+
+      const scrollArea = $("#scrollArea");
+      if (scrollArea) scrollArea.scrollTop = 0;
+    });
+  }
+
+  // ===================================================
+  // COUNTDOWN
+  // ===================================================
+  const targetDate = new Date("2026-12-27T08:00:00+07:00");
+
+  const cdDays = $("#cdDays");
+  const cdHours = $("#cdHours");
+  const cdMinutes = $("#cdMinutes");
+  const cdSeconds = $("#cdSeconds");
+  const countdownNote = $("#countdownNote");
+
+  function updateCountdown() {
+    if (!cdDays || !cdHours || !cdMinutes || !cdSeconds) return;
+
+    const now = new Date();
+    const diff = targetDate - now;
+
+    if (diff <= 0) {
+      cdDays.textContent = "0";
+      cdHours.textContent = "00";
+      cdMinutes.textContent = "00";
+      cdSeconds.textContent = "00";
+      if (countdownNote) countdownNote.textContent = "Hari ini! Sampai jumpa di lokasi.";
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    cdDays.textContent = String(days);
+    cdHours.textContent = String(hours).padStart(2, "0");
+    cdMinutes.textContent = String(minutes).padStart(2, "0");
+    cdSeconds.textContent = String(seconds).padStart(2, "0");
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // ===================================================
+  // RSVP + QR
+  // ===================================================
+  const rsvpGuest = $("#rsvpGuest");
+  const rsvpBadge = $("#rsvpBadge");
+  const btnHadir = $("#btnHadir");
+  const btnTidakHadir = $("#btnTidakHadir");
+  const btnResetRsvp = $("#btnResetRsvp");
+
+  const qrWrap = $("#qrWrap");
+  const qrCanvas = $("#qrCanvas");
+  const qrCodeText = $("#qrCodeText");
+  const btnCopyCode = $("#btnCopyCode");
+
+  const RSVP_KEY = "wedding_rsvp_v1";
+  if (rsvpGuest) rsvpGuest.textContent = guest;
+
+  function buildTicketCode(name) {
+    const safe = (name || "Tamu")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return `SA-${safe}-${Date.now().toString(36)}`.toUpperCase();
+  }
+
+  function saveRsvp(data) {
+    localStorage.setItem(RSVP_KEY, JSON.stringify(data));
+  }
+
+  function loadRsvp() {
+    try {
+      const raw = localStorage.getItem(RSVP_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setBadge(status) {
+    if (!rsvpBadge) return;
+    rsvpBadge.classList.remove("ok", "no");
+
+    if (status === "hadir") {
+      rsvpBadge.textContent = "Hadir";
+      rsvpBadge.classList.add("ok");
+    } else if (status === "tidak_hadir") {
+      rsvpBadge.textContent = "Tidak Hadir";
+      rsvpBadge.classList.add("no");
+    } else {
+      rsvpBadge.textContent = "Belum Konfirmasi";
+    }
+  }
+
+  function renderQr(code) {
+    if (!qrWrap || !qrCanvas) return;
+
+    // kalau CDN qrious nggak kebaca, kasih info jelas
+    if (typeof QRious === "undefined") {
+      qrWrap.hidden = false;
+      if (qrCodeText) qrCodeText.textContent = code;
+      alert("QR library belum kebaca. Pastikan internet aktif (karena qrious dari CDN).");
+      return;
+    }
+
+    qrWrap.hidden = false;
+
+    new QRious({
+      element: qrCanvas,
+      value: code,
+      size: 220,
+      level: "M",
+    });
+
+    if (qrCodeText) qrCodeText.textContent = code;
+  }
+
+  function hideQr() {
+    if (qrWrap) qrWrap.hidden = true;
+  }
+
+  const saved = loadRsvp();
+  if (saved?.status) {
+    setBadge(saved.status);
+    if (saved.status === "hadir" && saved.code) renderQr(saved.code);
+    else hideQr();
+  } else {
+    setBadge(null);
+    hideQr();
+  }
+
+  if (btnHadir) {
+    btnHadir.addEventListener("click", () => {
+      const code = buildTicketCode(guest);
+      saveRsvp({ status: "hadir", name: guest, code });
+      setBadge("hadir");
+      renderQr(code);
+    });
+  }
+
+  if (btnTidakHadir) {
+    btnTidakHadir.addEventListener("click", () => {
+      saveRsvp({ status: "tidak_hadir", name: guest });
+      setBadge("tidak_hadir");
+      hideQr();
+    });
+  }
+
+  if (btnResetRsvp) {
+    btnResetRsvp.addEventListener("click", () => {
+      localStorage.removeItem(RSVP_KEY);
+      setBadge(null);
+      hideQr();
+    });
+  }
+
+  if (btnCopyCode) {
+    btnCopyCode.addEventListener("click", async () => {
+      const data = loadRsvp();
+      const val = data?.code || "";
+      if (!val) return;
+
+      try {
+        await navigator.clipboard.writeText(val);
+        const old = btnCopyCode.textContent;
+        btnCopyCode.textContent = "Tersalin ✓";
+        setTimeout(() => (btnCopyCode.textContent = old), 1200);
+      } catch {
+        prompt("Copy manual:", val);
+      }
+    });
+  }
+
+  // ===================================================
+  // WISHES (chat bubble + 5 last)
+  // ===================================================
+  const wishForm = $("#wishForm");
+  const fillGuestBtn = $("#fillGuestBtn");
+  const wishListEl = $("#wishList");
+
+  const WISH_KEY = "wedding_wishes_v1";
+  const MAX_RENDER = 5;
+  const MAX_STORE = 200;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function loadWishes() {
+    try {
+      const raw = localStorage.getItem(WISH_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveWishes(arr) {
+    localStorage.setItem(WISH_KEY, JSON.stringify(arr));
+  }
+
+  function formatTime(ts) {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+    } catch {
+      return "";
+    }
+  }
+
+  function renderWishes({ animateNew = false } = {}) {
+    if (!wishListEl) return;
+
+    const wishes = loadWishes();
+    const lastFive = wishes.slice(-MAX_RENDER).reverse();
+
+    if (wishes.length === 0) {
+      wishListEl.innerHTML = `
+        <div class="wish-bubble left">
+          <div class="wish-text">Belum ada ucapan. Jadi yang pertama ya 🙂</div>
+        </div>
+      `;
+      return;
+    }
+
+    wishListEl.innerHTML = lastFive
+      .map((w, idx) => {
+        const side = idx % 2 === 0 ? "left" : "right";
+        const newClass = animateNew && idx === 0 ? " is-new" : "";
+        return `
+          <div class="wish-bubble ${side}${newClass}">
+            <div class="wish-meta">
+              <div class="wish-name">${escapeHtml(w.name)}</div>
+              <div class="wish-time">${escapeHtml(formatTime(w.ts))}</div>
+            </div>
+            <div class="wish-text">${escapeHtml(w.text)}</div>
+          </div>
+        `;
+      })
+      .join("");
+
+    if (wishes.length > MAX_RENDER) {
+      wishListEl.innerHTML += `
+        <div class="wish-bubble left">
+          <div class="wish-text">Scroll untuk lihat yang lain.</div>
+        </div>
+      `;
+    }
+  }
+
+  if (fillGuestBtn) {
+    fillGuestBtn.addEventListener("click", () => {
+      const wishName = $("#wishName");
+      const wishText = $("#wishText");
+      if (wishName) wishName.value = guest;
+      if (wishText) wishText.focus();
+    });
+  }
+
+  if (wishForm) {
+    wishForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const name = $("#wishName")?.value.trim();
+      const text = $("#wishText")?.value.trim();
+      if (!name || !text) return;
+
+      const wishes = loadWishes();
+      wishes.push({ name, text, ts: Date.now() });
+      saveWishes(wishes.slice(-MAX_STORE));
+
+      wishForm.reset();
+      renderWishes({ animateNew: true });
+
+      // tampilkan newest di atas
+      wishListEl.scrollTop = 0;
+    });
+  }
+
+  renderWishes();
+});
