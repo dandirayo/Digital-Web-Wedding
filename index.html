@@ -29,7 +29,7 @@
 
       <div class="guest reveal" style="transition-delay:.20s">
         Kepada Yth. Bapak/Ibu/Saudara/i
-        <strong id="guestName">Tamu Undangan</strong>
+        <strong id="guestName">Reza Pramudita</strong>
       </div>
 
       <div class="cta reveal" style="transition-delay:.26s">
@@ -44,9 +44,12 @@
 
       <!-- LEFT (sticky) -->
       <aside class="hero">
+        <!-- 2 LAYER untuk slideshow (WAJIB ADA) -->
+        <div class="hero-bg hero-bg-a"></div>
+        <div class="hero-bg hero-bg-b"></div>
+
         <div class="hero-inner">
           <span class="chip tag reveal">The Wedding of</span>
-
           <h2 class="reveal" style="transition-delay:.06s">Sheila &amp; Yoga</h2>
 
           <p class="quote reveal" style="transition-delay:.12s">
@@ -55,13 +58,58 @@
           </p>
 
           <div class="guestline reveal" style="transition-delay:.18s">
-            Untuk: <strong id="guestName2">Tamu Undangan</strong>
+            Untuk: <strong id="guestName2">Reza Pramudita</strong>
           </div>
         </div>
       </aside>
 
+
       <!-- RIGHT (scroll area) -->
       <main class="scroll" id="scrollArea">
+
+      <!-- MUSIC -->
+      <div class="music-player">
+        <audio id="bgMusic" preload="auto" loop>
+          <source src="assets/audio/song.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- LEFT: ICON -->
+        <button
+          id="musicToggle"
+          class="music-toggle"
+          type="button"
+          aria-label="Toggle music"
+          title="Music"
+        >
+          ♫
+        </button>
+
+        <!-- RIGHT: RUNNING TEXT -->
+        <div class="music-title-wrap">
+          <div class="music-title" id="musicTitle">
+            Beautiful In White — Shane Filan
+          </div>
+        </div>
+      </div>
+
+
+        <!-- VIDEO (di atas Assalamu’alaikum) -->
+        <section class="section reveal" id="introVideoSection">
+          <div class="video-wrap">
+            <video
+              id="introVideo"
+              class="intro-video"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+            >
+              <source src="assets/video/intro.mp4" type="video/mp4">
+              Browser kamu tidak mendukung video.
+            </video>
+          </div>
+        </section>
 
         <section class="section reveal">
           <h3>Assalamu’alaikum</h3>
@@ -85,11 +133,13 @@
             <!-- Bride -->
             <div class="person-card">
               <div class="avatar">
-                <img src="assets/image/bride.jpg" alt="Foto Sheila"
-                class="zoomable"
-                data-full="assets/image/bride.jpg"
-                data-caption="Sheila">
-
+                <img
+                  src="assets/image/bride.jpg"
+                  alt="Foto Sheila"
+                  class="zoomable"
+                  data-full="assets/image/bride.jpg"
+                  data-caption="Sheila"
+                />
               </div>
 
               <div class="person-name">Sheila</div>
@@ -100,7 +150,6 @@
 
               <a class="ig-link" href="https://instagram.com/" target="_blank" rel="noopener" aria-label="Instagram Sheila">
                 <span class="ig-ico" aria-hidden="true">
-                  <!-- Instagram SVG -->
                   <svg viewBox="0 0 24 24" width="18" height="18">
                     <path fill="currentColor" d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm9 2h-9A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4Zm-4.5 3.2A4.8 4.8 0 1 1 7.2 12 4.8 4.8 0 0 1 12 7.2Zm0 2A2.8 2.8 0 1 0 14.8 12 2.8 2.8 0 0 0 12 9.2ZM17.6 6.6a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z"/>
                   </svg>
@@ -112,10 +161,13 @@
             <!-- Groom -->
             <div class="person-card">
               <div class="avatar">
-                <img src="assets/image/groom.jpg" alt="Foto Dandi"
+                <img
+                  src="assets/image/groom.jpg"
+                  alt="Foto Yoga"
                   class="zoomable"
                   data-full="assets/image/groom.jpg"
-                  data-caption="Dandi">
+                  data-caption="Yoga"
+                />
               </div>
 
               <div class="person-name">Yoga</div>
@@ -139,7 +191,6 @@
         <section class="section reveal">
           <h3>Countdown</h3>
           <p id="countdownNote">Menuju hari bahagia kami.</p>
-
 
           <div class="countdown" aria-label="Countdown Timer">
             <div class="cd-box">
@@ -171,13 +222,10 @@
                 <div class="title">Akad Nikah</div>
                 <div class="time">08.00 - 10.00 WIB</div>
               </div>
-              <div class="loc">
-                Masjid ____ • Jl. ____ , Jakarta
-              </div>
+              <div class="loc">Masjid ____ • Jl. ____ , Jakarta</div>
 
-               <!-- MAP IMAGE -->
               <a class="map-thumb" target="_blank" rel="noopener"
-                href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
+                 href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
                 <img src="assets/image/maps-akad.jpg" alt="Peta Lokasi Akad">
                 <span class="map-badge">Lihat di Maps</span>
               </a>
@@ -191,74 +239,40 @@
             </article>
 
             <article class="event">
-            <div class="row">
-              <div class="title">Resepsi</div>
-              <div class="time">11.00 - 14.00 WIB</div>
-            </div>
+              <div class="row">
+                <div class="title">Resepsi</div>
+                <div class="time">11.00 - 14.00 WIB</div>
+              </div>
 
-            <div class="loc">
-              Grand Ballroom ____ • Jl. ____ , Jakarta
-            </div>
+              <div class="loc">Grand Ballroom ____ • Jl. ____ , Jakarta</div>
 
-            <!-- MAP IMAGE RESEPSI -->
-            <a class="map-thumb"
-              target="_blank"
-              rel="noopener"
-              href="https://maps.google.com/?q=Jakarta+Convention+Center">
-
-              <img src="assets/image/maps-resepsi.jpg"
-                  alt="Peta Lokasi Resepsi">
-
-              <span class="map-badge">Lihat di Maps</span>
-            </a>
-
-            <div class="actions">
-              <a class="btn-small"
-                target="_blank"
-                rel="noopener"
-                href="https://maps.google.com/?q=Jakarta+Convention+Center">
-                Lihat Lokasi
+              <a class="map-thumb" target="_blank" rel="noopener"
+                 href="https://maps.google.com/?q=Jakarta+Convention+Center">
+                <img src="assets/image/maps-resepsi.jpg" alt="Peta Lokasi Resepsi">
+                <span class="map-badge">Lihat di Maps</span>
               </a>
-            </div>
-          </article>
 
+              <div class="actions">
+                <a class="btn-small" target="_blank" rel="noopener"
+                   href="https://maps.google.com/?q=Jakarta+Convention+Center">
+                  Lihat Lokasi
+                </a>
+              </div>
+            </article>
           </div>
         </section>
 
         <section class="section reveal">
           <h3>Wedding Gallery</h3>
           <p>Beberapa momen kecil sebelum hari besar.</p>
+
           <div class="gallery" aria-label="Wedding Gallery">
-            <img src="assets/image/g1.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g1.jpg"
-            data-caption="Gallery 1">
-
-            <img src="assets/image/g2.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g2.jpg"
-            data-caption="Gallery 2">
-
-            <img src="assets/image/g3.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g3.jpg"
-            data-caption="Gallery 3">
-
-            <img src="assets/image/g4.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g4.jpg"
-            data-caption="Gallery 4">
-
-            <img src="assets/image/g5.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g5.jpg"
-            data-caption="Gallery 5">
-
-            <img src="assets/image/g6.jpg" alt="Gallery 1"
-            class="zoomable"
-            data-full="assets/image/g6.jpg"
-            data-caption="Gallery 6">
-
+            <img src="assets/image/g1.jpg" alt="Gallery 1" class="zoomable" data-full="assets/image/g1.jpg" data-caption="Gallery 1">
+            <img src="assets/image/g2.jpg" alt="Gallery 2" class="zoomable" data-full="assets/image/g2.jpg" data-caption="Gallery 2">
+            <img src="assets/image/g3.jpg" alt="Gallery 3" class="zoomable" data-full="assets/image/g3.jpg" data-caption="Gallery 3">
+            <img src="assets/image/g4.jpg" alt="Gallery 4" class="zoomable" data-full="assets/image/g4.jpg" data-caption="Gallery 4">
+            <img src="assets/image/g5.jpg" alt="Gallery 5" class="zoomable" data-full="assets/image/g5.jpg" data-caption="Gallery 5">
+            <img src="assets/image/g6.jpg" alt="Gallery 6" class="zoomable" data-full="assets/image/g6.jpg" data-caption="Gallery 6">
           </div>
         </section>
 
@@ -270,9 +284,8 @@
             <div class="rsvp-row">
               <div>
                 <strong>Nama Tamu</strong>
-                <small id="rsvpGuest">Tamu Undangan</small>
+                <small id="rsvpGuest">Reza Pramudita</small>
               </div>
-
               <div class="rsvp-badge" id="rsvpBadge">Belum Konfirmasi</div>
             </div>
 
@@ -283,12 +296,11 @@
             </div>
 
             <div class="hr"></div>
-            <!-- PAX SELECT (muncul setelah klik Hadir) -->
+
             <div class="pax-wrap" id="paxWrap" hidden>
               <p style="margin:10px 0 6px;font-size:14px;color:var(--muted)">
                 Jumlah tamu yang hadir
               </p>
-
               <div class="pax-options">
                 <button type="button" class="pax-btn" data-pax="1">1 Orang</button>
                 <button type="button" class="pax-btn" data-pax="2">2 Orang</button>
@@ -303,7 +315,6 @@
                 Tunjukkan QR ini saat check-in.
               </p>
 
-              <!-- QR akan digambar ke canvas -->
               <canvas id="qrCanvas" width="220" height="220" aria-label="QR Code"></canvas>
 
               <div class="qr-meta">
@@ -316,7 +327,6 @@
             </div>
           </div>
         </section>
-
 
         <section class="section reveal">
           <h3>Ucapan &amp; Doa</h3>
@@ -337,7 +347,6 @@
           <p>5 ucapan terakhir (scroll untuk lihat yang lain).</p>
 
           <div id="wishList" class="wish-list" aria-label="Daftar Ucapan"></div>
-
 
           <h3>Wedding Gift</h3>
           <p>Doa restu sudah cukup. Namun bila berkenan mengirim hadiah:</p>
@@ -370,22 +379,20 @@
   </section>
 
   <!-- LIGHTBOX (Image Viewer) -->
-<div id="lightbox" class="lightbox" hidden>
-  <div class="lightbox-backdrop" data-close="1"></div>
+  <div id="lightbox" class="lightbox" hidden>
+    <div class="lightbox-backdrop" data-close="1"></div>
 
-  <figure class="lightbox-figure" role="dialog" aria-modal="true" aria-label="Image viewer">
-    <button class="lightbox-close" type="button" data-close="1" aria-label="Close">✕</button>
+    <figure class="lightbox-figure" role="dialog" aria-modal="true" aria-label="Image viewer">
+      <button class="lightbox-close" type="button" data-close="1" aria-label="Close">✕</button>
+      <img id="lightboxImg" alt="">
+      <figcaption id="lightboxCap" class="lightbox-cap"></figcaption>
+    </figure>
+  </div>
 
-    <img id="lightboxImg" alt="">
-    <figcaption id="lightboxCap" class="lightbox-cap"></figcaption>
-  </figure>
-</div>
-
+  <!-- QR generator library (HARUS sebelum main.js jika dipakai di main.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 
   <!-- External JS -->
   <script src="assets/js/main.js"></script>
-  <!-- QR generator library -->
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-
 </body>
 </html>

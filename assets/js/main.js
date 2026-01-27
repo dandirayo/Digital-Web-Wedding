@@ -11,8 +11,104 @@ document.body.classList.add("lock-scroll");
 function getGuestName() {
   const url = new URL(window.location.href);
   const raw = url.searchParams.get("to");
-  if (!raw) return "Tamu Undangan";
-  return decodeURIComponent(raw).replace(/\s+/g, " ").trim() || "Tamu Undangan";
+  if (!raw) return "Reza Pramudita";
+  return decodeURIComponent(raw).replace(/\s+/g, " ").trim() || "Reza Pramudita";
+}
+
+
+// =====================================================
+// Hero background slideshow (prewed)
+// =====================================================
+const prewedImages = [
+  "assets/image/prewed-1.jpg",
+  "assets/image/prewed-2.jpg",
+  "assets/image/prewed-3.jpg",
+  "assets/image/prewed-4.jpg",
+  "assets/image/prewed-5.jpg",
+];
+
+setInterval(() => { /* ganti image */ }, 5000);
+
+
+function setHeroLayerBg(el, imgUrl){
+  if (!el) return;
+  el.style.backgroundImage = `
+    linear-gradient(rgba(15,17,21,0.55), rgba(15,17,21,0.75)),
+    url("${imgUrl}")
+  `;
+}
+
+function startHeroSlideshow(){
+  const hero = document.querySelector(".hero");
+  if (!hero) return;
+
+  const layerA = hero.querySelector(".hero-bg-a");
+  const layerB = hero.querySelector(".hero-bg-b");
+  if (!layerA || !layerB) return;
+
+  let idx = 0;
+  let useA = true;
+
+  // initial
+  setHeroLayerBg(layerA, prewedImages[idx % prewedImages.length]);
+  layerA.style.opacity = 1;
+  layerB.style.opacity = 0;
+
+  setInterval(() => {
+    idx = (idx + 1) % prewedImages.length;
+    const next = prewedImages[idx];
+
+    const show = useA ? layerB : layerA;
+    const hide = useA ? layerA : layerB;
+
+    setHeroLayerBg(show, next);
+    show.style.opacity = 1;
+    hide.style.opacity = 0;
+
+    useA = !useA;
+  }, 5000);
+}
+
+
+// =====================================================
+// Music (BGM)
+// =====================================================
+function setupMusic(){
+  const audio = document.getElementById("bgm");
+  const btn = document.getElementById("musicBtn");
+  if (!audio || !btn) return { tryAutoPlay: () => {} };
+
+  const syncUi = () => {
+    const playing = !audio.paused;
+    btn.classList.toggle("is-playing", playing);
+    btn.setAttribute("aria-pressed", String(playing));
+    btn.textContent = playing ? "❚❚" : "♫";
+  };
+
+  btn.addEventListener("click", async () => {
+    try {
+      if (audio.paused) await audio.play();
+      else audio.pause();
+    } catch {
+      // ignore autoplay restrictions
+    }
+    syncUi();
+  });
+
+  audio.addEventListener("play", syncUi);
+  audio.addEventListener("pause", syncUi);
+  syncUi();
+
+  return {
+    tryAutoPlay: async () => {
+      try {
+        await audio.play();
+      } catch {
+        // Browser mungkin blok autoplay: user bisa klik tombol ♫
+      }
+      syncUi();
+    }
+  };
 }
 
 // =====================================================
@@ -63,6 +159,9 @@ function setupReveal(root = document) {
 window.addEventListener("DOMContentLoaded", () => {
   const guest = getGuestName();
 
+  // setup music (needs user gesture for autoplay in most browsers)
+  const music = setupMusic();
+
   const paxWrap = $("#paxWrap");
   const paxButtons = $$(".pax-btn");
 
@@ -91,6 +190,10 @@ window.addEventListener("DOMContentLoaded", () => {
       pageMain.classList.add("is-shown");
 
       document.body.classList.remove("lock-scroll");
+
+      // start slideshow + try autoplay music (allowed because this click is a user gesture)
+      startHeroSlideshow();
+      music.tryAutoPlay();
 
       requestAnimationFrame(() => setupReveal(pageMain));
 
