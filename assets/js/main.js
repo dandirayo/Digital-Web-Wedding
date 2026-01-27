@@ -63,6 +63,9 @@ function setupReveal(root = document) {
 window.addEventListener("DOMContentLoaded", () => {
   const guest = getGuestName();
 
+  const paxWrap = $("#paxWrap");
+  const paxButtons = $$(".pax-btn");
+
   // Set guest name
   const g1 = $("#guestName");
   const g2 = $("#guestName2");
@@ -227,14 +230,64 @@ window.addEventListener("DOMContentLoaded", () => {
     hideQr();
   }
 
+  paxButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const pax = Number(btn.dataset.pax);
+    if (!pax) return;
+
+    // highlight active
+    paxButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // generate QR SETELAH pax dipilih
+    const code = buildTicketCode(guest);
+
+    saveRsvp({
+      status: "hadir",
+      name: guest,
+      pax: pax,
+      code: code
+    });
+
+    renderQr(code);
+  });
+});
+
+
   if (btnHadir) {
     btnHadir.addEventListener("click", () => {
-      const code = buildTicketCode(guest);
-      saveRsvp({ status: "hadir", name: guest, code });
+      // simpan status dulu, QR BELUM muncul
+      saveRsvp({ status: "hadir", name: guest });
+
       setBadge("hadir");
-      renderQr(code);
+
+      // tampilkan pilihan pax
+      if (paxWrap) paxWrap.hidden = false;
+
+      // sembunyikan QR dulu
+      hideQr();
     });
   }
+
+  if (btnTidakHadir) {
+    btnTidakHadir.addEventListener("click", () => {
+      saveRsvp({ status: "tidak_hadir", name: guest });
+      setBadge("tidak_hadir");
+      hideQr();
+      if (paxWrap) paxWrap.hidden = true;
+    });
+  }
+
+  if (btnResetRsvp) {
+    btnResetRsvp.addEventListener("click", () => {
+      localStorage.removeItem(RSVP_KEY);
+      setBadge(null);
+      hideQr();
+      if (paxWrap) paxWrap.hidden = true;
+    });
+  }
+
+
 
   if (btnTidakHadir) {
     btnTidakHadir.addEventListener("click", () => {
@@ -382,4 +435,50 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   renderWishes();
+});
+
+// ===================================================
+// LIGHTBOX (Gallery + Couple photos)
+// ===================================================
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
+const lightboxCap = document.getElementById("lightboxCap");
+
+function openLightbox(src, caption = "") {
+  if (!lightbox || !lightboxImg) return;
+  lightbox.hidden = false;
+  lightboxImg.src = src;
+  lightboxImg.alt = caption || "Preview";
+  if (lightboxCap) lightboxCap.textContent = caption || "";
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  if (!lightbox) return;
+  lightbox.hidden = true;
+  if (lightboxImg) {
+    lightboxImg.src = "";
+    lightboxImg.alt = "";
+  }
+  if (lightboxCap) lightboxCap.textContent = "";
+  document.body.style.overflow = "";
+}
+
+// click handler for all .zoomable
+document.addEventListener("click", (e) => {
+  const z = e.target.closest(".zoomable");
+  if (z) {
+    const src = z.getAttribute("data-full") || z.getAttribute("src");
+    const cap = z.getAttribute("data-caption") || z.getAttribute("alt") || "";
+    if (src) openLightbox(src, cap);
+  }
+
+  // close by clicking backdrop or close button
+  const closeEl = e.target.closest("[data-close='1']");
+  if (closeEl) closeLightbox();
+});
+
+// close with ESC
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && lightbox && !lightbox.hidden) closeLightbox();
 });
