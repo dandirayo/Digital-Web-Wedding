@@ -1156,6 +1156,95 @@ body[data-theme="adat"] .rsvp-card{
   display:block;
 }
 
+/* RUNDOWN */
+.rundown{
+  position: relative;
+  margin-top: 24px;
+  padding-left: 72px;
+}
+
+.rundown::before{
+  content:"";
+  position:absolute;
+  left:38px;
+  top:0;
+  bottom:0;
+  width:2px;
+  background: rgba(255,255,255,.15);
+}
+
+.rd-item{
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px 20px auto;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.rd-time{
+  font-weight: 600;
+  font-size: 14px;
+  opacity: .85;
+}
+
+.rd-dot{
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  position: relative;
+  z-index: 2;
+}
+
+.rd-desc{
+  font-size: 15px;
+}
+
+/* OUR-STORY */
+
+.story{
+  margin-top: 20px;
+}
+
+.story-item{
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+.story-year{
+  display: inline-block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  opacity: .85;
+}
+
+/* DRESSCODE */
+.dresscode{
+  display: flex;
+  gap: 16px;
+  margin: 20px 0 8px;
+}
+
+.dc-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.dc-swatch{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#333,#777);
+}
+
+.dc-note{
+  font-size: 13px;
+  opacity: .75;
+}
+
 /* ===============================
    MUSIC BUTTON
 ================================ */
