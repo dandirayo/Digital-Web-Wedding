@@ -425,6 +425,68 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+
+// ===============================
+// DOWNLOAD QR (pakai tombol #btnCopyCode)
+// ===============================
+if (btnCopyCode) {
+  btnCopyCode.addEventListener("click", () => {
+    const data = loadRsvp();
+
+    // QR cuma valid kalau sudah pilih pax (karena code baru dibuat saat pax dipilih)
+    if (!data?.code || data?.status !== "hadir") {
+      alert("QR belum tersedia. Klik 'Hadir' lalu pilih jumlah tamu (PAX) dulu ya.");
+      return;
+    }
+
+    if (!qrCanvas) return;
+
+    // Pastikan canvas sudah terisi QR (kalau belum, render dulu)
+    // Ini penting kalau user refresh halaman
+    renderQr(data.code);
+
+    // Ambil nama tamu untuk nama file
+    const guestName =
+      data?.name ||
+      document.getElementById("rsvpGuest")?.innerText ||
+      document.getElementById("guestName")?.innerText ||
+      "tamu";
+
+    const safeName = String(guestName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    // Optional: bikin canvas export yang lebih “rapih” (ada padding + background putih)
+    const exportCanvas = document.createElement("canvas");
+    const size = 320;
+    exportCanvas.width = size;
+    exportCanvas.height = size;
+
+    const ctx = exportCanvas.getContext("2d");
+    if (!ctx) return;
+
+    // background putih
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+
+    // gambar QR dari canvas utama ke tengah dengan padding
+    const qrSize = 260;
+    const x = Math.floor((size - qrSize) / 2);
+    const y = Math.floor((size - qrSize) / 2);
+    ctx.drawImage(qrCanvas, x, y, qrSize, qrSize);
+
+    // download
+    const link = document.createElement("a");
+    link.href = exportCanvas.toDataURL("image/png");
+    link.download = `QR-Undangan-${safeName}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+}
+
+
   // ===================================================
   // WISHES (chat bubble + 5 last)
   // ===================================================

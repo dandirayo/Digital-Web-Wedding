@@ -940,6 +940,22 @@ body[data-theme="adat"] .rsvp-card{
   margin-top: 8px;
 }
 
+/* QR WRAP WITH BLUR BACKGROUND */
+.qr-wrap{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-wrap canvas{
+  border-radius: 16px;
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+
 /* ===============================
    RSVP PAX
 ================================ */
