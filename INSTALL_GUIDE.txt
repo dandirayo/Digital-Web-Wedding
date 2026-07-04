@@ -1,0 +1,344 @@
+INSTALL GUIDE - WEDDING PLATFORM
+=================================
+
+Urutan ini dibuat untuk Windows.
+
+
+1. CEK YANG SUDAH ADA
+---------------------
+
+Buka PowerShell atau Terminal, lalu jalankan:
+
+node --version
+git --version
+pnpm --version
+
+Di laptop ini sudah terdeteksi:
+
+- Node.js: sudah ada
+- Git: sudah ada
+- pnpm: sudah ada
+
+
+2. INSTALL VISUAL STUDIO CODE
+-----------------------------
+
+Download:
+
+https://code.visualstudio.com/download
+
+Cara install:
+
+1. Pilih Windows User Installer x64.
+2. Jalankan file installer.
+3. Centang pilihan "Add to PATH" jika muncul.
+4. Setelah selesai, restart PowerShell/Terminal.
+
+Cara buka project:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding
+code .
+
+Jika command "code ." belum jalan, buka VS Code manual lalu pilih:
+
+File > Open Folder > Digital-Web-Wedding
+
+
+3. INSTALL DOCKER DESKTOP
+-------------------------
+
+Download:
+
+https://docs.docker.com/desktop/setup/install/windows-install/
+
+Cara install:
+
+1. Download Docker Desktop for Windows.
+2. Jalankan installer.
+3. Jika diminta mengaktifkan WSL 2, ikuti instruksi installer.
+4. Restart laptop jika diminta.
+5. Buka Docker Desktop.
+6. Tunggu sampai status Docker Desktop "Running".
+
+Cek install:
+
+docker --version
+
+Catatan:
+
+Docker Desktop dibutuhkan kalau ingin menjalankan Supabase secara lokal.
+Kalau langsung pakai Supabase Cloud, Docker bisa belakangan.
+
+
+4. INSTALL SUPABASE CLI
+-----------------------
+
+Dokumentasi resmi:
+
+https://supabase.com/docs/guides/local-development/cli/getting-started
+
+Cara paling praktis dengan pnpm:
+
+pnpm add -g supabase
+
+Cek install:
+
+supabase --version
+
+Jika install global bermasalah, pakai tanpa install global:
+
+pnpm dlx supabase --version
+
+Untuk login Supabase:
+
+supabase login
+
+Untuk init Supabase di project:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+supabase init
+
+Untuk start Supabase local:
+
+supabase start
+
+Catatan:
+
+supabase start butuh Docker Desktop sudah running.
+
+
+5. INSTALL VERCEL CLI
+---------------------
+
+Dokumentasi resmi:
+
+https://vercel.com/docs/cli
+
+Cara install:
+
+pnpm add -g vercel
+
+Cek install:
+
+vercel --version
+
+Login Vercel:
+
+vercel login
+
+Deploy preview:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+vercel
+
+Deploy production:
+
+vercel --prod
+
+
+6. MASUK KE PROJECT PLATFORM
+----------------------------
+
+Folder platform yang sudah dibuat:
+
+C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+
+Masuk ke folder:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+
+
+7. INSTALL DEPENDENCY PROJECT
+-----------------------------
+
+Jalankan:
+
+pnpm install --ignore-scripts
+
+Jika nanti pnpm meminta approve build:
+
+pnpm approve-builds
+
+Lalu pilih dependency yang diminta, biasanya:
+
+- sharp
+- unrs-resolver
+
+Setelah itu jalankan lagi:
+
+pnpm install
+
+
+8. JALANKAN FRONTEND LOCAL
+--------------------------
+
+Masuk folder:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+
+Run dev server:
+
+pnpm dev
+
+Buka browser:
+
+http://localhost:3000
+
+Halaman yang tersedia:
+
+- Company Profile:
+  http://localhost:3000
+
+- Login Role:
+  http://localhost:3000/login
+
+- Client Dashboard:
+  http://localhost:3000/client/dashboard
+
+- Owner Dashboard:
+  http://localhost:3000/owner/dashboard
+
+
+9. CEK PROJECT SEBELUM DEPLOY
+-----------------------------
+
+Jalankan lint:
+
+pnpm lint
+
+Jalankan build:
+
+pnpm build
+
+Jika dua command ini berhasil, project aman untuk deploy.
+
+
+10. SETUP SUPABASE CLOUD
+------------------------
+
+Buka:
+
+https://supabase.com
+
+Langkah:
+
+1. Login atau buat akun Supabase.
+2. Create new project.
+3. Isi nama project, password database, dan region.
+4. Setelah project jadi, buka Project Settings > API.
+5. Copy:
+   - Project URL
+   - anon public key
+   - service_role key
+
+
+11. SETUP ENV PROJECT
+---------------------
+
+Di folder wedding-platform, copy:
+
+.env.example
+
+Menjadi:
+
+.env.local
+
+Isi:
+
+NEXT_PUBLIC_SUPABASE_URL=isi_project_url_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=isi_anon_key_supabase
+SUPABASE_SERVICE_ROLE_KEY=isi_service_role_key_supabase
+
+Penting:
+
+SUPABASE_SERVICE_ROLE_KEY jangan pernah dipakai di frontend/browser.
+Gunakan hanya di server-side code.
+
+
+12. SETUP DATABASE SUPABASE
+---------------------------
+
+File schema awal ada di:
+
+C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform\src\lib\supabase\schema.sql
+
+Cara menjalankan:
+
+1. Buka dashboard Supabase.
+2. Masuk ke SQL Editor.
+3. Copy isi schema.sql.
+4. Paste ke SQL Editor.
+5. Klik Run.
+
+Tabel awal yang dibuat:
+
+- profiles
+- events
+- guests
+- wishes
+
+
+13. FLOW DEVELOPMENT YANG DISARANKAN
+------------------------------------
+
+Urutan kerja berikutnya:
+
+1. Rapikan UI company profile.
+2. Buat auth login asli dengan Supabase Auth.
+3. Buat role:
+   - owner
+   - client
+4. Sambungkan dashboard client ke table events, guests, wishes.
+5. Sambungkan dashboard owner ke semua events.
+6. Buat fitur CRUD tamu.
+7. Buat import CSV tamu.
+8. Buat QR generator per tamu.
+9. Buat public wedding page berdasarkan slug:
+   /wedding/sheila-yoga
+   /wedding/andi-rina
+10. Deploy ke Vercel.
+
+
+14. COMMAND HARIAN
+------------------
+
+Masuk project:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+
+Jalankan local:
+
+pnpm dev
+
+Cek error:
+
+pnpm lint
+
+Build:
+
+pnpm build
+
+Deploy:
+
+vercel --prod
+
+
+15. JIKA NPM DI POWERSHELL ERROR
+--------------------------------
+
+Jika muncul error seperti:
+
+"running scripts is disabled on this system"
+
+Pakai pnpm dulu karena di laptop ini pnpm sudah jalan.
+
+Alternatif sementara:
+
+npm.cmd --version
+
+Kalau ingin dibetulkan nanti, ubah PowerShell Execution Policy:
+
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+Lalu tutup dan buka ulang PowerShell.
+

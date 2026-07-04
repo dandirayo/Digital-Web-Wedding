@@ -3,6 +3,39 @@
 // =====================================================
 const $ = (q, el = document) => el.querySelector(q);
 const $$ = (q, el = document) => [...el.querySelectorAll(q)];
+const THEME_KEY = "wedding_theme_v1";
+
+function applyTheme(theme) {
+  const nextTheme = theme === "light" ? "light" : "modern";
+  document.body.dataset.theme = nextTheme;
+  localStorage.setItem(THEME_KEY, nextTheme);
+}
+
+function setupThemeToggle() {
+  const toggle = $("#themeToggle");
+  const icon = $("#themeToggleIcon");
+  const label = $("#themeToggleText");
+  if (!toggle || !icon || !label) return;
+
+  const syncUi = () => {
+    const isLight = document.body.dataset.theme === "light";
+    icon.textContent = isLight ? "☀" : "☾";
+    label.textContent = isLight ? "Light" : "Dark";
+    toggle.setAttribute("aria-label", isLight ? "Ganti ke dark mode" : "Ganti ke light mode");
+  };
+
+  toggle.addEventListener("click", () => {
+    const isLight = document.body.dataset.theme === "light";
+    applyTheme(isLight ? "modern" : "light");
+    syncUi();
+    refreshHeroSlideshowTheme();
+  });
+
+  syncUi();
+}
+
+const savedTheme = localStorage.getItem(THEME_KEY);
+if (savedTheme) applyTheme(savedTheme);
 
 // Lock scroll saat pertama load (cover)
 document.body.classList.add("lock-scroll");
@@ -20,22 +53,26 @@ function getGuestName() {
 // Hero background slideshow (prewed)
 // =====================================================
 const prewedImages = [
-  "assets/image/prewed-1.jpg",
-  "assets/image/prewed-2.jpg",
-  "assets/image/prewed-3.jpg",
-  "assets/image/prewed-4.jpg",
-  "assets/image/prewed-5.jpg",
+  "assets/images/prewed-1.jpg",
+  "assets/images/prewed-2.jpg",
+  "assets/images/prewed-3.jpg",
+  "assets/images/prewed-4.jpg",
+  "assets/images/prewed-5.jpg",
 ];
-
-setInterval(() => { /* ganti image */ }, 5000);
-
 
 function setHeroLayerBg(el, imgUrl){
   if (!el) return;
   el.style.backgroundImage = `
-    linear-gradient(rgba(15,17,21,0.55), rgba(15,17,21,0.75)),
+    linear-gradient(var(--hero-overlay-top), var(--hero-overlay-bottom)),
     url("${imgUrl}")
   `;
+}
+
+function refreshHeroSlideshowTheme() {
+  $$(".hero-bg").forEach((layer) => {
+    const currentImage = layer.dataset.image;
+    if (currentImage) setHeroLayerBg(layer, currentImage);
+  });
 }
 
 function startHeroSlideshow(){
@@ -51,6 +88,7 @@ function startHeroSlideshow(){
 
   // initial
   setHeroLayerBg(layerA, prewedImages[idx % prewedImages.length]);
+  layerA.dataset.image = prewedImages[idx % prewedImages.length];
   layerA.style.opacity = 1;
   layerB.style.opacity = 0;
 
@@ -62,6 +100,7 @@ function startHeroSlideshow(){
     const hide = useA ? layerA : layerB;
 
     setHeroLayerBg(show, next);
+    show.dataset.image = next;
     show.style.opacity = 1;
     hide.style.opacity = 0;
 
@@ -74,15 +113,15 @@ function startHeroSlideshow(){
 // Music (BGM)
 // =====================================================
 function setupMusic(){
-  const audio = document.getElementById("bgm");
-  const btn = document.getElementById("musicBtn");
+  const audio = document.getElementById("bgMusic");
+  const btn = document.getElementById("musicToggle");
   if (!audio || !btn) return { tryAutoPlay: () => {} };
 
   const syncUi = () => {
     const playing = !audio.paused;
     btn.classList.toggle("is-playing", playing);
     btn.setAttribute("aria-pressed", String(playing));
-    btn.textContent = playing ? "❚❚" : "♫";
+    btn.textContent = playing ? "||" : "♪";
   };
 
   btn.addEventListener("click", async () => {
@@ -104,7 +143,7 @@ function setupMusic(){
       try {
         await audio.play();
       } catch {
-        // Browser mungkin blok autoplay: user bisa klik tombol ♫
+        // Browser mungkin blok autoplay: user bisa klik tombol musik.
       }
       syncUi();
     }
@@ -159,6 +198,8 @@ function setupReveal(root = document) {
 window.addEventListener("DOMContentLoaded", () => {
   const guest = getGuestName();
 
+  setupThemeToggle();
+
   // setup music (needs user gesture for autoplay in most browsers)
   const music = setupMusic();
 
@@ -172,7 +213,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (g2) g2.textContent = guest;
 
   // ===================================================
-  // PAGE TRANSITION (Cover → Main)
+  // PAGE TRANSITION (Cover -> Main)
   // ===================================================
   const pageCover = $("#pageCover");
   const pageMain = $("#pageMain");
@@ -321,53 +362,68 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function hideQr() {
     if (qrWrap) qrWrap.hidden = true;
+    if (qrCodeText) qrCodeText.textContent = "";
+    if (qrCanvas) {
+      const ctx = qrCanvas.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+    }
+  }
+
+  function resetPaxSelection() {
+    paxButtons.forEach((btn) => btn.classList.remove("active"));
   }
 
   const saved = loadRsvp();
   if (saved?.status) {
     setBadge(saved.status);
-    if (saved.status === "hadir" && saved.code) renderQr(saved.code);
-    else hideQr();
+    if (saved.status === "hadir") {
+      if (paxWrap) paxWrap.hidden = Boolean(saved.code);
+      paxButtons.forEach((btn) => {
+        btn.classList.toggle("active", Number(btn.dataset.pax) === Number(saved.pax));
+      });
+      if (saved.code) renderQr(saved.code);
+      else hideQr();
+    } else {
+      if (paxWrap) paxWrap.hidden = true;
+      hideQr();
+    }
   } else {
     setBadge(null);
+    if (paxWrap) paxWrap.hidden = true;
     hideQr();
   }
 
   paxButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const pax = Number(btn.dataset.pax);
-    if (!pax) return;
+    btn.addEventListener("click", () => {
+      const pax = Number(btn.dataset.pax);
+      if (!pax) return;
 
-    // highlight active
-    paxButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+      paxButtons.forEach((item) => item.classList.remove("active"));
+      btn.classList.add("active");
 
-    // generate QR SETELAH pax dipilih
-    const code = buildTicketCode(guest);
+      const code = buildTicketCode(guest);
 
-    saveRsvp({
-      status: "hadir",
-      name: guest,
-      pax: pax,
-      code: code
+      saveRsvp({
+        status: "hadir",
+        name: guest,
+        pax,
+        code,
+      });
+
+      if (paxWrap) paxWrap.hidden = true;
+      renderQr(code);
     });
-
-    renderQr(code);
   });
-});
-
 
   if (btnHadir) {
     btnHadir.addEventListener("click", () => {
-      // simpan status dulu, QR BELUM muncul
       saveRsvp({ status: "hadir", name: guest });
 
       setBadge("hadir");
 
-      // tampilkan pilihan pax
       if (paxWrap) paxWrap.hidden = false;
+      resetPaxSelection();
 
-      // sembunyikan QR dulu
       hideQr();
     });
   }
@@ -378,6 +434,7 @@ window.addEventListener("DOMContentLoaded", () => {
       setBadge("tidak_hadir");
       hideQr();
       if (paxWrap) paxWrap.hidden = true;
+      resetPaxSelection();
     });
   }
 
@@ -387,104 +444,58 @@ window.addEventListener("DOMContentLoaded", () => {
       setBadge(null);
       hideQr();
       if (paxWrap) paxWrap.hidden = true;
-    });
-  }
-
-
-
-  if (btnTidakHadir) {
-    btnTidakHadir.addEventListener("click", () => {
-      saveRsvp({ status: "tidak_hadir", name: guest });
-      setBadge("tidak_hadir");
-      hideQr();
-    });
-  }
-
-  if (btnResetRsvp) {
-    btnResetRsvp.addEventListener("click", () => {
-      localStorage.removeItem(RSVP_KEY);
-      setBadge(null);
-      hideQr();
+      resetPaxSelection();
     });
   }
 
   if (btnCopyCode) {
-    btnCopyCode.addEventListener("click", async () => {
+    btnCopyCode.addEventListener("click", () => {
       const data = loadRsvp();
-      const val = data?.code || "";
-      if (!val) return;
 
-      try {
-        await navigator.clipboard.writeText(val);
-        const old = btnCopyCode.textContent;
-        btnCopyCode.textContent = "Tersalin ✓";
-        setTimeout(() => (btnCopyCode.textContent = old), 1200);
-      } catch {
-        prompt("Copy manual:", val);
+      if (!data?.code || data?.status !== "hadir") {
+        alert("QR belum tersedia. Klik 'Hadir' lalu pilih jumlah tamu (PAX) dulu ya.");
+        return;
       }
+
+      if (!qrCanvas) return;
+
+      renderQr(data.code);
+
+      const guestName =
+        data?.name ||
+        document.getElementById("rsvpGuest")?.innerText ||
+        document.getElementById("guestName")?.innerText ||
+        "tamu";
+
+      const safeName = String(guestName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const exportCanvas = document.createElement("canvas");
+      const size = 320;
+      exportCanvas.width = size;
+      exportCanvas.height = size;
+
+      const ctx = exportCanvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, size, size);
+
+      const qrSize = 260;
+      const x = Math.floor((size - qrSize) / 2);
+      const y = Math.floor((size - qrSize) / 2);
+      ctx.drawImage(qrCanvas, x, y, qrSize, qrSize);
+
+      const link = document.createElement("a");
+      link.href = exportCanvas.toDataURL("image/png");
+      link.download = `QR-Undangan-${safeName}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
   }
-
-
-// ===============================
-// DOWNLOAD QR (pakai tombol #btnCopyCode)
-// ===============================
-if (btnCopyCode) {
-  btnCopyCode.addEventListener("click", () => {
-    const data = loadRsvp();
-
-    // QR cuma valid kalau sudah pilih pax (karena code baru dibuat saat pax dipilih)
-    if (!data?.code || data?.status !== "hadir") {
-      alert("QR belum tersedia. Klik 'Hadir' lalu pilih jumlah tamu (PAX) dulu ya.");
-      return;
-    }
-
-    if (!qrCanvas) return;
-
-    // Pastikan canvas sudah terisi QR (kalau belum, render dulu)
-    // Ini penting kalau user refresh halaman
-    renderQr(data.code);
-
-    // Ambil nama tamu untuk nama file
-    const guestName =
-      data?.name ||
-      document.getElementById("rsvpGuest")?.innerText ||
-      document.getElementById("guestName")?.innerText ||
-      "tamu";
-
-    const safeName = String(guestName)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    // Optional: bikin canvas export yang lebih “rapih” (ada padding + background putih)
-    const exportCanvas = document.createElement("canvas");
-    const size = 320;
-    exportCanvas.width = size;
-    exportCanvas.height = size;
-
-    const ctx = exportCanvas.getContext("2d");
-    if (!ctx) return;
-
-    // background putih
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
-
-    // gambar QR dari canvas utama ke tengah dengan padding
-    const qrSize = 260;
-    const x = Math.floor((size - qrSize) / 2);
-    const y = Math.floor((size - qrSize) / 2);
-    ctx.drawImage(qrCanvas, x, y, qrSize, qrSize);
-
-    // download
-    const link = document.createElement("a");
-    link.href = exportCanvas.toDataURL("image/png");
-    link.download = `QR-Undangan-${safeName}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-}
 
 
   // ===================================================
@@ -493,6 +504,7 @@ if (btnCopyCode) {
   const wishForm = $("#wishForm");
   const fillGuestBtn = $("#fillGuestBtn");
   const wishListEl = $("#wishList");
+  const wishStatus = $("#wishStatus");
 
   const WISH_KEY = "wedding_wishes_v1";
   const MAX_RENDER = 5;
@@ -539,7 +551,7 @@ if (btnCopyCode) {
     if (wishes.length === 0) {
       wishListEl.innerHTML = `
         <div class="wish-bubble left">
-          <div class="wish-text">Belum ada ucapan. Jadi yang pertama ya 🙂</div>
+          <div class="wish-text">Belum ada ucapan. Jadi yang pertama ya :)</div>
         </div>
       `;
       return;
@@ -592,10 +604,12 @@ if (btnCopyCode) {
       saveWishes(wishes.slice(-MAX_STORE));
 
       wishForm.reset();
-      renderWishes({ animateNew: true });
+      if (wishStatus) {
+        wishStatus.textContent = "Terima kasih, ucapan Anda sudah tersimpan.";
+      }
 
-      // tampilkan newest di atas
-      wishListEl.scrollTop = 0;
+      renderWishes({ animateNew: true });
+      if (wishListEl) wishListEl.scrollTop = 0;
     });
   }
 
@@ -647,3 +661,4 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && lightbox && !lightbox.hidden) closeLightbox();
 });
+

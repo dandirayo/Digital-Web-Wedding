@@ -15,20 +15,31 @@
 </head>
 
 <body data-theme="modern">
+  <button
+    id="themeToggle"
+    class="theme-toggle"
+    type="button"
+    aria-label="Ganti ke light mode"
+    title="Ganti tema"
+  >
+    <span id="themeToggleIcon" aria-hidden="true">☾</span>
+    <span id="themeToggleText">Dark</span>
+  </button>
+
   <!-- PAGE 1 -->
   <section id="pageCover" class="page cover is-shown" aria-label="Cover">
 
         <!-- FLOWER DECOR -->
-    <img src="assets/image/flower left.png" class="flower flower-left" alt="flower">
-    <img src="assets/image/flower right.png" class="flower flower-right" alt="flower">
+    <img src="assets/images/flower-left.png" class="flower flower-left" alt="flower">
+    <img src="assets/images/flower-right.png" class="flower flower-right" alt="flower">
     <div class="cover-inner card">
       <div class="subtitle reveal">Our Wedding Invitation</div>
 
       <h1 class="reveal" style="transition-delay:.08s">Sheila &amp; Yoga</h1>
 
       <div class="meta reveal" style="transition-delay:.14s">
-        <div><strong>Sabtu, 27 Desember 2025</strong></div>
-        <div>Grand Ballroom • Jakarta</div>
+        <div><strong>Sabtu, 27 Desember 2026</strong></div>
+        <div>Grand Ballroom &bull; Jakarta</div>
       </div>
 
       <div class="guest reveal" style="transition-delay:.20s">
@@ -56,9 +67,9 @@
           <span class="chip tag reveal">The Wedding of</span>
           <h2 class="reveal" style="transition-delay:.06s">Sheila &amp; Yoga</h2>
 
-          <p class="quote reveal" style="transition-delay:.12s">
-            “What counts in making a happy marriage is not so much how compatible you are,
-            but how you deal with incompatibility.”
+        <p class="quote reveal" style="transition-delay:.12s">
+            &ldquo;What counts in making a happy marriage is not so much how compatible you are,
+            but how you deal with incompatibility.&rdquo;
           </p>
 
           <div class="guestline reveal" style="transition-delay:.18s">
@@ -85,19 +96,19 @@
           aria-label="Toggle music"
           title="Music"
         >
-          ♫
+          ♪
         </button>
 
         <!-- RIGHT: RUNNING TEXT -->
         <div class="music-title-wrap">
           <div class="music-title" id="musicTitle">
-            Beautiful In White — Shane Filan
+            Beautiful In White &mdash; Shane Filan
           </div>
         </div>
       </div>
 
 
-        <!-- VIDEO (di atas Assalamu’alaikum) -->
+        <!-- VIDEO (di atas Assalamu'alaikum) -->
         <section class="section reveal" id="introVideoSection">
           <h3>Our Pre-Wedding Video</h3>
           <div class="video-wrap">
@@ -110,22 +121,22 @@
               playsinline
               preload="metadata"
             >
-              <source src="assets/video/intro.mp4" type="video/mp4">
+              <source src="assets/videos/intro.mp4" type="video/mp4">
               Browser kamu tidak mendukung video.
             </video>
           </div>
         </section>
 
         <section class="section reveal">
-          <h3>Assalamu’alaikum</h3>
+          <h3>Assalamu&rsquo;alaikum</h3>
           <p>
             Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i
             untuk hadir pada acara pernikahan kami:
           </p>
           <div class="hr"></div>
           <p>
-            <strong>Sheila</strong> — Putri dari Bapak ____ &amp; Ibu ____ <br/>
-            <strong>Yoga</strong> — Putra dari Bapak ____ &amp; Ibu ____
+            <strong>Sheila</strong> &mdash; Putri dari Bapak ____ &amp; Ibu ____ <br/>
+            <strong>Yoga</strong> &mdash; Putra dari Bapak ____ &amp; Ibu ____
           </p>
         </section>
 
@@ -139,10 +150,10 @@
             <div class="person-card">
               <div class="avatar">
                 <img
-                  src="assets/image/bride.jpg"
+                  src="assets/images/bride.jpg"
                   alt="Foto Sheila"
                   class="zoomable"
-                  data-full="assets/image/bride.jpg"
+                  data-full="assets/images/bride.jpg"
                   data-caption="Sheila"
                 />
               </div>
@@ -167,10 +178,10 @@
             <div class="person-card">
               <div class="avatar">
                 <img
-                  src="assets/image/groom.jpg"
+                  src="assets/images/groom.jpg"
                   alt="Foto Yoga"
                   class="zoomable"
-                  data-full="assets/image/groom.jpg"
+                  data-full="assets/images/groom.jpg"
                   data-caption="Yoga"
                 />
               </div>
@@ -227,11 +238,11 @@
                 <div class="title">Akad Nikah</div>
                 <div class="time">08.00 - 10.00 WIB</div>
               </div>
-              <div class="loc">Masjid ____ • Jl. ____ , Jakarta</div>
+              <div class="loc">Masjid ____ &bull; Jl. ____ , Jakarta</div>
 
               <a class="map-thumb" target="_blank" rel="noopener"
                  href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
-                <!-- <img src="assets/image/maps-akad.jpg" alt="Peta Lokasi Akad"> -->
+                <!-- <img src="assets/images/maps-akad.jpg" alt="Peta Lokasi Akad"> -->
                 <span class="map-badge">Lihat di Maps</span>
               </a>
 
@@ -249,11 +260,11 @@
                 <div class="time">11.00 - 14.00 WIB</div>
               </div>
 
-              <div class="loc">Grand Ballroom ____ • Jl. ____ , Jakarta</div>
+              <div class="loc">Grand Ballroom ____ &bull; Jl. ____ , Jakarta</div>
 
               <a class="map-thumb" target="_blank" rel="noopener"
                  href="https://maps.google.com/?q=Jakarta+Convention+Center">
-                <!-- <img src="assets/image/maps-resepsi.jpg" alt="Peta Lokasi Resepsi"> -->
+                <!-- <img src="assets/images/maps-resepsi.jpg" alt="Peta Lokasi Resepsi"> -->
                 <span class="map-badge">Lihat di Maps</span>
               </a>
 
@@ -343,12 +354,12 @@
           <p>Beberapa momen kecil sebelum hari besar.</p>
 
           <div class="gallery" aria-label="Wedding Gallery">
-            <img src="assets/image/g1.jpg" alt="Gallery 1" class="zoomable" data-full="assets/image/g1.jpg" data-caption="Gallery 1">
-            <img src="assets/image/g2.jpg" alt="Gallery 2" class="zoomable" data-full="assets/image/g2.jpg" data-caption="Gallery 2">
-            <img src="assets/image/g3.jpg" alt="Gallery 3" class="zoomable" data-full="assets/image/g3.jpg" data-caption="Gallery 3">
-            <img src="assets/image/g4.jpg" alt="Gallery 4" class="zoomable" data-full="assets/image/g4.jpg" data-caption="Gallery 4">
-            <img src="assets/image/g5.jpg" alt="Gallery 5" class="zoomable" data-full="assets/image/g5.jpg" data-caption="Gallery 5">
-            <img src="assets/image/g6.jpg" alt="Gallery 6" class="zoomable" data-full="assets/image/g6.jpg" data-caption="Gallery 6">
+            <img src="assets/images/g1.jpg" alt="Gallery 1" class="zoomable" data-full="assets/images/g1.jpg" data-caption="Gallery 1">
+            <img src="assets/images/g2.jpg" alt="Gallery 2" class="zoomable" data-full="assets/images/g2.jpg" data-caption="Gallery 2">
+            <img src="assets/images/g3.jpg" alt="Gallery 3" class="zoomable" data-full="assets/images/g3.jpg" data-caption="Gallery 3">
+            <img src="assets/images/g4.jpg" alt="Gallery 4" class="zoomable" data-full="assets/images/g4.jpg" data-caption="Gallery 4">
+            <img src="assets/images/g5.jpg" alt="Gallery 5" class="zoomable" data-full="assets/images/g5.jpg" data-caption="Gallery 5">
+            <img src="assets/images/g6.jpg" alt="Gallery 6" class="zoomable" data-full="assets/images/g6.jpg" data-caption="Gallery 6">
           </div>
         </section>
 
@@ -394,8 +405,8 @@
               <div class="qr-meta">
                 <small id="qrCodeText" style="color:var(--muted)"></small>
               </div>
-              <div class="qrActions">
-                <button class="btn-small" id="btnCopyCode" type="button">Unduh QR</button></button>
+              <div class="qr-actions">
+                <button class="btn-small" id="btnCopyCode" type="button">Unduh QR</button>
               </div>
               
             </div>
@@ -403,7 +414,7 @@
         </section>
 
         <section class="section reveal">
-          <h3>Ucapan &amp; Doa</h3>
+          <h3>Kirim Ucapan</h3>
           <p>Tuliskan ucapan terbaikmu untuk kami.</p>
 
           <form id="wishForm">
@@ -415,13 +426,17 @@
             </div>
           </form>
 
+          <p id="wishStatus" class="form-status" aria-live="polite"></p>
+
           <div class="hr"></div>
 
           <h3>Ucapan Terbaru</h3>
-          <p>5 ucapan terakhir (scroll untuk lihat yang lain).</p>
+          <p>5 ucapan terakhir dari para tamu.</p>
 
           <div id="wishList" class="wish-list" aria-label="Daftar Ucapan"></div>
+        </section>
 
+        <section class="section reveal">
           <h3>Wedding Gift</h3>
           <p>Doa restu sudah cukup. Namun bila berkenan mengirim hadiah:</p>
 
@@ -429,7 +444,7 @@
             <div class="gift-item">
               <div>
                 <strong>Bank BCA</strong>
-                <small>A/N Sheila • 1234567890</small>
+                <small>A/N Sheila &bull; 1234567890</small>
               </div>
               <!-- <button class="copy-btn" data-copy="1234567890" type="button">Unduh Barcode</button> -->
             </div>
@@ -487,7 +502,7 @@
     <div class="lightbox-backdrop" data-close="1"></div>
 
     <figure class="lightbox-figure" role="dialog" aria-modal="true" aria-label="Image viewer">
-      <button class="lightbox-close" type="button" data-close="1" aria-label="Close">✕</button>
+      <button class="lightbox-close" type="button" data-close="1" aria-label="Close">&times;</button>
       <img id="lightboxImg" alt="">
       <figcaption id="lightboxCap" class="lightbox-cap"></figcaption>
     </figure>
@@ -500,3 +515,4 @@
   <script src="assets/js/main.js"></script>
 </body>
 </html>
+
