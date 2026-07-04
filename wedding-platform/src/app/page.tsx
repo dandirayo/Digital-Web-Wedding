@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LoginModal } from "@/components/login-modal";
 import { packages } from "@/lib/demo-data";
 
 const features = [
@@ -34,12 +35,7 @@ export default function Home() {
             <a href="#alur" className="transition hover:text-[#241f1a]">Alur</a>
             <a href="#paket" className="transition hover:text-[#241f1a]">Paket</a>
           </nav>
-          <Link
-            href="/login"
-            className="inline-flex h-10 items-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white transition hover:bg-[#3a3129]"
-          >
-            Login
-          </Link>
+          <LoginModal label="Login" variant="secondary" />
         </div>
       </header>
 
@@ -57,12 +53,7 @@ export default function Home() {
               memberikan dashboard untuk klien, dan memantau semua event dari sisi owner.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/login"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-[#241f1a] px-5 text-sm font-semibold text-white transition hover:bg-[#3a3129]"
-              >
-                Coba Dashboard
-              </Link>
+              <LoginModal label="Masuk Dashboard" />
               <a
                 href="#paket"
                 className="inline-flex h-12 items-center justify-center rounded-md border border-[#cdbba8] px-5 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"

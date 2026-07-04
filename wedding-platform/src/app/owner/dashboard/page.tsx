@@ -1,3 +1,4 @@
+import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { StatCard } from "@/components/stat-card";
 import { events } from "@/lib/demo-data";
@@ -7,19 +8,45 @@ export default function OwnerDashboardPage() {
   const totalGuests = events.reduce((sum, event) => sum + event.guests, 0);
   const totalRsvp = events.reduce((sum, event) => sum + event.rsvpYes + event.rsvpNo, 0);
   const totalWishes = events.reduce((sum, event) => sum + event.wishes, 0);
+  const draft = events.filter((event) => event.status === "draft").length;
 
   return (
-    <DashboardShell
-      role="owner"
-      title="Monitoring Semua Event"
-      description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
-    >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />
-        <StatCard label="Total Tamu" value={String(totalGuests)} helper="Dari semua client" />
-        <StatCard label="Total RSVP" value={String(totalRsvp)} helper="Konfirmasi masuk" />
-        <StatCard label="Total Ucapan" value={String(totalWishes)} helper="Semua event" />
-      </section>
+    <AuthGate role="owner">
+      <DashboardShell
+        role="owner"
+        title="Monitoring Semua Event"
+        description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
+      >
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />
+          <StatCard label="Total Tamu" value={String(totalGuests)} helper="Dari semua client" />
+          <StatCard label="Total RSVP" value={String(totalRsvp)} helper="Konfirmasi masuk" />
+          <StatCard label="Total Ucapan" value={String(totalWishes)} helper="Semua event" />
+        </section>
+
+        <section className="mt-6 grid gap-6 xl:grid-cols-[0.72fr_0.28fr]">
+          <div className="rounded-md border border-[#e0d4c7] bg-white p-5">
+            <h2 className="text-xl font-semibold">Ringkasan Operasional</h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <OwnerMiniCard label="Event aktif" value={String(active)} helper="Perlu dimonitor" />
+              <OwnerMiniCard label="Draft setup" value={String(draft)} helper="Butuh publish" />
+              <OwnerMiniCard label="Check-in hari ini" value="27" helper="Live dari semua event" />
+            </div>
+          </div>
+
+          <div className="rounded-md border border-[#e0d4c7] bg-[#241f1a] p-5 text-white">
+            <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6c7a1]">
+              Owner action
+            </div>
+            <h2 className="mt-3 text-2xl font-semibold">Buat event baru</h2>
+            <p className="mt-2 text-sm leading-6 text-white/70">
+              Setelah form event aktif, owner bisa membuat workspace client dari sini.
+            </p>
+            <button className="mt-5 h-10 rounded-md bg-white px-4 text-sm font-semibold text-[#241f1a]">
+              Buat Event
+            </button>
+          </div>
+        </section>
 
       <section id="monitoring" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
         <div className="flex items-center justify-between gap-4">
@@ -27,8 +54,8 @@ export default function OwnerDashboardPage() {
             <h2 className="text-xl font-semibold">Event Yang Sedang Dikelola</h2>
             <p className="mt-1 text-sm text-[#6b6056]">Owner bisa membuka detail client, memantau progres, dan membantu edit konten.</p>
           </div>
-          <button className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white">
-            Buat Event
+          <button className="rounded-md border border-[#cdbba8] px-4 py-2 text-sm font-semibold text-[#5a4028]">
+            Export Report
           </button>
         </div>
 
@@ -60,16 +87,32 @@ export default function OwnerDashboardPage() {
       </section>
 
       <section id="pipeline" className="mt-6 grid gap-6 xl:grid-cols-3">
-        {["Lead Baru", "Proses Setup", "Siap Publish"].map((stage) => (
+        {[
+          ["Lead Baru", "Order dari calon client yang perlu follow-up."],
+          ["Proses Setup", "Event yang sedang dibuat konten dan datanya."],
+          ["Siap Publish", "Event siap dikirim ke client atau dipasang domain."],
+        ].map(([stage, description]) => (
           <div key={stage} className="rounded-md border border-[#e0d4c7] bg-white p-5">
             <h2 className="font-semibold">{stage}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#6b6056]">
-              Board ini nanti bisa diisi order masuk, invoice, dan progress pengerjaan template.
-            </p>
+            <p className="mt-2 text-sm leading-6 text-[#6b6056]">{description}</p>
+            <div className="mt-5 rounded-md border border-dashed border-[#d9caba] bg-[#fffaf4] p-4 text-sm text-[#756a60]">
+              Kanban card akan muncul di sini.
+            </div>
           </div>
         ))}
       </section>
-    </DashboardShell>
+      </DashboardShell>
+    </AuthGate>
+  );
+}
+
+function OwnerMiniCard({ label, value, helper }: { label: string; value: string; helper: string }) {
+  return (
+    <div className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
+      <div className="mt-2 text-3xl font-semibold">{value}</div>
+      <div className="mt-1 text-sm text-[#6b6056]">{helper}</div>
+    </div>
   );
 }
 

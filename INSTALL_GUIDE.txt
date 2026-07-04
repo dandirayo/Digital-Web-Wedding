@@ -85,6 +85,10 @@ Cek install:
 
 supabase --version
 
+Jika PowerShell menolak file .ps1 karena Execution Policy, pakai:
+
+supabase.cmd --version
+
 Jika install global bermasalah, pakai tanpa install global:
 
 pnpm dlx supabase --version
@@ -121,6 +125,10 @@ pnpm add -g vercel
 Cek install:
 
 vercel --version
+
+Jika PowerShell menolak file .ps1 karena Execution Policy, pakai:
+
+vercel.cmd --version
 
 Login Vercel:
 
@@ -278,7 +286,98 @@ Tabel awal yang dibuat:
 - wishes
 
 
-13. FLOW DEVELOPMENT YANG DISARANKAN
+13. AKTIFKAN LOGIN OCCASIO
+--------------------------
+
+Setelah schema.sql dijalankan:
+
+Cara otomatis:
+
+1. Pastikan .env.local sudah terisi.
+2. Pastikan schema.sql sudah dijalankan.
+3. Jalankan:
+
+cd C:\Users\ASUS\Documents\GitHub\Digital-Web-Wedding\wedding-platform
+pnpm seed:users
+
+Command ini akan membuat:
+
+- owner@occasio.app / OccasioOwner123!
+- client@occasio.app / OccasioClient123!
+
+Sekaligus membuat row profile:
+
+- owner
+- client
+
+Cara manual:
+
+1. Buka Supabase Dashboard.
+2. Masuk ke Authentication > Users.
+3. Buat user untuk owner.
+4. Buat user untuk client.
+5. Copy masing-masing user id.
+6. Masuk ke SQL Editor.
+7. Masukkan profile untuk masing-masing user.
+
+Contoh:
+
+insert into public.profiles (id, full_name, role)
+values
+  ('ISI_USER_ID_OWNER', 'Owner Occasio', 'owner'),
+  ('ISI_USER_ID_CLIENT', 'Client Demo', 'client');
+
+Setelah itu buka:
+
+http://localhost:3000
+
+Klik tombol Login di halaman utama. Login akan muncul sebagai popup.
+Login dengan email/password yang dibuat di Supabase.
+
+Jika role user adalah owner, akan diarahkan ke:
+
+http://localhost:3000/owner/dashboard
+
+Jika role user adalah client, akan diarahkan ke:
+
+http://localhost:3000/client/dashboard
+
+Catatan:
+
+Dashboard client dan owner sekarang terkunci.
+Tidak ada tombol preview dashboard.
+User harus login dan role harus tersedia di table profiles.
+
+
+14. FORMAT EXCEL TAMU CLIENT
+----------------------------
+
+Dashboard client sudah punya fitur upload Excel untuk preview daftar tamu.
+
+Kolom yang didukung:
+
+- nama
+- telepon
+- pax
+
+Contoh isi Excel:
+
+nama,telepon,pax
+Reza Pramudita,08123456789,2
+Dewi Lestari,08129876543,1
+Bagas Putra,08125551111,2
+
+Format file:
+
+- .xlsx
+- .xls
+- .csv
+
+Saat ini upload Excel masih preview di browser.
+Next step-nya adalah menyimpan hasil upload ke table guests di Supabase.
+
+
+15. FLOW DEVELOPMENT YANG DISARANKAN
 ------------------------------------
 
 Urutan kerja berikutnya:
@@ -299,7 +398,7 @@ Urutan kerja berikutnya:
 10. Deploy ke Vercel.
 
 
-14. COMMAND HARIAN
+16. COMMAND HARIAN
 ------------------
 
 Masuk project:
@@ -323,7 +422,7 @@ Deploy:
 vercel --prod
 
 
-15. JIKA NPM DI POWERSHELL ERROR
+17. JIKA NPM DI POWERSHELL ERROR
 --------------------------------
 
 Jika muncul error seperti:
@@ -341,4 +440,3 @@ Kalau ingin dibetulkan nanti, ubah PowerShell Execution Policy:
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 Lalu tutup dan buka ulang PowerShell.
-

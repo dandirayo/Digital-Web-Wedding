@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LogoutButton } from "./logout-button";
 
 type DashboardShellProps = {
   role: "client" | "owner";
@@ -66,12 +67,7 @@ export function DashboardShell({ role, title, description, children }: Dashboard
               <h1 className="mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">{description}</p>
             </div>
-            <Link
-              href="/login"
-              className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
-            >
-              Ganti Role
-            </Link>
+            <LogoutButton />
           </div>
         </header>
         <div className="px-5 py-6 lg:px-8">{children}</div>
