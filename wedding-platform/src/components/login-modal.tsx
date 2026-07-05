@@ -53,7 +53,7 @@ export function LoginModal({ label = "Login", variant = "primary" }: LoginModalP
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">
                   Occasio
                 </div>
-                <div className="mt-1 text-lg font-semibold text-[#241f1a]">Login workspace</div>
+                <div className="mt-1 text-lg font-semibold text-[#241f1a]">Login demo workspace</div>
               </div>
               <button
                 type="button"

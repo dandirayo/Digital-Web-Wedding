@@ -20,8 +20,8 @@ export default function LoginPage() {
             Satu pintu masuk untuk client dan owner.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-7 text-[#6b6056]">
-            Setelah Supabase aktif, client hanya masuk ke dashboard event miliknya,
-            sedangkan owner masuk ke dashboard monitoring semua event.
+            Untuk sementara login memakai mode demo lokal. Supabase Auth bisa
+            diaktifkan lagi setelah flow dashboard sudah matang.
           </p>
         </div>
 
@@ -52,8 +52,8 @@ export default function LoginPage() {
             </div>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">Masuk ke workspace.</h2>
             <p className="mt-3 text-sm leading-6 text-[#6b6056]">
-              Tidak ada preview dashboard di mode ini. Dashboard hanya bisa dibuka
-              setelah akun Supabase berhasil login dan role terbaca.
+            Gunakan akun demo owner atau client. Dashboard tetap dipisahkan berdasarkan
+            role supaya flow produk bisa diuji dulu.
             </p>
           </div>
 

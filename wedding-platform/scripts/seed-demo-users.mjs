@@ -55,7 +55,12 @@ for (const user of users) {
     },
   });
 
-  if (error && !error.message.toLowerCase().includes("already registered")) {
+  const userAlreadyExists =
+    error?.message.toLowerCase().includes("already registered") ||
+    error?.message.toLowerCase().includes("already been registered") ||
+    error?.message.toLowerCase().includes("already exists");
+
+  if (error && !userAlreadyExists) {
     console.error(`Failed creating ${user.email}:`, error.message);
     process.exitCode = 1;
     continue;
@@ -76,6 +81,21 @@ for (const user of users) {
 
   if (!userId) {
     console.error(`Could not resolve user id for ${user.email}`);
+    process.exitCode = 1;
+    continue;
+  }
+
+  const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+    password: user.password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: user.fullName,
+      role: user.role,
+    },
+  });
+
+  if (updateError) {
+    console.error(`Failed updating ${user.email}:`, updateError.message);
     process.exitCode = 1;
     continue;
   }

@@ -1,0 +1,518 @@
+ <!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Wedding of Sheila & Yoga</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body data-theme="modern">
+  <button
+    id="themeToggle"
+    class="theme-toggle"
+    type="button"
+    aria-label="Ganti ke light mode"
+    title="Ganti tema"
+  >
+    <span id="themeToggleIcon" aria-hidden="true">☾</span>
+    <span id="themeToggleText">Dark</span>
+  </button>
+
+  <!-- PAGE 1 -->
+  <section id="pageCover" class="page cover is-shown" aria-label="Cover">
+
+        <!-- FLOWER DECOR -->
+    <img src="assets/images/flower-left.png" class="flower flower-left" alt="flower">
+    <img src="assets/images/flower-right.png" class="flower flower-right" alt="flower">
+    <div class="cover-inner card">
+      <div class="subtitle reveal">Our Wedding Invitation</div>
+
+      <h1 class="reveal" style="transition-delay:.08s">Sheila &amp; Yoga</h1>
+
+      <div class="meta reveal" style="transition-delay:.14s">
+        <div><strong>Sabtu, 27 Desember 2026</strong></div>
+        <div>Grand Ballroom &bull; Jakarta</div>
+      </div>
+
+      <div class="guest reveal" style="transition-delay:.20s">
+        Kepada Yth. Bapak/Ibu/Saudara/i
+        <strong id="guestName">Reza Pramudita</strong>
+      </div>
+
+      <div class="cta reveal" style="transition-delay:.26s">
+        <button id="openInviteBtn" class="btn btn-primary" type="button">Buka Undangan</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section id="pageMain" class="page main is-hidden" aria-label="Main Content">
+    <div class="main-wrap">
+
+      <!-- LEFT (sticky) -->
+      <aside class="hero">
+        <!-- 2 LAYER untuk slideshow (WAJIB ADA) -->
+        <div class="hero-bg hero-bg-a"></div>
+        <div class="hero-bg hero-bg-b"></div>
+
+        <div class="hero-inner">
+          <span class="chip tag reveal">The Wedding of</span>
+          <h2 class="reveal" style="transition-delay:.06s">Sheila &amp; Yoga</h2>
+
+        <p class="quote reveal" style="transition-delay:.12s">
+            &ldquo;What counts in making a happy marriage is not so much how compatible you are,
+            but how you deal with incompatibility.&rdquo;
+          </p>
+
+          <div class="guestline reveal" style="transition-delay:.18s">
+            Untuk: <strong id="guestName2">Reza Pramudita</strong>
+          </div>
+        </div>
+      </aside>
+
+
+      <!-- RIGHT (scroll area) -->
+      <main class="scroll" id="scrollArea">
+
+      <!-- MUSIC -->
+      <div class="music-player">
+        <audio id="bgMusic" preload="auto" loop>
+          <source src="assets/audio/song.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- LEFT: ICON -->
+        <button
+          id="musicToggle"
+          class="music-toggle"
+          type="button"
+          aria-label="Toggle music"
+          title="Music"
+        >
+          ♪
+        </button>
+
+        <!-- RIGHT: RUNNING TEXT -->
+        <div class="music-title-wrap">
+          <div class="music-title" id="musicTitle">
+            Beautiful In White &mdash; Shane Filan
+          </div>
+        </div>
+      </div>
+
+
+        <!-- VIDEO (di atas Assalamu'alaikum) -->
+        <section class="section reveal" id="introVideoSection">
+          <h3>Our Pre-Wedding Video</h3>
+          <div class="video-wrap">
+            <video
+              id="introVideo"
+              class="intro-video"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+            >
+              <source src="assets/videos/intro.mp4" type="video/mp4">
+              Browser kamu tidak mendukung video.
+            </video>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Assalamu&rsquo;alaikum</h3>
+          <p>
+            Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i
+            untuk hadir pada acara pernikahan kami:
+          </p>
+          <div class="hr"></div>
+          <p>
+            <strong>Sheila</strong> &mdash; Putri dari Bapak ____ &amp; Ibu ____ <br/>
+            <strong>Yoga</strong> &mdash; Putra dari Bapak ____ &amp; Ibu ____
+          </p>
+        </section>
+
+        <!-- Bride and Groom -->
+        <section class="section reveal" id="coupleSection">
+          <h3>Bride &amp; Groom</h3>
+          <p>Dengan penuh rasa syukur, kami memperkenalkan diri.</p>
+
+          <div class="couple-grid">
+            <!-- Bride -->
+            <div class="person-card">
+              <div class="avatar">
+                <img
+                  src="assets/images/bride.jpg"
+                  alt="Foto Sheila"
+                  class="zoomable"
+                  data-full="assets/images/bride.jpg"
+                  data-caption="Sheila"
+                />
+              </div>
+
+              <div class="person-name">Sheila</div>
+
+              <div class="person-desc">
+                Putri dari <strong>Bapak Prabowo</strong> &amp; <strong>Ibu [Nama]</strong>
+              </div>
+
+              <a class="ig-link" href="https://instagram.com/" target="_blank" rel="noopener" aria-label="Instagram Sheila">
+                <span class="ig-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="currentColor" d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm9 2h-9A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4Zm-4.5 3.2A4.8 4.8 0 1 1 7.2 12 4.8 4.8 0 0 1 12 7.2Zm0 2A2.8 2.8 0 1 0 14.8 12 2.8 2.8 0 0 0 12 9.2ZM17.6 6.6a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z"/>
+                  </svg>
+                </span>
+                <span class="ig-text">@Sheila</span>
+              </a>
+            </div>
+
+            <!-- Groom -->
+            <div class="person-card">
+              <div class="avatar">
+                <img
+                  src="assets/images/groom.jpg"
+                  alt="Foto Yoga"
+                  class="zoomable"
+                  data-full="assets/images/groom.jpg"
+                  data-caption="Yoga"
+                />
+              </div>
+
+              <div class="person-name">Yoga</div>
+
+              <div class="person-desc">
+                Putra dari <strong>Bapak Sucipto</strong> &amp; <strong>Ibu [Nama]</strong>
+              </div>
+
+              <a class="ig-link" href="https://instagram.com/" target="_blank" rel="noopener" aria-label="Instagram Yoga">
+                <span class="ig-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="currentColor" d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm9 2h-9A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4Zm-4.5 3.2A4.8 4.8 0 1 1 7.2 12 4.8 4.8 0 0 1 12 7.2Zm0 2A2.8 2.8 0 1 0 14.8 12 2.8 2.8 0 0 0 12 9.2ZM17.6 6.6a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z"/>
+                  </svg>
+                </span>
+                <span class="ig-text">@Yoga</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Countdown</h3>
+          <p id="countdownNote">Menuju hari bahagia kami.</p>
+
+          <div class="countdown" aria-label="Countdown Timer">
+            <div class="cd-box">
+              <div class="cd-num" id="cdDays">0</div>
+              <div class="cd-label">Hari</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdHours">0</div>
+              <div class="cd-label">Jam</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdMinutes">0</div>
+              <div class="cd-label">Menit</div>
+            </div>
+            <div class="cd-box">
+              <div class="cd-num" id="cdSeconds">0</div>
+              <div class="cd-label">Detik</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Acara</h3>
+          <p>Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i.</p>
+
+          <div class="timeline">
+            <article class="event">
+              <div class="row">
+                <div class="title">Akad Nikah</div>
+                <div class="time">08.00 - 10.00 WIB</div>
+              </div>
+              <div class="loc">Masjid ____ &bull; Jl. ____ , Jakarta</div>
+
+              <a class="map-thumb" target="_blank" rel="noopener"
+                 href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
+                <!-- <img src="assets/images/maps-akad.jpg" alt="Peta Lokasi Akad"> -->
+                <span class="map-badge">Lihat di Maps</span>
+              </a>
+
+              <div class="actions">
+                <a class="btn-small" target="_blank" rel="noopener"
+                   href="https://maps.google.com/?q=Masjid+Istiqlal+Jakarta">
+                  Lihat Lokasi
+                </a>
+              </div>
+            </article>
+
+            <article class="event">
+              <div class="row">
+                <div class="title">Resepsi</div>
+                <div class="time">11.00 - 14.00 WIB</div>
+              </div>
+
+              <div class="loc">Grand Ballroom ____ &bull; Jl. ____ , Jakarta</div>
+
+              <a class="map-thumb" target="_blank" rel="noopener"
+                 href="https://maps.google.com/?q=Jakarta+Convention+Center">
+                <!-- <img src="assets/images/maps-resepsi.jpg" alt="Peta Lokasi Resepsi"> -->
+                <span class="map-badge">Lihat di Maps</span>
+              </a>
+
+              <div class="actions">
+                <a class="btn-small" target="_blank" rel="noopener"
+                   href="https://maps.google.com/?q=Jakarta+Convention+Center">
+                  Lihat Lokasi
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+
+        <section class="section reveal">
+        <h3>Rundown Acara</h3>
+        <p>Susunan acara resepsi pernikahan kami.</p>
+
+        <!-- Rundown -->
+        <div class="rundown">
+          <div class="rd-item">
+            <div class="rd-time">11.00</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">Grand Entrance</div>
+          </div>
+
+          <div class="rd-item">
+            <div class="rd-time">11.15</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">Cut the Cake &amp; Speeches</div>
+          </div>
+
+          <div class="rd-item">
+            <div class="rd-time">11.30</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">Photo Session</div>
+          </div>
+
+          <div class="rd-item">
+            <div class="rd-time">12.30</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">First Dance Bride &amp; Groom</div>
+          </div>
+
+          <div class="rd-item">
+            <div class="rd-time">13.00</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">Games</div>
+          </div>
+
+          <div class="rd-item">
+            <div class="rd-time">13.30</div>
+            <div class="rd-dot"></div>
+            <div class="rd-desc">Grand Exit</div>
+          </div>
+        </div>
+      </section>
+
+        <section class="section reveal">
+        <h3>Dress Code</h3>
+        <p>Kami mengharapkan kehadiran Anda dengan busana berikut.</p>
+
+        <div class="dresscode">
+          <div class="dc-item">
+            <div class="dc-swatch"></div>
+            <span>Hitam</span>
+          </div>
+
+          <div class="dc-item">
+            <div class="dc-swatch"></div>
+            <span>Abu-abu</span>
+          </div>
+
+          <div class="dc-item">
+            <div class="dc-swatch"></div>
+            <span>Putih</span>
+          </div>
+        </div>
+
+        <p class="dc-note">
+          Mohon menggunakan pakaian rapi dan sopan.
+        </p>
+      </section>
+
+        <section class="section reveal">
+          <h3>Wedding Gallery</h3>
+          <p>Beberapa momen kecil sebelum hari besar.</p>
+
+          <div class="gallery" aria-label="Wedding Gallery">
+            <img src="assets/images/g1.jpg" alt="Gallery 1" class="zoomable" data-full="assets/images/g1.jpg" data-caption="Gallery 1">
+            <img src="assets/images/g2.jpg" alt="Gallery 2" class="zoomable" data-full="assets/images/g2.jpg" data-caption="Gallery 2">
+            <img src="assets/images/g3.jpg" alt="Gallery 3" class="zoomable" data-full="assets/images/g3.jpg" data-caption="Gallery 3">
+            <img src="assets/images/g4.jpg" alt="Gallery 4" class="zoomable" data-full="assets/images/g4.jpg" data-caption="Gallery 4">
+            <img src="assets/images/g5.jpg" alt="Gallery 5" class="zoomable" data-full="assets/images/g5.jpg" data-caption="Gallery 5">
+            <img src="assets/images/g6.jpg" alt="Gallery 6" class="zoomable" data-full="assets/images/g6.jpg" data-caption="Gallery 6">
+          </div>
+        </section>
+
+        <section class="section reveal" id="rsvpSection">
+          <h3>RSVP</h3>
+          <p>Konfirmasi kehadiran Anda untuk memudahkan kami mempersiapkan acara.</p>
+
+          <div class="rsvp-card">
+            <div class="rsvp-row">
+              <div>
+                <strong>Nama Tamu</strong>
+                <small id="rsvpGuest">Reza Pramudita</small>
+              </div>
+              <div class="rsvp-badge" id="rsvpBadge">Belum Konfirmasi</div>
+            </div>
+
+            <div class="rsvp-actions">
+              <button class="btn btn-primary" id="btnHadir" type="button">Hadir</button>
+              <button class="btn" id="btnTidakHadir" type="button">Tidak Hadir</button>
+              <button class="btn" id="btnResetRsvp" type="button">Reset</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="pax-wrap" id="paxWrap" hidden>
+              <p style="margin:10px 0 6px;font-size:14px;color:var(--muted)">
+                Jumlah tamu yang hadir
+              </p>
+              <div class="pax-options">
+                <button type="button" class="pax-btn" data-pax="1">1 Orang</button>
+                <button type="button" class="pax-btn" data-pax="2">2 Orang</button>
+
+              </div>
+            </div>
+
+            <div class="qr-wrap" id="qrWrap" hidden>
+              <p style="margin:0 0 10px;color:var(--muted)">
+                Tunjukkan QR ini saat check-in.
+              </p>
+
+              <canvas id="qrCanvas" width="220" height="220" aria-label="QR Code"></canvas>
+
+              <div class="qr-meta">
+                <small id="qrCodeText" style="color:var(--muted)"></small>
+              </div>
+              <div class="qr-actions">
+                <button class="btn-small" id="btnCopyCode" type="button">Unduh QR</button>
+              </div>
+              
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Kirim Ucapan</h3>
+          <p>Tuliskan ucapan terbaikmu untuk kami.</p>
+
+          <form id="wishForm">
+            <input id="wishName" type="text" placeholder="Nama" required />
+            <textarea id="wishText" placeholder="Ucapan..." required></textarea>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Kirim Ucapan</button>
+              <button class="btn" id="fillGuestBtn" type="button">Pakai Nama Tamu</button>
+            </div>
+          </form>
+
+          <p id="wishStatus" class="form-status" aria-live="polite"></p>
+
+          <div class="hr"></div>
+
+          <h3>Ucapan Terbaru</h3>
+          <p>5 ucapan terakhir dari para tamu.</p>
+
+          <div id="wishList" class="wish-list" aria-label="Daftar Ucapan"></div>
+        </section>
+
+        <section class="section reveal">
+          <h3>Wedding Gift</h3>
+          <p>Doa restu sudah cukup. Namun bila berkenan mengirim hadiah:</p>
+
+          <div class="gift">
+            <div class="gift-item">
+              <div>
+                <strong>Bank BCA</strong>
+                <small>A/N Sheila &bull; 1234567890</small>
+              </div>
+              <!-- <button class="copy-btn" data-copy="1234567890" type="button">Unduh Barcode</button> -->
+            </div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+        <h3>Our Story</h3>
+        <p>Sebuah perjalanan singkat tentang kami.</p>
+
+        <div class="story">
+          <div class="story-item">
+            <span class="story-year">2019</span>
+            <p>Kami pertama kali bertemu dan saling mengenal satu sama lain.</p>
+          </div>
+
+          <div class="story-item">
+            <span class="story-year">2021</span>
+            <p>Hubungan kami tumbuh, belajar memahami, dan saling menguatkan.</p>
+          </div>
+
+          <div class="story-item">
+            <span class="story-year">2024</span>
+            <p>Dengan keyakinan dan doa, kami memutuskan melangkah ke jenjang yang lebih serius.</p>
+          </div>
+
+          <div class="story-item">
+            <span class="story-year">2025</span>
+            <p>Kami mengikat janji suci pernikahan.</p>
+          </div>
+        </div>
+      </section>
+
+
+        <!-- Thanks -->
+
+        <section class="section reveal">
+          <h3>Terima Kasih</h3>
+          <p>
+            Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i
+            berkenan hadir dan memberikan doa restu.
+          </p>
+          <p style="margin-top:12px;color:rgba(255,255,255,.85)">
+            Sampai jumpa di hari bahagia kami. <br/>
+            <strong>Sheila &amp; Yoga</strong>
+          </p>
+        </section>
+
+      </main>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX (Image Viewer) -->
+  <div id="lightbox" class="lightbox" hidden>
+    <div class="lightbox-backdrop" data-close="1"></div>
+
+    <figure class="lightbox-figure" role="dialog" aria-modal="true" aria-label="Image viewer">
+      <button class="lightbox-close" type="button" data-close="1" aria-label="Close">&times;</button>
+      <img id="lightboxImg" alt="">
+      <figcaption id="lightboxCap" class="lightbox-cap"></figcaption>
+    </figure>
+  </div>
+
+  <!-- QR generator library (HARUS sebelum main.js jika dipakai di main.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+  <!-- External JS -->
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+

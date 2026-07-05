@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthGateProps = {
   role: "client" | "owner";
@@ -11,6 +10,12 @@ type AuthGateProps = {
 };
 
 type GateState = "checking" | "allowed" | "blocked" | "setup";
+
+type DemoSession = {
+  email: string;
+  role: "client" | "owner";
+  loggedInAt: string;
+};
 
 export function AuthGate({ role, children }: AuthGateProps) {
   const router = useRouter();
@@ -22,34 +27,23 @@ export function AuthGate({ role, children }: AuthGateProps) {
 
     async function checkSession() {
       try {
-        const supabase = createSupabaseBrowserClient();
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const rawSession = localStorage.getItem("occasio_demo_session");
+        const session = rawSession ? (JSON.parse(rawSession) as DemoSession) : null;
 
-        if (sessionError) throw sessionError;
-
-        const userId = sessionData.session?.user.id;
-        if (!userId) {
+        if (!session?.role) {
           if (!active) return;
           setState("blocked");
-          setMessage("Silakan login terlebih dahulu dari halaman utama.");
+          setMessage("Silakan login demo terlebih dahulu dari halaman utama.");
           return;
         }
 
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userId)
-          .single();
-
-        if (profileError) throw profileError;
-
-        if (profile?.role !== role) {
-          if (profile?.role === "owner") {
+        if (session.role !== role) {
+          if (session.role === "owner") {
             router.replace("/owner/dashboard");
             return;
           }
 
-          if (profile?.role === "client") {
+          if (session.role === "client") {
             router.replace("/client/dashboard");
             return;
           }
@@ -65,7 +59,7 @@ export function AuthGate({ role, children }: AuthGateProps) {
       } catch (error) {
         if (!active) return;
         setState("setup");
-        setMessage(error instanceof Error ? error.message : "Auth belum siap.");
+        setMessage(error instanceof Error ? error.message : "Session demo belum siap.");
       }
     }
 
@@ -82,7 +76,7 @@ export function AuthGate({ role, children }: AuthGateProps) {
     <main className="grid min-h-screen place-items-center bg-[#f7f3ed] px-5 text-[#241f1a]">
       <div className="w-full max-w-lg rounded-md border border-[#e0d4c7] bg-white p-6 text-center shadow-[0_18px_48px_rgba(82,57,38,0.08)]">
         <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">
-          Occasio Auth
+          Occasio Demo Auth
         </div>
         <h1 className="mt-4 text-3xl font-semibold">
           {state === "checking" ? "Memeriksa akses" : "Dashboard terkunci"}

@@ -2,6 +2,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { StatCard } from "@/components/stat-card";
 import { events } from "@/lib/demo-data";
+import Link from "next/link";
 
 export default function OwnerDashboardPage() {
   const active = events.filter((event) => event.status === "active").length;
@@ -80,6 +81,16 @@ export default function OwnerDashboardPage() {
                   <MiniStat label="Ucapan" value={event.wishes} />
                   <MiniStat label="Check-in" value={event.checkIns} />
                 </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#eadfd2] pt-4">
+                <Link
+                  href={`/wedding/${event.slug}`}
+                  target="_blank"
+                  className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  View Website
+                </Link>
+                <span className="text-sm text-[#6b6056]">/wedding/{event.slug}</span>
               </div>
             </article>
           ))}

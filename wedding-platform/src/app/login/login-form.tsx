@@ -2,34 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type LoginStatus = "idle" | "loading" | "error";
 
-function getLoginErrorMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : "Login gagal. Coba lagi.";
-
-  if (
-    message.includes("NEXT_PUBLIC_SUPABASE_URL") ||
-    message.includes("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  ) {
-    return "Supabase belum dikonfigurasi. Buat file .env.local, isi URL dan anon key dari Supabase, jalankan schema.sql, lalu jalankan pnpm seed:users.";
-  }
-
-  if (message.toLowerCase().includes("invalid login credentials")) {
-    return "Email atau password belum cocok. Pastikan user sudah dibuat di Supabase Auth dan password benar.";
-  }
-
-  if (message.toLowerCase().includes("profiles")) {
-    return "Login berhasil, tapi role belum ditemukan. Pastikan row profiles untuk user ini sudah dibuat.";
-  }
-
-  return message;
-}
+const DEMO_USERS = {
+  "owner@occasio.app": {
+    password: "OccasioOwner123!",
+    role: "owner",
+    path: "/owner/dashboard",
+  },
+  "client@occasio.app": {
+    password: "OccasioClient123!",
+    role: "client",
+    path: "/client/dashboard",
+  },
+} as const;
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("client@occasio.app");
+  const [email, setEmail] = useState("owner@occasio.app");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [message, setMessage] = useState("");
@@ -40,48 +31,67 @@ export function LoginForm() {
     setMessage("");
 
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const normalizedEmail = email.trim().toLowerCase();
+      const demoUser = DEMO_USERS[normalizedEmail as keyof typeof DEMO_USERS];
 
-      if (error) throw error;
-
-      const userId = data.user?.id;
-      if (!userId) throw new Error("User tidak ditemukan setelah login.");
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (profile?.role === "owner") {
-        router.push("/owner/dashboard");
-        return;
+      if (!demoUser || demoUser.password !== password) {
+        throw new Error("Email atau password demo belum cocok.");
       }
 
-      router.push("/client/dashboard");
+      localStorage.setItem(
+        "occasio_demo_session",
+        JSON.stringify({
+          email: normalizedEmail,
+          role: demoUser.role,
+          loggedInAt: new Date().toISOString(),
+        }),
+      );
+
+      router.push(demoUser.path);
     } catch (error) {
       setStatus("error");
-      setMessage(getLoginErrorMessage(error));
+      setMessage(error instanceof Error ? error.message : "Login gagal. Coba lagi.");
+    } finally {
+      setStatus("idle");
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-md border border-[#e0d4c7] bg-white p-6 shadow-[0_18px_48px_rgba(82,57,38,0.08)]">
       <div className="inline-flex rounded-full bg-[#efe5d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
-        Supabase Auth
+        Demo Login
       </div>
 
       <h3 className="mt-5 text-2xl font-semibold">Login akun Occasio</h3>
       <p className="mt-3 text-sm leading-6 text-[#6b6056]">
-        Masukkan email dan password client atau owner. Role akan dibaca dari table
-        `profiles`, lalu user diarahkan ke dashboard yang sesuai.
+        Sementara Supabase Auth dinonaktifkan. Gunakan akun demo owner atau client,
+        lalu dashboard akan terbuka sesuai role.
       </p>
+
+      <div className="mt-5 grid gap-2 text-sm md:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => {
+            setEmail("owner@occasio.app");
+            setPassword("OccasioOwner123!");
+            setMessage("");
+          }}
+          className="rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-2 text-left font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+        >
+          Pakai Owner
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setEmail("client@occasio.app");
+            setPassword("OccasioClient123!");
+            setMessage("");
+          }}
+          className="rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-2 text-left font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+        >
+          Pakai Client
+        </button>
+      </div>
 
       <div className="mt-6 space-y-4">
         <label className="block">
@@ -104,7 +114,7 @@ export function LoginForm() {
             onChange={(event) => setPassword(event.target.value)}
             type="password"
             autoComplete="current-password"
-            placeholder="Isi password akun Supabase"
+            placeholder="Isi password demo"
             required
           />
         </label>

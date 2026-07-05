@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { GuestExcelUpload } from "@/components/guest-excel-upload";
 import { StatCard } from "@/components/stat-card";
 import { clientEvent, recentGuests, recentWishes } from "@/lib/demo-data";
+import Link from "next/link";
 
 export default function ClientDashboardPage() {
   const pending = clientEvent.guests - clientEvent.rsvpYes - clientEvent.rsvpNo;
@@ -25,10 +26,30 @@ export default function ClientDashboardPage() {
           <GuestExcelUpload />
 
           <div id="content" className="rounded-md border border-[#e0d4c7] bg-white p-5">
-            <h2 className="text-xl font-semibold">Konten Undangan</h2>
-            <p className="mt-1 text-sm leading-6 text-[#6b6056]">
-              Ringkasan konten utama yang akan muncul di website undangan client.
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Konten Undangan</h2>
+                <p className="mt-1 text-sm leading-6 text-[#6b6056]">
+                  Ringkasan konten utama yang akan muncul di website undangan client.
+                </p>
+              </div>
+              <Link
+                href={`/wedding/${clientEvent.slug}`}
+                target="_blank"
+                className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white"
+              >
+                View Website
+              </Link>
+            </div>
+            <div className="mt-5 overflow-hidden rounded-md border border-[#eadfd2] bg-[#f7f3ed]">
+              <div className="aspect-[16/10] bg-[linear-gradient(rgba(36,31,26,0.04),rgba(36,31,26,0.54)),url('/sample-wedding.svg')] bg-cover bg-center p-4 text-white">
+                <div className="flex h-full flex-col justify-end">
+                  <div className="text-xs uppercase tracking-[0.2em]">Website Preview</div>
+                  <div className="mt-1 text-3xl font-semibold">{clientEvent.couple}</div>
+                  <div className="mt-2 text-sm text-white/80">/wedding/{clientEvent.slug}</div>
+                </div>
+              </div>
+            </div>
             <div className="mt-5 space-y-4">
               {[
                 ["Slug Website", `/wedding/${clientEvent.slug}`],
