@@ -1,4 +1,5 @@
 import { AuthGate } from "@/components/auth-gate";
+import { AddGuestAction } from "@/components/client-actions";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { GuestExcelUpload } from "@/components/guest-excel-upload";
 import { StatCard } from "@/components/stat-card";
@@ -73,9 +74,7 @@ export default function ClientDashboardPage() {
               <h2 className="text-xl font-semibold">Daftar Tamu Terbaru</h2>
               <p className="mt-1 text-sm text-[#6b6056]">Data ini nanti diambil dari table `guests` milik event client.</p>
             </div>
-            <button className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white">
-              Tambah Tamu
-            </button>
+            <AddGuestAction />
           </div>
 
           <div className="mt-5 overflow-hidden rounded-md border border-[#eadfd2]">

@@ -1,5 +1,11 @@
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
+import {
+  CreateEventAction,
+  CreateInvoiceAction,
+  ExportReportAction,
+  PipelineAction,
+} from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
 import { events } from "@/lib/demo-data";
 import Link from "next/link";
@@ -43,9 +49,9 @@ export default function OwnerDashboardPage() {
             <p className="mt-2 text-sm leading-6 text-white/70">
               Setelah form event aktif, owner bisa membuat workspace client dari sini.
             </p>
-            <button className="mt-5 h-10 rounded-md bg-white px-4 text-sm font-semibold text-[#241f1a]">
-              Buat Event
-            </button>
+            <div className="mt-5">
+              <CreateEventAction />
+            </div>
           </div>
         </section>
 
@@ -55,9 +61,7 @@ export default function OwnerDashboardPage() {
             <h2 className="text-xl font-semibold">Event Yang Sedang Dikelola</h2>
             <p className="mt-1 text-sm text-[#6b6056]">Owner bisa membuka detail client, memantau progres, dan membantu edit konten.</p>
           </div>
-          <button className="rounded-md border border-[#cdbba8] px-4 py-2 text-sm font-semibold text-[#5a4028]">
-            Export Report
-          </button>
+          <ExportReportAction />
         </div>
 
         <div className="mt-5 grid gap-4">
@@ -107,10 +111,36 @@ export default function OwnerDashboardPage() {
             <h2 className="font-semibold">{stage}</h2>
             <p className="mt-2 text-sm leading-6 text-[#6b6056]">{description}</p>
             <div className="mt-5 rounded-md border border-dashed border-[#d9caba] bg-[#fffaf4] p-4 text-sm text-[#756a60]">
-              Kanban card akan muncul di sini.
+              <p className="mb-4">Kanban card demo untuk tahap {stage.toLowerCase()}.</p>
+              <PipelineAction stage={stage} description={description} />
             </div>
           </div>
         ))}
+      </section>
+
+      <section id="billing" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Billing & Paket</h2>
+            <p className="mt-1 text-sm text-[#6b6056]">
+              Section ini membuat menu Billing di sidebar aktif. Nanti bisa dihubungkan ke invoice dan payment status.
+            </p>
+          </div>
+          <CreateInvoiceAction />
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {[
+            ["Pendapatan Bulan Ini", "Rp8,7jt", "Dari 4 invoice paid"],
+            ["Invoice Pending", "3", "Menunggu pembayaran"],
+            ["Paket Terlaris", "Premium", "2 event aktif"],
+          ].map(([label, value, helper]) => (
+            <div key={label} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
+              <div className="mt-2 text-2xl font-semibold">{value}</div>
+              <div className="mt-1 text-sm text-[#6b6056]">{helper}</div>
+            </div>
+          ))}
+        </div>
       </section>
       </DashboardShell>
     </AuthGate>
