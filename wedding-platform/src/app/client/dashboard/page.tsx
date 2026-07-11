@@ -1,23 +1,80 @@
+"use client";
+
 import { AuthGate } from "@/components/auth-gate";
-import { AddGuestAction } from "@/components/client-actions";
+import { AddGuestAction, type ClientGuest } from "@/components/client-actions";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { GuestExcelUpload } from "@/components/guest-excel-upload";
 import { StatCard } from "@/components/stat-card";
 import { clientEvent, recentGuests, recentWishes } from "@/lib/demo-data";
 import Link from "next/link";
+import { FormEvent, useState } from "react";
+
+type WeddingContent = {
+  couple: string;
+  date: string;
+  venue: string;
+  packageName: string;
+  greeting: string;
+};
+
+const GUESTS_KEY = "occasio_demo_guests_sheila-yoga";
+const CONTENT_KEY = "occasio_demo_content_sheila-yoga";
+
+const defaultContent: WeddingContent = {
+  couple: clientEvent.couple,
+  date: clientEvent.date,
+  venue: clientEvent.venue,
+  packageName: clientEvent.packageName,
+  greeting: "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
+};
 
 export default function ClientDashboardPage() {
-  const pending = clientEvent.guests - clientEvent.rsvpYes - clientEvent.rsvpNo;
+  const [guests, setGuests] = useState<ClientGuest[]>(() => {
+    if (typeof window === "undefined") return recentGuests;
+    try {
+      const storedGuests = localStorage.getItem(GUESTS_KEY);
+      return storedGuests ? (JSON.parse(storedGuests) as ClientGuest[]) : recentGuests;
+    } catch {
+      return recentGuests;
+    }
+  });
+  const [content, setContent] = useState<WeddingContent>(() => {
+    if (typeof window === "undefined") return defaultContent;
+    try {
+      const storedContent = localStorage.getItem(CONTENT_KEY);
+      return storedContent
+        ? { ...defaultContent, ...(JSON.parse(storedContent) as Partial<WeddingContent>) }
+        : defaultContent;
+    } catch {
+      return defaultContent;
+    }
+  });
+  const [contentSaved, setContentSaved] = useState(false);
+  const pending = Math.max(guests.length - clientEvent.rsvpYes - clientEvent.rsvpNo, 0);
+
+  function handleAddGuest(guest: ClientGuest) {
+    setGuests((current) => {
+      const next = [guest, ...current];
+      localStorage.setItem(GUESTS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function handleSaveContent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
+    setContentSaved(true);
+  }
 
   return (
     <AuthGate role="client">
       <DashboardShell
         role="client"
-        title={clientEvent.couple}
+        title={content.couple}
         description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
       >
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Tamu" value={String(clientEvent.guests)} helper="Database undangan" />
+          <StatCard label="Total Tamu" value={String(guests.length)} helper="Demo tersimpan lokal" />
           <StatCard label="Hadir" value={String(clientEvent.rsvpYes)} helper="RSVP sudah konfirmasi" />
           <StatCard label="Belum Jawab" value={String(pending)} helper="Perlu follow-up" />
           <StatCard label="Ucapan" value={String(clientEvent.wishes)} helper="Masuk dari web" />
@@ -46,7 +103,7 @@ export default function ClientDashboardPage() {
               <div className="aspect-[16/10] bg-[linear-gradient(rgba(36,31,26,0.04),rgba(36,31,26,0.54)),url('/sample-wedding.svg')] bg-cover bg-center p-4 text-white">
                 <div className="flex h-full flex-col justify-end">
                   <div className="text-xs uppercase tracking-[0.2em]">Website Preview</div>
-                  <div className="mt-1 text-3xl font-semibold">{clientEvent.couple}</div>
+                  <div className="mt-1 text-3xl font-semibold">{content.couple}</div>
                   <div className="mt-2 text-sm text-white/80">/wedding/{clientEvent.slug}</div>
                 </div>
               </div>
@@ -54,9 +111,9 @@ export default function ClientDashboardPage() {
             <div className="mt-5 space-y-4">
               {[
                 ["Slug Website", `/wedding/${clientEvent.slug}`],
-                ["Tanggal", clientEvent.date],
-                ["Venue", clientEvent.venue],
-                ["Paket", clientEvent.packageName],
+                ["Tanggal", content.date],
+                ["Venue", content.venue],
+                ["Paket", content.packageName],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-[#eadfd2] p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">{label}</div>
@@ -67,6 +124,40 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
+        <section className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Edit Konten Website</h2>
+              <p className="mt-1 text-sm leading-6 text-[#6b6056]">
+                Perubahan ini tersimpan lokal dan dibaca oleh halaman `/wedding/sheila-yoga`.
+              </p>
+            </div>
+            {contentSaved ? (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                Tersimpan
+              </span>
+            ) : null}
+          </div>
+
+          <form onSubmit={handleSaveContent} className="mt-5 grid gap-4 md:grid-cols-2">
+            <ContentField label="Nama pasangan" value={content.couple} onChange={(value) => setContent((current) => ({ ...current, couple: value }))} />
+            <ContentField label="Tanggal" value={content.date} onChange={(value) => setContent((current) => ({ ...current, date: value }))} />
+            <ContentField label="Venue" value={content.venue} onChange={(value) => setContent((current) => ({ ...current, venue: value }))} />
+            <ContentField label="Paket" value={content.packageName} onChange={(value) => setContent((current) => ({ ...current, packageName: value }))} />
+            <label className="block md:col-span-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Kalimat pembuka</span>
+              <textarea
+                className="mt-2 min-h-28 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-3 text-sm outline-none transition focus:border-[#9a6a3a]"
+                value={content.greeting}
+                onChange={(event) => setContent((current) => ({ ...current, greeting: event.target.value }))}
+              />
+            </label>
+            <button className="h-11 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white md:col-span-2">
+              Simpan Konten
+            </button>
+          </form>
+        </section>
+
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div id="guests" className="rounded-md border border-[#e0d4c7] bg-white p-5">
           <div className="flex items-center justify-between gap-4">
@@ -74,7 +165,7 @@ export default function ClientDashboardPage() {
               <h2 className="text-xl font-semibold">Daftar Tamu Terbaru</h2>
               <p className="mt-1 text-sm text-[#6b6056]">Data ini nanti diambil dari table `guests` milik event client.</p>
             </div>
-            <AddGuestAction />
+            <AddGuestAction onAdd={handleAddGuest} />
           </div>
 
           <div className="mt-5 overflow-hidden rounded-md border border-[#eadfd2]">
@@ -88,7 +179,7 @@ export default function ClientDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentGuests.map((guest) => (
+                {guests.map((guest) => (
                   <tr key={guest.code} className="border-t border-[#eadfd2]">
                     <td className="px-4 py-3 font-medium">{guest.name}</td>
                     <td className="px-4 py-3 text-[#6b6056]">{guest.status}</td>
@@ -138,5 +229,26 @@ export default function ClientDashboardPage() {
       </section>
       </DashboardShell>
     </AuthGate>
+  );
+}
+
+function ContentField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">{label}</span>
+      <input
+        className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   );
 }

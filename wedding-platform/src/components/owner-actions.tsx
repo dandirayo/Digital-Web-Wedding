@@ -1,11 +1,55 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { events } from "@/lib/demo-data";
+import { FormEvent, useMemo, useState } from "react";
+import type { WeddingEvent } from "@/lib/demo-data";
 import { DemoActionModal } from "./demo-action-modal";
 
-export function CreateEventAction() {
+type CreateEventActionProps = {
+  onCreate: (event: WeddingEvent) => void;
+};
+
+export function CreateEventAction({ onCreate }: CreateEventActionProps) {
   const [saved, setSaved] = useState(false);
+  const [couple, setCouple] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [slug, setSlug] = useState("");
+  const [date, setDate] = useState("");
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanCouple = couple.trim();
+    const cleanSlug =
+      slug.trim() ||
+      cleanCouple
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+    if (!cleanCouple || !cleanSlug) return;
+
+    onCreate({
+      id: `evt_${Date.now().toString(36)}`,
+      slug: cleanSlug,
+      couple: cleanCouple,
+      clientName: clientEmail || "Client Baru",
+      packageName: "Premium",
+      date: date || "Belum ditentukan",
+      venue: "Venue belum diisi",
+      status: "draft",
+      guests: 0,
+      rsvpYes: 0,
+      rsvpNo: 0,
+      wishes: 0,
+      checkIns: 0,
+      lastActivity: "Baru dibuat",
+    });
+
+    setCouple("");
+    setClientEmail("");
+    setSlug("");
+    setDate("");
+    setSaved(true);
+  }
 
   return (
     <DemoActionModal
@@ -16,18 +60,15 @@ export function CreateEventAction() {
     >
       <form
         className="space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setSaved(true);
-        }}
+        onSubmit={handleSubmit}
       >
-        <Field label="Nama pasangan" placeholder="Contoh: Andi & Rina" />
-        <Field label="Email client" placeholder="client@email.com" type="email" />
-        <Field label="Slug website" placeholder="andi-rina" />
-        <Field label="Tanggal event" placeholder="2027-02-14" type="date" />
+        <Field label="Nama pasangan" placeholder="Contoh: Andi & Rina" value={couple} onChange={setCouple} />
+        <Field label="Email client" placeholder="client@email.com" type="email" value={clientEmail} onChange={setClientEmail} />
+        <Field label="Slug website" placeholder="andi-rina" value={slug} onChange={setSlug} />
+        <Field label="Tanggal event" placeholder="2027-02-14" type="date" value={date} onChange={setDate} />
         {saved ? (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            Draft event siap dibuat. Integrasi database akan menyimpan data ini ke table events.
+            Event tersimpan di demo dashboard.
           </div>
         ) : null}
         <button className="h-11 w-full rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white">
@@ -38,7 +79,7 @@ export function CreateEventAction() {
   );
 }
 
-export function ExportReportAction() {
+export function ExportReportAction({ events }: { events: WeddingEvent[] }) {
   const csv = useMemo(() => {
     const rows = [
       ["couple", "status", "guests", "rsvp", "wishes", "check_ins"],
@@ -53,7 +94,7 @@ export function ExportReportAction() {
     ];
 
     return rows.map((row) => row.join(",")).join("\n");
-  }, []);
+  }, [events]);
 
   function downloadReport() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -130,10 +171,10 @@ export function CreateInvoiceAction() {
           setSaved(true);
         }}
       >
-        <Field label="Client" placeholder="Sheila & Yoga" />
-        <Field label="Paket" placeholder="Premium" />
-        <Field label="Nominal" placeholder="1490000" type="number" />
-        <Field label="Jatuh tempo" placeholder="2027-01-01" type="date" />
+        <LooseField label="Client" placeholder="Sheila & Yoga" />
+        <LooseField label="Paket" placeholder="Premium" />
+        <LooseField label="Nominal" placeholder="1490000" type="number" />
+        <LooseField label="Jatuh tempo" placeholder="2027-01-01" type="date" />
         {saved ? (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             Invoice preview siap dibuat.
@@ -147,7 +188,7 @@ export function CreateInvoiceAction() {
   );
 }
 
-function Field({ label, placeholder, type = "text" }: { label: string; placeholder: string; type?: string }) {
+function LooseField({ label, placeholder, type = "text" }: { label: string; placeholder: string; type?: string }) {
   return (
     <label className="block">
       <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">{label}</span>
@@ -155,6 +196,33 @@ function Field({ label, placeholder, type = "text" }: { label: string; placehold
         className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
         placeholder={placeholder}
         type={type}
+      />
+    </label>
+  );
+}
+
+function Field({
+  label,
+  placeholder,
+  type = "text",
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  type?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">{label}</span>
+      <input
+        className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
+        placeholder={placeholder}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
       />
     </label>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import {
@@ -7,15 +9,45 @@ import {
   PipelineAction,
 } from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
-import { events } from "@/lib/demo-data";
+import { events as defaultEvents, type WeddingEvent } from "@/lib/demo-data";
 import Link from "next/link";
+import { useState } from "react";
+
+const EVENTS_KEY = "occasio_demo_events";
 
 export default function OwnerDashboardPage() {
+  const [events, setEvents] = useState<WeddingEvent[]>(() => {
+    if (typeof window === "undefined") return defaultEvents;
+    try {
+      const storedEvents = localStorage.getItem(EVENTS_KEY);
+      return storedEvents ? (JSON.parse(storedEvents) as WeddingEvent[]) : defaultEvents;
+    } catch {
+      return defaultEvents;
+    }
+  });
   const active = events.filter((event) => event.status === "active").length;
   const totalGuests = events.reduce((sum, event) => sum + event.guests, 0);
   const totalRsvp = events.reduce((sum, event) => sum + event.rsvpYes + event.rsvpNo, 0);
   const totalWishes = events.reduce((sum, event) => sum + event.wishes, 0);
   const draft = events.filter((event) => event.status === "draft").length;
+
+  function handleCreateEvent(event: WeddingEvent) {
+    setEvents((current) => {
+      const next = [event, ...current];
+      localStorage.setItem(EVENTS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function handleStatusChange(id: string, status: WeddingEvent["status"]) {
+    setEvents((current) => {
+      const next = current.map((event) =>
+        event.id === id ? { ...event, status, lastActivity: "Status baru diubah" } : event,
+      );
+      localStorage.setItem(EVENTS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
 
   return (
     <AuthGate role="owner">
@@ -50,7 +82,7 @@ export default function OwnerDashboardPage() {
               Setelah form event aktif, owner bisa membuat workspace client dari sini.
             </p>
             <div className="mt-5">
-              <CreateEventAction />
+              <CreateEventAction onCreate={handleCreateEvent} />
             </div>
           </div>
         </section>
@@ -61,7 +93,7 @@ export default function OwnerDashboardPage() {
             <h2 className="text-xl font-semibold">Event Yang Sedang Dikelola</h2>
             <p className="mt-1 text-sm text-[#6b6056]">Owner bisa membuka detail client, memantau progres, dan membantu edit konten.</p>
           </div>
-          <ExportReportAction />
+          <ExportReportAction events={events} />
         </div>
 
         <div className="mt-5 grid gap-4">
@@ -71,9 +103,7 @@ export default function OwnerDashboardPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-xl font-semibold">{event.couple}</h3>
-                    <span className="rounded-full bg-[#efe5d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">
-                      {event.status}
-                    </span>
+                    <StatusBadge status={event.status} />
                   </div>
                   <p className="mt-2 text-sm text-[#6b6056]">
                     {event.clientName} / {event.packageName} / {event.date}
@@ -94,6 +124,20 @@ export default function OwnerDashboardPage() {
                 >
                   View Website
                 </Link>
+                <label className="inline-flex items-center gap-2 text-sm text-[#6b6056]">
+                  Status
+                  <select
+                    value={event.status}
+                    onChange={(selectEvent) =>
+                      handleStatusChange(event.id, selectEvent.target.value as WeddingEvent["status"])
+                    }
+                    className="h-10 rounded-md border border-[#cdbba8] bg-white px-3 text-sm font-semibold text-[#5a4028] outline-none"
+                  >
+                    <option value="draft">draft</option>
+                    <option value="active">active</option>
+                    <option value="completed">completed</option>
+                  </select>
+                </label>
                 <span className="text-sm text-[#6b6056]">/wedding/{event.slug}</span>
               </div>
             </article>
@@ -144,6 +188,21 @@ export default function OwnerDashboardPage() {
       </section>
       </DashboardShell>
     </AuthGate>
+  );
+}
+
+function StatusBadge({ status }: { status: WeddingEvent["status"] }) {
+  const color =
+    status === "active"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "completed"
+        ? "bg-zinc-100 text-zinc-700"
+        : "bg-[#efe5d8] text-[#9a6a3a]";
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${color}`}>
+      {status}
+    </span>
   );
 }
 
