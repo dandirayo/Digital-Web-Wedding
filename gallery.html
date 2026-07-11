@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery Template - Occasio</title>
+  <meta name="description" content="Jelajahi gallery template undangan digital Occasio berdasarkan kategori, harga, dan style visual.">
+  <link rel="canonical" href="https://example.com/Digital-Web-Wedding/gallery.html">
+  <meta property="og:title" content="Gallery Template Occasio">
+  <meta property="og:description" content="Pilih template undangan digital premium dan kirim konsultasi WhatsApp.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/images/prewed-1.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#171717">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="site-shell">
+  <a class="skip-link" href="#main">Lewati ke konten utama</a>
+  <header class="site-header">
+    <nav class="container navbar" aria-label="Navigasi utama">
+      <a class="brand" href="index.html"><span class="brand__mark">O</span><span>Occasio</span></a>
+      <button class="nav-toggle" type="button" data-nav-toggle aria-controls="primaryMenu" aria-expanded="false" aria-label="Buka menu navigasi"><span></span><span></span><span></span></button>
+      <div class="nav-menu" id="primaryMenu">
+        <a class="nav-link" href="index.html#home">Home</a>
+        <a class="nav-link" href="index.html#fitur">Fitur</a>
+        <a class="nav-link is-active" href="gallery.html">Gallery</a>
+        <a class="nav-link" href="index.html#paket">Paket</a>
+        <a class="nav-link" href="index.html#faq">FAQ</a>
+      </div>
+      <div class="nav-actions"><button class="btn btn-secondary" type="button" data-open-consultation>Konsultasi</button></div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="gallery-hero">
+      <div class="container">
+        <span class="eyebrow">Gallery template</span>
+        <h1 class="section-title">Pilih gaya undangan yang paling dekat dengan acara kamu.</h1>
+        <p class="section-copy">Semua kartu dirender dari data terpusat di JavaScript, jadi template baru bisa ditambahkan tanpa copy paste HTML kartu berulang.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filter-bar" aria-label="Filter template">
+          <div class="field">
+            <label for="templateSearch">Cari template</label>
+            <input id="templateSearch" type="search" placeholder="Contoh: modern, QR, minimal" data-template-search>
+          </div>
+          <div class="field">
+            <label for="templateCategory">Kategori</label>
+            <select id="templateCategory" data-template-category></select>
+          </div>
+          <div class="field">
+            <label for="templateSort">Urutkan</label>
+            <select id="templateSort" data-template-sort>
+              <option value="featured">Rekomendasi</option>
+              <option value="price-low">Harga terendah</option>
+              <option value="price-high">Harga tertinggi</option>
+              <option value="name">Nama A-Z</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" type="button" data-reset-filters>Reset</button>
+        </div>
+
+        <div class="result-line">
+          <strong data-result-count>0 template ditemukan</strong>
+          <a href="index.html#template">Kembali ke template unggulan</a>
+        </div>
+
+        <div class="template-grid" data-gallery-grid></div>
+        <div class="empty-state" data-empty-state hidden>
+          <h2>Tidak ada template yang cocok.</h2>
+          <p>Coba ubah kata kunci, kategori, atau reset filter.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div><a class="brand" href="index.html"><span class="brand__mark">O</span><span>Occasio</span></a><p>Gallery template undangan digital.</p></div>
+        <div><div class="footer-title">Navigasi</div><ul class="footer-list"><li><a href="index.html">Home</a></li><li><a href="index.html#paket">Paket</a></li><li><a href="index.html#faq">FAQ</a></li></ul></div>
+        <div><div class="footer-title">Kontak</div><ul class="footer-list"><li><button class="btn btn-gold" type="button" data-open-consultation>Konsultasi</button></li></ul></div>
+        <div><div class="footer-title">Legal</div><ul class="footer-list"><li><a href="privacy.html">Kebijakan Privasi</a></li><li><a href="terms.html">Ketentuan Layanan</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><span>© 2026 Occasio.</span><span>Template dapat disesuaikan dengan kebutuhan acara.</span></div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" type="button" data-back-to-top hidden aria-label="Kembali ke atas">↑</button>
+  <div class="modal-root" id="modalRoot" hidden>
+    <div class="modal-backdrop" aria-hidden="true"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+      <header class="modal__header"><div><h2 class="modal__title" id="modalTitle">Modal</h2><p id="modalDescription"></p></div><button class="modal__close" type="button" data-modal-close aria-label="Tutup modal">X</button></header>
+      <div class="modal__body" id="modalBody"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>
