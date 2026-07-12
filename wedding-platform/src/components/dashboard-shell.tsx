@@ -69,6 +69,17 @@ export function DashboardShell({ role, title, description, children }: Dashboard
             </div>
             <LogoutButton />
           </div>
+          <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Dashboard mobile menu">
+            {nav[role].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="inline-flex h-10 shrink-0 items-center rounded-md border border-[#e0d4c7] bg-white px-3 text-sm font-semibold text-[#5d5146]"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </header>
         <div className="px-5 py-6 lg:px-8">{children}</div>
       </main>

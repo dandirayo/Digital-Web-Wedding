@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import QRCode from "qrcode";
+import { FormEvent, useMemo, useState } from "react";
 import {
   events as defaultEvents,
   recentWishes,
@@ -17,6 +18,21 @@ type WeddingContent = {
   greeting: string;
 };
 
+type RsvpData = {
+  name: string;
+  status: "hadir" | "tidak_hadir";
+  pax: number;
+  code: string;
+  qrDataUrl: string;
+  submittedAt: string;
+};
+
+type WeddingWish = {
+  name: string;
+  text: string;
+  time: string;
+};
+
 const EVENTS_KEY = "occasio_demo_events";
 const TEMPLATE_PATH = "/templates/sheila-yoga/assets";
 
@@ -24,6 +40,23 @@ const galleryImages = ["g1.jpg", "g2.jpg", "g3.jpg", "g4.jpg", "g5.jpg", "g6.jpg
 
 function getContentKey(slug: string) {
   return `occasio_demo_content_${slug}`;
+}
+
+function getRsvpKey(slug: string) {
+  return `occasio_demo_rsvp_${slug}`;
+}
+
+function getWishesKey(slug: string) {
+  return `occasio_demo_wishes_${slug}`;
+}
+
+function buildTicketCode(slug: string, name: string) {
+  const safeName = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 18);
+  return `${slug}-${safeName || "tamu"}-${Date.now().toString(36)}`.toUpperCase();
 }
 
 export function WeddingView({ slug }: { slug: string }) {
@@ -45,6 +78,31 @@ export function WeddingView({ slug }: { slug: string }) {
       return {};
     }
   });
+  const [rsvp, setRsvp] = useState<RsvpData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const storedRsvp = localStorage.getItem(getRsvpKey(slug));
+      return storedRsvp ? (JSON.parse(storedRsvp) as RsvpData) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [wishes, setWishes] = useState<WeddingWish[]>(() => {
+    const fallback = recentWishes.map((wish) => ({
+      name: wish.name,
+      text: wish.text,
+      time: wish.time,
+    }));
+    if (typeof window === "undefined") return fallback;
+    try {
+      const storedWishes = localStorage.getItem(getWishesKey(slug));
+      return storedWishes ? (JSON.parse(storedWishes) as WeddingWish[]) : fallback;
+    } catch {
+      return fallback;
+    }
+  });
+  const [rsvpStatus, setRsvpStatus] = useState("");
+  const [wishStatus, setWishStatus] = useState("");
 
   const event = useMemo(
     () => events.find((item) => item.slug === slug) ?? defaultEvents.find((item) => item.slug === slug),
@@ -61,12 +119,92 @@ export function WeddingView({ slug }: { slug: string }) {
       "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
     guests: event?.guests ?? 0,
     rsvp: (event?.rsvpYes ?? 0) + (event?.rsvpNo ?? 0),
-    wishes: event?.wishes ?? recentWishes.length,
+    wishes: wishes.length,
   };
 
   const [firstName = "Bride", secondName = "Groom"] = resolved.couple
     .split("&")
     .map((name) => name.trim());
+
+  async function handleRsvpSubmit(formEvent: FormEvent<HTMLFormElement>) {
+    formEvent.preventDefault();
+    const formData = new FormData(formEvent.currentTarget);
+    const name = String(formData.get("rsvpName") || "").trim();
+    const status = String(formData.get("rsvpStatus") || "hadir") as RsvpData["status"];
+    const pax = Number(formData.get("rsvpPax") || 1);
+
+    if (!name) {
+      setRsvpStatus("Nama tamu wajib diisi.");
+      return;
+    }
+
+    const code = status === "hadir" ? buildTicketCode(slug, name) : "";
+    const qrPayload = JSON.stringify({
+      type: "occasio-demo-checkin",
+      slug,
+      guest: name,
+      pax: status === "hadir" ? pax : 0,
+      code,
+    });
+    const qrDataUrl =
+      status === "hadir"
+        ? await QRCode.toDataURL(qrPayload, {
+            errorCorrectionLevel: "M",
+            margin: 2,
+            scale: 8,
+            color: {
+              dark: "#2b241f",
+              light: "#fffaf4",
+            },
+          })
+        : "";
+    const nextRsvp: RsvpData = {
+      name,
+      status,
+      pax: status === "hadir" ? pax : 0,
+      code,
+      qrDataUrl,
+      submittedAt: new Date().toISOString(),
+    };
+
+    setRsvp(nextRsvp);
+    localStorage.setItem(getRsvpKey(slug), JSON.stringify(nextRsvp));
+    setRsvpStatus(
+      status === "hadir"
+        ? "RSVP berhasil. QR check-in demo sudah dibuat."
+        : "RSVP berhasil. Terima kasih sudah memberi kabar.",
+    );
+  }
+
+  function handleResetRsvp() {
+    setRsvp(null);
+    localStorage.removeItem(getRsvpKey(slug));
+    setRsvpStatus("RSVP demo sudah direset.");
+  }
+
+  function handleWishSubmit(formEvent: FormEvent<HTMLFormElement>) {
+    formEvent.preventDefault();
+    const form = formEvent.currentTarget;
+    const formData = new FormData(form);
+    const name = String(formData.get("wishName") || "").trim();
+    const text = String(formData.get("wishText") || "").trim();
+
+    if (!name || !text) {
+      setWishStatus("Nama dan ucapan wajib diisi.");
+      return;
+    }
+
+    const nextWish: WeddingWish = {
+      name,
+      text,
+      time: "Baru saja",
+    };
+    const nextWishes = [nextWish, ...wishes].slice(0, 20);
+    setWishes(nextWishes);
+    localStorage.setItem(getWishesKey(slug), JSON.stringify(nextWishes));
+    setWishStatus("Ucapan berhasil ditampilkan.");
+    form.reset();
+  }
 
   return (
     <main className="min-h-screen bg-[#f3ebdf] text-[#2b241f]">
@@ -223,25 +361,97 @@ export function WeddingView({ slug }: { slug: string }) {
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
           <Panel title="RSVP" eyebrow={`${resolved.guests} tamu`}>
             <p className="leading-7 text-[#6b6056]">
-              Konfirmasi kehadiran akan terhubung ke dashboard client. Untuk sementara tombol
-              ini menampilkan tampilan form dulu.
+              Konfirmasi kehadiran demo tersimpan di browser ini. Jika memilih hadir,
+              sistem akan membuat QR check-in demo.
             </p>
-            <div className="mt-5 grid gap-3">
-              <input className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4" placeholder="Nama tamu" />
-              <select className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4">
-                <option>Hadir</option>
-                <option>Tidak hadir</option>
+            <form onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
+              <input
+                name="rsvpName"
+                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                placeholder="Nama tamu"
+                defaultValue={rsvp?.name ?? ""}
+              />
+              <select
+                name="rsvpStatus"
+                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                defaultValue={rsvp?.status ?? "hadir"}
+              >
+                <option value="hadir">Hadir</option>
+                <option value="tidak_hadir">Tidak hadir</option>
+              </select>
+              <select
+                name="rsvpPax"
+                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                defaultValue={String(rsvp?.pax || 1)}
+              >
+                <option value="1">1 orang</option>
+                <option value="2">2 orang</option>
+                <option value="3">3 orang</option>
+                <option value="4">4 orang</option>
               </select>
               <button className="h-12 rounded-md bg-[#2b241f] font-semibold text-white">Kirim RSVP</button>
-            </div>
+            </form>
+            {rsvpStatus ? <p className="mt-3 text-sm font-semibold text-[#9a6a3a]">{rsvpStatus}</p> : null}
+            {rsvp ? (
+              <div className="mt-5 rounded-md border border-[#eadfd2] bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
+                  Status RSVP
+                </div>
+                <div className="mt-2 font-semibold">
+                  {rsvp.name} / {rsvp.status === "hadir" ? `${rsvp.pax} hadir` : "Tidak hadir"}
+                </div>
+                {rsvp.qrDataUrl ? (
+                  <div className="mt-4 text-center">
+                    <Image
+                      src={rsvp.qrDataUrl}
+                      alt={`QR check-in demo untuk ${rsvp.name}`}
+                      width={220}
+                      height={220}
+                      unoptimized
+                      className="mx-auto rounded-md border border-[#eadfd2] bg-[#fffaf4] p-2"
+                    />
+                    <div className="mt-3 break-all font-mono text-xs text-[#756a60]">{rsvp.code}</div>
+                    <a
+                      href={rsvp.qrDataUrl}
+                      download={`QR-${rsvp.code}.png`}
+                      className="mt-3 inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028]"
+                    >
+                      Download QR
+                    </a>
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleResetRsvp}
+                  className="mt-4 h-10 w-full rounded-md border border-[#cdbba8] text-sm font-semibold text-[#5a4028]"
+                >
+                  Reset RSVP
+                </button>
+              </div>
+            ) : null}
           </Panel>
 
           <Panel title="Ucapan" eyebrow={`${resolved.wishes} ucapan`}>
+            <form onSubmit={handleWishSubmit} className="mb-5 grid gap-3">
+              <input
+                name="wishName"
+                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                placeholder="Nama"
+              />
+              <textarea
+                name="wishText"
+                className="min-h-28 rounded-md border border-[#d8c8b8] bg-white px-4 py-3"
+                placeholder="Tulis ucapan..."
+              />
+              <button className="h-12 rounded-md bg-[#2b241f] font-semibold text-white">Kirim Ucapan</button>
+              {wishStatus ? <p className="text-sm font-semibold text-[#9a6a3a]">{wishStatus}</p> : null}
+            </form>
             <div className="space-y-3">
-              {recentWishes.map((wish) => (
+              {wishes.map((wish) => (
                 <div key={`${wish.name}-${wish.time}`} className="rounded-md border border-[#eadfd2] bg-white p-4">
                   <div className="font-semibold">{wish.name}</div>
                   <p className="mt-1 text-sm leading-6 text-[#6b6056]">{wish.text}</p>
+                  <div className="mt-2 text-xs text-[#9a6a3a]">{wish.time}</div>
                 </div>
               ))}
             </div>

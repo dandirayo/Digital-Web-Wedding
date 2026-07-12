@@ -2,6 +2,7 @@
 
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { EventReadiness } from "@/components/event-readiness";
 import {
   CreateEventAction,
   CreateInvoiceAction,
@@ -139,6 +140,9 @@ export default function OwnerDashboardPage() {
                   </select>
                 </label>
                 <span className="text-sm text-[#6b6056]">/wedding/{event.slug}</span>
+              </div>
+              <div className="mt-4">
+                <EventReadiness event={event} />
               </div>
             </article>
           ))}

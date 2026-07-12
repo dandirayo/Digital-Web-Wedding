@@ -51,6 +51,14 @@ export default function ClientDashboardPage() {
   });
   const [contentSaved, setContentSaved] = useState(false);
   const pending = Math.max(guests.length - clientEvent.rsvpYes - clientEvent.rsvpNo, 0);
+  const setupItems = [
+    { label: "Konten utama", done: Boolean(content.couple && content.date && content.venue && content.greeting) },
+    { label: "Daftar tamu", done: guests.length > 0 },
+    { label: "RSVP masuk", done: clientEvent.rsvpYes + clientEvent.rsvpNo > 0 },
+    { label: "Ucapan tampil", done: clientEvent.wishes > 0 },
+    { label: "Website preview", done: true },
+  ];
+  const setupScore = Math.round((setupItems.filter((item) => item.done).length / setupItems.length) * 100);
 
   function handleAddGuest(guest: ClientGuest) {
     setGuests((current) => {
@@ -78,6 +86,43 @@ export default function ClientDashboardPage() {
           <StatCard label="Hadir" value={String(clientEvent.rsvpYes)} helper="RSVP sudah konfirmasi" />
           <StatCard label="Belum Jawab" value={String(pending)} helper="Perlu follow-up" />
           <StatCard label="Ucapan" value={String(clientEvent.wishes)} helper="Masuk dari web" />
+        </section>
+
+        <section className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
+                Setup progress
+              </div>
+              <h2 className="mt-2 text-2xl font-semibold">Kesiapan undangan {content.couple}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">
+                Progress ini membantu client melihat bagian mana yang sudah siap sebelum website dibagikan.
+              </p>
+            </div>
+            <div className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4 text-center">
+              <div className="text-4xl font-semibold">{setupScore}%</div>
+              <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
+                siap publish
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#eadfd2]">
+            <div className="h-full rounded-full bg-[#9a6a3a]" style={{ width: `${setupScore}%` }} />
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-5">
+            {setupItems.map((item) => (
+              <div key={item.label} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-3">
+                <div
+                  className={`mb-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                    item.done ? "bg-emerald-50 text-emerald-700" : "bg-white text-[#9a6a3a]"
+                  }`}
+                >
+                  {item.done ? "OK" : "Pending"}
+                </div>
+                <div className="text-sm font-semibold">{item.label}</div>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">

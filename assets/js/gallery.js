@@ -84,7 +84,7 @@ function renderTemplates(grid, items) {
 
 function templateCard(template) {
   const colors = template.colors
-    .map((color) => `<span aria-hidden="true" style="background:${color};width:18px;height:18px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.12)"></span>`)
+    .map((color) => `<span class="color-swatch" aria-hidden="true" style="--swatch-color:${color}"></span>`)
     .join("");
 
   return `
@@ -95,7 +95,7 @@ function templateCard(template) {
       <div class="template-card__body">
         <div class="template-card__meta">
           <span class="badge">${template.badge}</span>
-          <span aria-label="Palet warna ${template.name}" style="display:flex;gap:5px">${colors}</span>
+          <span class="color-swatches" aria-label="Palet warna ${template.name}">${colors}</span>
         </div>
         <h3 class="template-card__title">${template.name}</h3>
         <p>${template.description}</p>
@@ -132,7 +132,7 @@ function openTemplatePreview(template, trigger) {
       </div>
       <div>
         <span class="badge">${template.category}</span>
-        <h3 class="section-title" style="font-size:3rem;margin-top:12px">${template.name}</h3>
+        <h3 class="section-title modal-preview-title">${template.name}</h3>
         <p>${template.description}</p>
         <p><strong>Harga mulai ${formatRupiah(template.priceFrom)}</strong></p>
         <ul class="feature-list">

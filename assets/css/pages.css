@@ -173,7 +173,7 @@
 }
 
 .feature-list li::before {
-  content: "✓";
+  content: "+";
   margin-right: 8px;
   color: var(--success);
   font-weight: 900;
@@ -188,6 +188,10 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--white);
+}
+
+.comparison-table.with-space {
+  margin-top: 22px;
 }
 
 .comparison-table table {
@@ -284,6 +288,14 @@
   max-width: 840px;
   margin-inline: auto;
   padding: 30px;
+}
+
+.section-link-row {
+  margin-top: 22px;
+}
+
+.cta-card {
+  text-align: center;
 }
 
 .back-to-top {

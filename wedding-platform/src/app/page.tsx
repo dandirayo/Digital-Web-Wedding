@@ -34,6 +34,7 @@ export default function Home() {
             <a href="#fitur" className="transition hover:text-[#241f1a]">Fitur</a>
             <a href="#alur" className="transition hover:text-[#241f1a]">Alur</a>
             <a href="#paket" className="transition hover:text-[#241f1a]">Paket</a>
+            <Link href="/wedding/sheila-yoga" className="transition hover:text-[#241f1a]">Preview</Link>
           </nav>
           <LoginModal label="Login" variant="secondary" />
         </div>
@@ -52,6 +53,10 @@ export default function Home() {
               Occasio membantu studio undangan digital menjual website wedding,
               memberikan dashboard untuk klien, dan memantau semua event dari sisi owner.
             </p>
+            <div className="mt-5 rounded-md border border-[#e0d4c7] bg-white/72 p-4 text-sm leading-6 text-[#6b6056]">
+              <strong className="text-[#241f1a]">Tahap aplikasi:</strong> frontend platform demo.
+              Login masih demo lokal, sedangkan Supabase/database produksi disiapkan untuk tahap backend berikutnya.
+            </div>
             <div className="mt-8 flex flex-wrap gap-3">
               <LoginModal label="Masuk Dashboard" />
               <a
@@ -60,6 +65,12 @@ export default function Home() {
               >
                 Lihat Paket
               </a>
+              <Link
+                href="/wedding/sheila-yoga"
+                className="inline-flex h-12 items-center justify-center rounded-md border border-[#cdbba8] px-5 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+              >
+                Preview Wedding
+              </Link>
             </div>
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3">
               {[
@@ -138,6 +149,24 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-3">
+          {[
+            ["Owner", "Login sebagai owner untuk membuat event, mengubah status draft/active/completed, dan memantau readiness."],
+            ["Client", "Login sebagai client untuk upload tamu, edit konten undangan, melihat ucapan, dan membuka preview website."],
+            ["Wedding Page", "Halaman /wedding/[slug] membaca data demo lokal dan menampilkan template dynamic yang dekat dengan HTML asli."],
+          ].map(([title, description]) => (
+            <article key={title} className="rounded-md border border-[#e0d4c7] bg-white p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
+                Flow
+              </div>
+              <h2 className="mt-3 text-2xl font-semibold">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b6056]">{description}</p>
+            </article>
+          ))}
         </div>
       </section>
 
