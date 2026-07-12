@@ -1,4 +1,4 @@
-import { buildWhatsappUrl } from "./config.js";
+import { buildWhatsappUrl, siteConfig } from "./config.js";
 import { openModal, showToast } from "./modal.js";
 import { categories, formatRupiah, templates } from "./data/templates.js";
 
@@ -18,7 +18,11 @@ export function setupTemplateBlocks() {
     const previewButton = event.target.closest("[data-preview-template]");
     if (previewButton) {
       const template = templates.find((item) => item.id === previewButton.dataset.previewTemplate);
-      if (template) openTemplatePreview(template, previewButton);
+      if (template?.demoUrl) {
+        window.open(template.demoUrl, "_blank", "noopener");
+      } else if (template) {
+        openTemplatePreview(template, previewButton);
+      }
     }
 
     const chooseButton = event.target.closest("[data-choose-template]");
@@ -102,6 +106,7 @@ function templateCard(template) {
         <p><strong>Mulai ${formatRupiah(template.priceFrom)}</strong></p>
         <div class="template-card__actions">
           <button class="btn btn-primary" type="button" data-preview-template="${template.id}">Preview</button>
+          <a class="btn btn-secondary" href="${template.demoUrl || siteConfig.demoWeddingUrl}" target="_blank" rel="noopener">Demo</a>
           <button class="btn btn-secondary" type="button" data-choose-template="${template.id}">Pilih</button>
         </div>
       </div>
@@ -140,7 +145,7 @@ function openTemplatePreview(template, trigger) {
         </ul>
         <div class="modal-actions">
           <a class="btn btn-primary" href="${buildWhatsappUrl(template.whatsappMessage)}" target="_blank" rel="noopener">Pilih Template</a>
-          <a class="btn btn-secondary" href="index.html#demo" target="_blank" rel="noopener">Demo Penuh</a>
+          <a class="btn btn-secondary" href="${template.demoUrl || siteConfig.demoWeddingUrl}" target="_blank" rel="noopener">Demo Penuh</a>
         </div>
       </div>
     `;

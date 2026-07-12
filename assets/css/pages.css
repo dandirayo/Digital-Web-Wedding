@@ -4,6 +4,51 @@
   padding: 90px 0 64px;
 }
 
+.feature-section {
+  padding-top: 78px;
+}
+
+.feature-section .section__head {
+  max-width: 780px;
+  margin-bottom: 30px;
+}
+
+.feature-section .section-title {
+  max-width: 760px;
+  margin-inline: auto;
+  font-size: clamp(2.75rem, 4.6vw, 4.25rem);
+  line-height: 1.02;
+}
+
+.feature-section .section-copy {
+  margin-inline: auto;
+  max-width: 670px;
+}
+
+.feature-grid {
+  gap: 16px;
+}
+
+.workflow-section {
+  padding-top: 72px;
+}
+
+.workflow-section .section__head {
+  max-width: 680px;
+  margin-bottom: 28px;
+}
+
+.workflow-section .section-title {
+  max-width: 620px;
+  margin-inline: auto;
+  font-size: clamp(2.65rem, 4.2vw, 4rem);
+  line-height: 1.03;
+}
+
+.workflow-grid {
+  gap: 16px;
+}
+
 .hero-section::before {
   content: "";
   position: absolute;

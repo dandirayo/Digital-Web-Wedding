@@ -11,6 +11,7 @@ export const templates = [
     badge: "Best Preview",
     priceFrom: 799000,
     packageLevel: "Premium",
+    demoUrl: "http://localhost:3001/wedding/sheila-yoga",
     whatsappMessage: "Halo Occasio, saya tertarik dengan template Sheila & Yoga untuk undangan digital.",
   },
   {

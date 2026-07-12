@@ -14,7 +14,9 @@ Occasio adalah website static untuk jasa undangan pernikahan digital. Versi ini 
 - `assets/js/gallery.js`: render kartu template, filter, search, sort, hash highlight.
 - `assets/js/modal.js`: modal reusable dengan focus trap.
 - `assets/js/forms.js`: form konsultasi, validasi, draft localStorage, WhatsApp message.
+- `assets/js/production-data.js`: render paket, testimoni, footer contact, dan metadata runtime dari config.
 - `assets/images/`: aset foto/video template.
+- `PRODUCTION_DATA_CHECKLIST.md`: daftar data produksi yang wajib diganti sebelum publish.
 
 ## Halaman
 
@@ -38,16 +40,20 @@ Occasio adalah website static untuk jasa undangan pernikahan digital. Versi ini 
 - Belum ada backend, database, login, dashboard, payment, atau penyimpanan server.
 - Testimonial masih placeholder sampai ada kutipan asli dari client.
 
-## Mengganti Nomor WhatsApp
+## Mengganti Data Produksi
 
 Buka `assets/js/config.js`, lalu ganti:
 
 ```js
+baseUrl: "https://domain-anda.com/",
 whatsappNumber: "6280000000000",
 whatsappFallbackUrl: "https://wa.me/6280000000000",
+contactLabel: "WhatsApp belum diset",
 ```
 
 Gunakan format Indonesia tanpa tanda plus, misalnya `62812xxxxxxxx`.
+
+Data paket, opsi budget, dan testimonial juga dipusatkan di `assets/js/config.js`.
 
 ## Menambah Template
 
@@ -70,7 +76,7 @@ Pastikan gambar tersedia di `assets/images/` atau `assets/images/templates/`.
 
 ## Konfigurasi Metadata dan Domain
 
-Ganti `https://example.com/Digital-Web-Wedding/` pada:
+Ganti `https://domain-anda.com/` pada:
 
 - `assets/js/config.js`
 - `index.html`
@@ -82,10 +88,7 @@ Ganti `https://example.com/Digital-Web-Wedding/` pada:
 
 ## Checklist Sebelum Deployment
 
-- Ganti nomor WhatsApp placeholder.
-- Ganti domain canonical dan sitemap.
-- Konfirmasi harga paket final.
-- Isi testimoni asli jika sudah ada izin.
+- Ikuti `PRODUCTION_DATA_CHECKLIST.md`.
 - Optimasi gambar produksi.
 - Uji responsive 320px, 375px, 768px, 1024px, dan desktop.
 - Uji semua tombol CTA, modal, form, dan link WhatsApp.

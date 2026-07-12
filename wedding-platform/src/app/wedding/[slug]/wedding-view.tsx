@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useMemo, useSyncExternalStore, useState } from "react";
 import {
   events as defaultEvents,
   recentWishes,
@@ -33,10 +33,20 @@ type WeddingWish = {
   time: string;
 };
 
+type GalleryPreview = {
+  src: string;
+  alt: string;
+};
+
 const EVENTS_KEY = "occasio_demo_events";
 const TEMPLATE_PATH = "/templates/sheila-yoga/assets";
 
 const galleryImages = ["g1.jpg", "g2.jpg", "g3.jpg", "g4.jpg", "g5.jpg", "g6.jpg"];
+const defaultWeddingWishes = recentWishes.map((wish) => ({
+  name: wish.name,
+  text: wish.text,
+  time: wish.time,
+}));
 
 function getContentKey(slug: string) {
   return `occasio_demo_content_${slug}`;
@@ -59,50 +69,80 @@ function buildTicketCode(slug: string, name: string) {
   return `${slug}-${safeName || "tamu"}-${Date.now().toString(36)}`.toUpperCase();
 }
 
+function subscribeToBrowserHydration(onStoreChange: () => void) {
+  const frame = window.requestAnimationFrame(onStoreChange);
+  return () => window.cancelAnimationFrame(frame);
+}
+
+function getServerSnapshot() {
+  return "{}";
+}
+
 export function WeddingView({ slug }: { slug: string }) {
-  const [events] = useState<WeddingEvent[]>(() => {
-    if (typeof window === "undefined") return defaultEvents;
+  const getLocalSnapshot = useCallback(() => {
     try {
-      const storedEvents = localStorage.getItem(EVENTS_KEY);
-      return storedEvents ? (JSON.parse(storedEvents) as WeddingEvent[]) : defaultEvents;
+      return JSON.stringify({
+        events: localStorage.getItem(EVENTS_KEY),
+        content: localStorage.getItem(getContentKey(slug)),
+        rsvp: localStorage.getItem(getRsvpKey(slug)),
+        wishes: localStorage.getItem(getWishesKey(slug)),
+      });
     } catch {
-      return defaultEvents;
+      return "{}";
     }
-  });
-  const [content] = useState<Partial<WeddingContent>>(() => {
-    if (typeof window === "undefined") return {};
+  }, [slug]);
+  const localSnapshot = useSyncExternalStore(
+    subscribeToBrowserHydration,
+    getLocalSnapshot,
+    getServerSnapshot,
+  );
+  const localData = useMemo(() => {
     try {
-      const storedContent = localStorage.getItem(getContentKey(slug));
-      return storedContent ? (JSON.parse(storedContent) as Partial<WeddingContent>) : {};
+      return JSON.parse(localSnapshot) as {
+        events?: string | null;
+        content?: string | null;
+        rsvp?: string | null;
+        wishes?: string | null;
+      };
     } catch {
       return {};
     }
-  });
-  const [rsvp, setRsvp] = useState<RsvpData | null>(() => {
-    if (typeof window === "undefined") return null;
+  }, [localSnapshot]);
+  const events = useMemo(() => {
     try {
-      const storedRsvp = localStorage.getItem(getRsvpKey(slug));
-      return storedRsvp ? (JSON.parse(storedRsvp) as RsvpData) : null;
+      return localData.events ? (JSON.parse(localData.events) as WeddingEvent[]) : defaultEvents;
+    } catch {
+      return defaultEvents;
+    }
+  }, [localData.events]);
+  const content = useMemo(() => {
+    try {
+      return localData.content ? (JSON.parse(localData.content) as Partial<WeddingContent>) : {};
+    } catch {
+      return {};
+    }
+  }, [localData.content]);
+  const storedRsvp = useMemo(() => {
+    try {
+      return localData.rsvp ? (JSON.parse(localData.rsvp) as RsvpData) : null;
     } catch {
       return null;
     }
-  });
-  const [wishes, setWishes] = useState<WeddingWish[]>(() => {
-    const fallback = recentWishes.map((wish) => ({
-      name: wish.name,
-      text: wish.text,
-      time: wish.time,
-    }));
-    if (typeof window === "undefined") return fallback;
+  }, [localData.rsvp]);
+  const storedWishes = useMemo(() => {
     try {
-      const storedWishes = localStorage.getItem(getWishesKey(slug));
-      return storedWishes ? (JSON.parse(storedWishes) as WeddingWish[]) : fallback;
+      return localData.wishes ? (JSON.parse(localData.wishes) as WeddingWish[]) : defaultWeddingWishes;
     } catch {
-      return fallback;
+      return defaultWeddingWishes;
     }
-  });
+  }, [localData.wishes]);
+  const [rsvpOverride, setRsvpOverride] = useState<RsvpData | null | undefined>(undefined);
+  const [wishesOverride, setWishesOverride] = useState<WeddingWish[] | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
   const [rsvpStatus, setRsvpStatus] = useState("");
   const [wishStatus, setWishStatus] = useState("");
+  const rsvp = rsvpOverride === undefined ? storedRsvp : rsvpOverride;
+  const wishes = wishesOverride ?? storedWishes;
 
   const event = useMemo(
     () => events.find((item) => item.slug === slug) ?? defaultEvents.find((item) => item.slug === slug),
@@ -167,7 +207,7 @@ export function WeddingView({ slug }: { slug: string }) {
       submittedAt: new Date().toISOString(),
     };
 
-    setRsvp(nextRsvp);
+    setRsvpOverride(nextRsvp);
     localStorage.setItem(getRsvpKey(slug), JSON.stringify(nextRsvp));
     setRsvpStatus(
       status === "hadir"
@@ -177,7 +217,7 @@ export function WeddingView({ slug }: { slug: string }) {
   }
 
   function handleResetRsvp() {
-    setRsvp(null);
+    setRsvpOverride(null);
     localStorage.removeItem(getRsvpKey(slug));
     setRsvpStatus("RSVP demo sudah direset.");
   }
@@ -200,7 +240,7 @@ export function WeddingView({ slug }: { slug: string }) {
       time: "Baru saja",
     };
     const nextWishes = [nextWish, ...wishes].slice(0, 20);
-    setWishes(nextWishes);
+    setWishesOverride(nextWishes);
     localStorage.setItem(getWishesKey(slug), JSON.stringify(nextWishes));
     setWishStatus("Ucapan berhasil ditampilkan.");
     form.reset();
@@ -327,26 +367,50 @@ export function WeddingView({ slug }: { slug: string }) {
           <SectionLabel>Our Gallery</SectionLabel>
           <h2 className="mt-4 text-4xl font-semibold md:text-5xl">Momen Bahagia</h2>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-2 md:row-span-2">
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedImage({
+                src: `${TEMPLATE_PATH}/images/prewed-1.jpg`,
+                alt: "Prewedding Sheila dan Yoga",
+              })
+            }
+            className="group overflow-hidden rounded-md text-left"
+            aria-label="Preview foto prewedding"
+          >
             <Image
               src={`${TEMPLATE_PATH}/images/prewed-1.jpg`}
-              alt="Prewedding"
+              alt="Prewedding Sheila dan Yoga"
               width={900}
-              height={720}
-              className="h-full min-h-[360px] w-full rounded-md object-cover"
+              height={900}
+              className="aspect-square w-full object-cover transition duration-300 group-hover:scale-[1.025]"
             />
+          </button>
+          <div className="grid grid-cols-2 gap-4">
+            {galleryImages.slice(0, 4).map((image) => (
+              <button
+                key={image}
+                type="button"
+                onClick={() =>
+                  setSelectedImage({
+                    src: `${TEMPLATE_PATH}/images/${image}`,
+                    alt: "Gallery wedding Sheila dan Yoga",
+                  })
+                }
+                className="group overflow-hidden rounded-md text-left"
+                aria-label="Preview foto gallery"
+              >
+                <Image
+                  src={`${TEMPLATE_PATH}/images/${image}`}
+                  alt="Gallery wedding Sheila dan Yoga"
+                  width={520}
+                  height={520}
+                  className="aspect-square w-full object-cover transition duration-300 group-hover:scale-[1.035]"
+                />
+              </button>
+            ))}
           </div>
-          {galleryImages.slice(0, 4).map((image) => (
-            <Image
-              key={image}
-              src={`${TEMPLATE_PATH}/images/${image}`}
-              alt="Gallery wedding"
-              width={520}
-              height={390}
-              className="aspect-[4/3] w-full rounded-md object-cover"
-            />
-          ))}
         </div>
         <video
           src={`${TEMPLATE_PATH}/videos/intro.mp4`}
@@ -364,7 +428,7 @@ export function WeddingView({ slug }: { slug: string }) {
               Konfirmasi kehadiran demo tersimpan di browser ini. Jika memilih hadir,
               sistem akan membuat QR check-in demo.
             </p>
-            <form onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
+            <form key={rsvp?.code ?? "new-rsvp"} onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
               <input
                 name="rsvpName"
                 className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
@@ -487,6 +551,37 @@ export function WeddingView({ slug }: { slug: string }) {
           ))}
         </div>
       </section>
+
+      {selectedImage ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-[#1d1712]/82 px-4 py-6 backdrop-blur-sm">
+          <button
+            type="button"
+            className="absolute inset-0"
+            aria-label="Tutup preview gambar"
+            onClick={() => setSelectedImage(null)}
+          />
+          <figure className="relative w-full max-w-5xl overflow-hidden rounded-md bg-[#f8f1e8] p-3 shadow-[0_28px_100px_rgba(0,0,0,0.42)]">
+            <button
+              type="button"
+              onClick={() => setSelectedImage(null)}
+              className="absolute right-5 top-5 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/92 text-xl font-semibold text-[#2b241f]"
+              aria-label="Tutup preview"
+            >
+              x
+            </button>
+            <Image
+              src={selectedImage.src}
+              alt={selectedImage.alt}
+              width={1400}
+              height={1000}
+              className="max-h-[82vh] w-full rounded-sm object-contain"
+            />
+            <figcaption className="px-2 pt-3 text-sm font-semibold text-[#6b6056]">
+              {selectedImage.alt}
+            </figcaption>
+          </figure>
+        </div>
+      ) : null}
     </main>
   );
 }

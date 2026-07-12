@@ -2,8 +2,10 @@ import { setupForms } from "./forms.js";
 import { setupGalleryPage, setupTemplateBlocks } from "./gallery.js";
 import { setupModal } from "./modal.js";
 import { setupNavigation } from "./navigation.js";
+import { setupProductionData } from "./production-data.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  setupProductionData();
   setupModal();
   setupNavigation();
   setupTemplateBlocks();

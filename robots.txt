@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://example.com/Digital-Web-Wedding/sitemap.xml
+Sitemap: https://domain-anda.com/sitemap.xml

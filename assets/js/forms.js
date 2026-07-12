@@ -11,9 +11,6 @@ export function setupForms() {
 
     const packageButton = event.target.closest("[data-open-package]");
     if (packageButton) openPackageDetail(packageButton.dataset.packageName || "Paket Occasio", packageButton);
-
-    const qrButton = event.target.closest("[data-open-qr-demo]");
-    if (qrButton) openQrDemo(qrButton);
   });
 }
 
@@ -31,7 +28,7 @@ export function openConsultationForm(templateId = "", trigger = null) {
       ${selectField("eventType", "Jenis acara", ["Pernikahan", "Engagement", "Akad", "Resepsi", "Lainnya"], draft.eventType)}
       ${selectField("template", "Template pilihan", templates.map((item) => item.name), selectedTemplate?.name || draft.template || "")}
       ${selectField("package", "Paket", ["Basic", "Premium", "Custom"], draft.package)}
-      ${selectField("budget", "Kisaran budget", ["< Rp1 juta", "Rp1 juta - Rp2 juta", "Rp2 juta - Rp5 juta", "> Rp5 juta"], draft.budget)}
+      ${selectField("budget", "Kisaran budget", siteConfig.budgetOptions, draft.budget)}
       <div class="field field-wide" data-field="notes">
         <label for="notes">Catatan</label>
         <textarea id="notes" name="notes" placeholder="Ceritakan kebutuhan event kamu">${escapeAttr(draft.notes || "")}</textarea>
@@ -190,27 +187,6 @@ function openPackageDetail(name, trigger) {
         <li>Gallery, ucapan, maps, gift, dan copywriting acara</li>
       </ul>
       <button class="btn btn-primary" type="button" data-open-consultation>Konsultasi Paket</button>
-    `,
-  });
-}
-
-function openQrDemo(trigger) {
-  openModal({
-    title: "Demo QR Check-in",
-    description: "Ilustrasi alur QR. Belum tersambung database produksi.",
-    trigger,
-    content: `
-      <div class="demo-flow">
-        <div class="card feature-card">
-          <div class="icon-box">QR</div>
-          <h3>Alur Demo</h3>
-          <p>Tamu mengisi RSVP, mendapat kode undangan, lalu panitia melakukan scan saat check-in.</p>
-        </div>
-        <div class="card feature-card">
-          <h3>Status saat ini</h3>
-          <p>Frontend demo siap. Untuk produksi dibutuhkan backend, database tamu, autentikasi panitia, dan log check-in.</p>
-        </div>
-      </div>
     `,
   });
 }
