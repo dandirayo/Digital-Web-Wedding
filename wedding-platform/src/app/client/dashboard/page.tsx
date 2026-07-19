@@ -3,7 +3,7 @@
 import { AuthGate } from "@/components/auth-gate";
 import { AddGuestAction, type ClientGuest } from "@/components/client-actions";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { GuestExcelUpload } from "@/components/guest-excel-upload";
+import { GuestExcelUpload, type ImportedGuest } from "@/components/guest-excel-upload";
 import { StatCard } from "@/components/stat-card";
 import { clientEvent, recentGuests, recentWishes } from "@/lib/demo-data";
 import Link from "next/link";
@@ -68,6 +68,31 @@ export default function ClientDashboardPage() {
     });
   }
 
+  function handleImportGuests(importedGuests: ImportedGuest[]) {
+    const importedAt = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    const nextGuests = importedGuests.map((guest, index) => {
+      const safeCode = guest.name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .slice(0, 12);
+
+      return {
+        name: guest.name,
+        status: "Belum",
+        pax: guest.paxLimit,
+        code: `XL-${safeCode || "TAMU"}-${index + 1}`,
+        time: importedAt,
+      };
+    });
+
+    setGuests((current) => {
+      const next = [...nextGuests, ...current];
+      localStorage.setItem(GUESTS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
   function handleSaveContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
@@ -126,7 +151,7 @@ export default function ClientDashboardPage() {
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <GuestExcelUpload />
+          <GuestExcelUpload onImport={handleImportGuests} />
 
           <div id="content" className="rounded-md border border-[#e0d4c7] bg-white p-5">
             <div className="flex items-start justify-between gap-4">
@@ -241,18 +266,18 @@ export default function ClientDashboardPage() {
             <h2 className="text-xl font-semibold">Checklist Client</h2>
             <div className="mt-5 space-y-3">
               {[
-                "Upload daftar tamu",
-                "Cek RSVP masuk",
-                "Review ucapan tamu",
-                "Lengkapi konten undangan",
-                "Download QR tamu",
-              ].map((item, index) => (
-                <div key={item} className="flex items-center gap-3 rounded-md border border-[#eadfd2] p-3">
+                ["Upload daftar tamu", "#guests"],
+                ["Cek RSVP masuk", "/wedding/sheila-yoga"],
+                ["Review ucapan tamu", "#wishes"],
+                ["Lengkapi konten undangan", "#content"],
+                ["Download QR tamu", "/wedding/sheila-yoga"],
+              ].map(([item, href], index) => (
+                <Link key={item} href={href} className="flex items-center gap-3 rounded-md border border-[#eadfd2] p-3 transition hover:bg-[#fffaf4]">
                   <div className="grid h-7 w-7 place-items-center rounded-full bg-[#efe5d8] text-xs font-semibold text-[#9a6a3a]">
                     {index + 1}
                   </div>
                   <div className="text-sm font-medium">{item}</div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

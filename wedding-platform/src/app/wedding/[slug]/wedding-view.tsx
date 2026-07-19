@@ -141,6 +141,7 @@ export function WeddingView({ slug }: { slug: string }) {
   const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
   const [rsvpStatus, setRsvpStatus] = useState("");
   const [wishStatus, setWishStatus] = useState("");
+  const [giftStatus, setGiftStatus] = useState("");
   const rsvp = rsvpOverride === undefined ? storedRsvp : rsvpOverride;
   const wishes = wishesOverride ?? storedWishes;
 
@@ -244,6 +245,15 @@ export function WeddingView({ slug }: { slug: string }) {
     localStorage.setItem(getWishesKey(slug), JSON.stringify(nextWishes));
     setWishStatus("Ucapan berhasil ditampilkan.");
     form.reset();
+  }
+
+  async function handleCopyGift() {
+    try {
+      await navigator.clipboard.writeText(`BCA 1234567890 a.n. ${resolved.couple}`);
+      setGiftStatus("Nomor rekening berhasil disalin.");
+    } catch {
+      setGiftStatus("Browser belum mengizinkan copy otomatis.");
+    }
   }
 
   return (
@@ -531,6 +541,14 @@ export function WeddingView({ slug }: { slug: string }) {
               <div className="mt-1 text-xl font-semibold">1234567890</div>
               <div className="mt-1 text-sm text-[#756a60]">a.n. {resolved.couple}</div>
             </div>
+            <button
+              type="button"
+              onClick={handleCopyGift}
+              className="mt-4 h-11 w-full rounded-md bg-[#2b241f] text-sm font-semibold text-white transition hover:bg-[#3a3129]"
+            >
+              Salin Rekening
+            </button>
+            {giftStatus ? <p className="mt-3 text-sm font-semibold text-[#9a6a3a]">{giftStatus}</p> : null}
           </Panel>
         </div>
       </section>
@@ -645,6 +663,8 @@ function EventCard({
   venue: string;
   mapImage: string;
 }) {
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+
   return (
     <article className="overflow-hidden rounded-md border border-white/12 bg-white text-[#2b241f]">
       <Image
@@ -658,6 +678,14 @@ function EventCard({
         <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">{title}</div>
         <h3 className="mt-3 text-2xl font-semibold">{time}</h3>
         <p className="mt-3 leading-7 text-[#6b6056]">{venue}</p>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener"
+          className="mt-5 inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+        >
+          Buka Maps
+        </a>
       </div>
     </article>
   );

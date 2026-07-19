@@ -192,6 +192,15 @@ export default function Home() {
                   <li key={feature}>- {feature}</li>
                 ))}
               </ul>
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                <LoginModal label="Masuk Dashboard" variant="secondary" />
+                <Link
+                  href="/wedding/sheila-yoga"
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+                >
+                  Preview Wedding
+                </Link>
+              </div>
             </article>
           ))}
         </div>

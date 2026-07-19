@@ -9,6 +9,12 @@ type GuestPreview = {
   paxLimit: number;
 };
 
+export type ImportedGuest = GuestPreview;
+
+type GuestExcelUploadProps = {
+  onImport?: (guests: ImportedGuest[]) => void;
+};
+
 function normalizeGuest(row: Record<string, unknown>): GuestPreview | null {
   const rawName = row.nama ?? row.Nama ?? row.name ?? row.Name;
   const rawPhone = row.telepon ?? row.Telepon ?? row.phone ?? row.Phone ?? row.whatsapp ?? row.Whatsapp;
@@ -27,10 +33,11 @@ function normalizeGuest(row: Record<string, unknown>): GuestPreview | null {
   };
 }
 
-export function GuestExcelUpload() {
+export function GuestExcelUpload({ onImport }: GuestExcelUploadProps) {
   const [fileName, setFileName] = useState("");
   const [guests, setGuests] = useState<GuestPreview[]>([]);
   const [error, setError] = useState("");
+  const [imported, setImported] = useState(false);
 
   const totalPax = useMemo(
     () => guests.reduce((sum, guest) => sum + guest.paxLimit, 0),
@@ -41,6 +48,7 @@ export function GuestExcelUpload() {
     const file = event.target.files?.[0];
     setError("");
     setGuests([]);
+    setImported(false);
 
     if (!file) return;
 
@@ -64,6 +72,12 @@ export function GuestExcelUpload() {
     } finally {
       event.target.value = "";
     }
+  }
+
+  function handleImport() {
+    if (!guests.length || !onImport) return;
+    onImport(guests);
+    setImported(true);
   }
 
   return (
@@ -105,7 +119,7 @@ export function GuestExcelUpload() {
           <div className="mb-3 grid gap-3 md:grid-cols-3">
             <MiniSummary label="Tamu terbaca" value={String(guests.length)} />
             <MiniSummary label="Total PAX" value={String(totalPax)} />
-            <MiniSummary label="Status" value="Preview" />
+          <MiniSummary label="Status" value="Preview" />
           </div>
 
           <div className="max-h-72 overflow-auto rounded-md border border-[#eadfd2]">
@@ -133,6 +147,22 @@ export function GuestExcelUpload() {
             <p className="mt-3 text-sm text-[#6b6056]">
               Menampilkan 20 baris pertama dari {guests.length} tamu.
             </p>
+          ) : null}
+
+          {onImport ? (
+            <div className="mt-4 flex flex-col gap-3 rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4 md:flex-row md:items-center md:justify-between">
+              <p className="text-sm leading-6 text-[#6b6056]">
+                Data sudah terbaca. Klik import untuk memasukkan tamu ke tabel dashboard demo.
+              </p>
+              <button
+                type="button"
+                onClick={handleImport}
+                disabled={imported}
+                className="h-11 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white transition hover:bg-[#3a3129] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {imported ? "Sudah Diimport" : "Import ke Tabel"}
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}
