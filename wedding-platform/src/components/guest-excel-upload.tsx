@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
 
 type GuestPreview = {
   name: string;
@@ -54,6 +53,7 @@ export function GuestExcelUpload({ onImport }: GuestExcelUploadProps) {
 
     try {
       setFileName(file.name);
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];

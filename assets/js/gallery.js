@@ -18,11 +18,7 @@ export function setupTemplateBlocks() {
     const previewButton = event.target.closest("[data-preview-template]");
     if (previewButton) {
       const template = templates.find((item) => item.id === previewButton.dataset.previewTemplate);
-      if (template?.demoUrl) {
-        window.open(template.demoUrl, "_blank", "noopener");
-      } else if (template) {
-        openTemplatePreview(template, previewButton);
-      }
+      if (template) openTemplatePreview(template, previewButton);
     }
 
     const chooseButton = event.target.closest("[data-choose-template]");
@@ -105,9 +101,8 @@ function templateCard(template) {
         <p>${template.description}</p>
         <p><strong>Mulai ${formatRupiah(template.priceFrom)}</strong></p>
         <div class="template-card__actions">
-          <button class="btn btn-primary" type="button" data-preview-template="${template.id}">Preview</button>
-          <a class="btn btn-secondary" href="${template.demoUrl || siteConfig.demoWeddingUrl}" target="_blank" rel="noopener">Demo</a>
-          <button class="btn btn-secondary" type="button" data-choose-template="${template.id}">Pilih</button>
+          <button class="btn btn-primary" type="button" data-preview-template="${template.id}">Preview Detail</button>
+          <button class="btn btn-secondary" type="button" data-choose-template="${template.id}">Konsultasi</button>
         </div>
       </div>
     </article>

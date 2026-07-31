@@ -19,6 +19,31 @@ const workflow = [
   "QR check-in hari H",
 ];
 
+const quickPaths = [
+  {
+    title: "Saya Owner",
+    description: "Masuk untuk monitor event, status order, pipeline, dan billing.",
+    action: <LoginModal label="Login Owner/Client" variant="secondary" />,
+  },
+  {
+    title: "Saya Client",
+    description: "Edit konten wedding, upload tamu, cek RSVP, dan lihat ucapan.",
+    action: <LoginModal label="Masuk Dashboard" variant="secondary" />,
+  },
+  {
+    title: "Lihat Website Tamu",
+    description: "Buka contoh undangan yang akan dilihat tamu.",
+    action: (
+      <Link
+        href="/wedding/sheila-yoga"
+        className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+      >
+        Preview Wedding
+      </Link>
+    ),
+  },
+];
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f7f3ed] text-[#241f1a]">
@@ -71,6 +96,17 @@ export default function Home() {
               >
                 Preview Wedding
               </Link>
+            </div>
+            <div className="mt-6 grid max-w-3xl gap-3 md:grid-cols-3">
+              {quickPaths.map((item) => (
+                <article key={item.title} className="rounded-md border border-[#e0d4c7] bg-white/78 p-4">
+                  <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">
+                    {item.title}
+                  </div>
+                  <p className="mt-2 min-h-12 text-sm leading-6 text-[#6b6056]">{item.description}</p>
+                  <div className="mt-4">{item.action}</div>
+                </article>
+              ))}
             </div>
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3">
               {[
@@ -192,17 +228,23 @@ export default function Home() {
                   <li key={feature}>- {feature}</li>
                 ))}
               </ul>
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <LoginModal label="Masuk Dashboard" variant="secondary" />
-                <Link
-                  href="/wedding/sheila-yoga"
-                  className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
-                >
-                  Preview Wedding
-                </Link>
-              </div>
             </article>
           ))}
+        </div>
+        <div className="mt-6 flex flex-col gap-3 rounded-md border border-[#e0d4c7] bg-white p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="font-semibold">Sudah tahu paketnya?</h3>
+            <p className="mt-1 text-sm text-[#6b6056]">Login dashboard untuk demo operasional, atau buka preview wedding dari sisi tamu.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <LoginModal label="Masuk Dashboard" variant="secondary" />
+            <Link
+              href="/wedding/sheila-yoga"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+            >
+              Preview Wedding
+            </Link>
+          </div>
         </div>
       </section>
     </main>

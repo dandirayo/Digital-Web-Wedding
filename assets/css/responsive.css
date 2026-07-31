@@ -109,12 +109,18 @@
 
   .hero-actions,
   .modal-actions,
-  .form-actions {
+  .form-actions,
+  .cta-actions {
     flex-direction: column;
   }
 
-  .btn {
+  .btn,
+  .cta-actions .btn {
     width: 100%;
+  }
+
+  .flow-strip {
+    grid-template-columns: 1fr 1fr;
   }
 
   .trust-row,
@@ -150,6 +156,39 @@
 
   .footer-bottom {
     flex-direction: column;
+  }
+
+  .mobile-quick-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    border-top: 1px solid var(--line);
+    background: rgba(251, 247, 240, 0.96);
+    padding: 10px 12px;
+    backdrop-filter: blur(16px);
+  }
+
+  .mobile-quick-actions a,
+  .mobile-quick-actions button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .mobile-quick-actions button {
+    border-color: var(--charcoal);
+    background: var(--charcoal);
+    color: var(--white);
   }
 }
 

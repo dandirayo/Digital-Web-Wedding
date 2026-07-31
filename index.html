@@ -51,12 +51,13 @@
         <a class="nav-link" href="#fitur">Fitur</a>
         <a class="nav-link" href="#template">Template</a>
         <a class="nav-link" href="#paket">Paket</a>
-        <a class="nav-link" href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Demo</a>
+        <a class="nav-link" href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Preview Wedding</a>
         <a class="nav-link" href="#faq">FAQ</a>
         <a class="nav-link" href="gallery.html">Gallery</a>
       </div>
       <div class="nav-actions">
-        <button class="btn btn-secondary" type="button" data-open-consultation>Konsultasi</button>
+        <a class="btn btn-secondary" href="http://localhost:3001" target="_blank" rel="noopener">Dashboard</a>
+        <button class="btn btn-primary" type="button" data-open-consultation>Konsultasi</button>
       </div>
     </nav>
   </header>
@@ -70,8 +71,14 @@
           <p class="hero-copy">Occasio membantu menyiapkan website undangan pernikahan yang rapi, mobile-first, mudah dibagikan, dan siap dikembangkan ke RSVP serta QR check-in produksi pada tahap backend.</p>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" data-open-consultation>Mulai Konsultasi</button>
-            <a class="btn btn-secondary" href="gallery.html">Lihat Gallery Template</a>
-            <a class="btn btn-gold" href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Buka Demo Wedding</a>
+            <a class="btn btn-secondary" href="gallery.html">Pilih Template</a>
+            <a class="btn btn-gold" href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Preview Wedding</a>
+          </div>
+          <div class="flow-strip" aria-label="Alur cepat Occasio">
+            <a href="gallery.html"><strong>1</strong><span>Pilih template</span></a>
+            <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link><strong>2</strong><span>Cek demo wedding</span></a>
+            <button type="button" data-open-consultation><strong>3</strong><span>Kirim brief</span></button>
+            <a href="http://localhost:3001" target="_blank" rel="noopener"><strong>4</strong><span>Kelola dashboard</span></a>
           </div>
           <div class="trust-row" aria-label="Ringkasan layanan">
             <div class="trust-item"><strong>Mobile-first</strong><span>Nyaman dari 320px sampai desktop.</span></div>
@@ -147,26 +154,27 @@
       <div class="container">
         <div class="section__head center">
           <span class="eyebrow">Cara kerja</span>
-          <h2 class="section-title">Flow pemesanan sederhana.</h2>
+          <h2 class="section-title">Alur website mudah dipahami.</h2>
+          <p class="section-copy">Pengunjung melihat template, membuka preview, lalu masuk konsultasi. Setelah order, owner dan client lanjut mengelola event dari dashboard.</p>
         </div>
         <div class="grid grid-3 workflow-grid">
           <article class="card step-card">
             <div class="step-card__number">1</div>
-            <h3>Pilih arah visual</h3>
-            <p>Lihat gallery template dan pilih style yang paling cocok.</p>
-            <a href="gallery.html">Buka gallery</a>
+            <h3>Pengunjung pilih template</h3>
+            <p>Gallery menjadi tempat utama untuk membandingkan style, harga awal, dan fitur.</p>
+            <a href="gallery.html">Buka Template</a>
           </article>
           <article class="card step-card">
             <div class="step-card__number">2</div>
-            <h3>Kirim kebutuhan</h3>
-            <p>Isi form konsultasi agar brief awal rapi sebelum diskusi.</p>
-            <button type="button" data-open-consultation>Konsultasi</button>
+            <h3>Preview wedding demo</h3>
+            <p>Client melihat contoh undangan lengkap dengan gallery, RSVP, ucapan, QR, maps, dan gift.</p>
+            <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Buka Preview</a>
           </article>
           <article class="card step-card">
             <div class="step-card__number">3</div>
-            <h3>Produksi website</h3>
-            <p>Konten, foto, acara, dan CTA disusun sampai siap dibagikan.</p>
-            <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Lihat demo</a>
+            <h3>Order dan kelola dashboard</h3>
+            <p>Owner membuat event, client mengisi konten dan tamu, lalu website siap dibagikan.</p>
+            <button type="button" data-open-consultation>Konsultasi</button>
           </article>
         </div>
       </div>
@@ -252,7 +260,11 @@
       <div class="container card feature-card cta-card">
         <span class="eyebrow">Siap mulai?</span>
         <h2 class="section-title">Bangun undangan digital yang pantas dibagikan.</h2>
-        <button class="btn btn-primary" type="button" data-open-consultation>Mulai Konsultasi</button>
+        <div class="cta-actions">
+          <button class="btn btn-primary" type="button" data-open-consultation>Mulai Konsultasi</button>
+          <a class="btn btn-secondary" href="gallery.html">Lihat Template</a>
+          <a class="btn btn-gold" href="http://localhost:3001" target="_blank" rel="noopener">Masuk Dashboard</a>
+        </div>
       </div>
     </section>
   </main>
@@ -268,6 +280,12 @@
       <div class="footer-bottom"><span>&copy; <span data-publish-year>2026</span> Occasio.</span><span>Frontend static. Backend produksi belum termasuk tahap ini.</span></div>
     </div>
   </footer>
+
+  <div class="mobile-quick-actions" aria-label="Aksi cepat">
+    <a href="gallery.html">Template</a>
+    <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Preview</a>
+    <button type="button" data-open-consultation>Konsultasi</button>
+  </div>
 
   <button class="back-to-top" type="button" data-back-to-top hidden aria-label="Kembali ke atas">&uarr;</button>
 

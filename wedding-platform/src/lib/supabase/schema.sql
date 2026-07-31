@@ -76,11 +76,74 @@ using (
   )
 );
 
+drop policy if exists "profiles_insert_own" on public.profiles;
+create policy "profiles_insert_own"
+on public.profiles for insert
+to authenticated
+with check (id = auth.uid());
+
+drop policy if exists "profiles_update_own_or_owner" on public.profiles;
+create policy "profiles_update_own_or_owner"
+on public.profiles for update
+to authenticated
+using (
+  id = auth.uid()
+  or exists (
+    select 1 from public.profiles owner_profile
+    where owner_profile.id = auth.uid()
+      and owner_profile.role = 'owner'
+  )
+)
+with check (
+  id = auth.uid()
+  or exists (
+    select 1 from public.profiles owner_profile
+    where owner_profile.id = auth.uid()
+      and owner_profile.role = 'owner'
+  )
+);
+
 drop policy if exists "events_select_client_or_owner" on public.events;
 create policy "events_select_client_or_owner"
 on public.events for select
 to authenticated
 using (
+  client_id = auth.uid()
+  or owner_id = auth.uid()
+  or exists (
+    select 1 from public.profiles owner_profile
+    where owner_profile.id = auth.uid()
+      and owner_profile.role = 'owner'
+  )
+);
+
+drop policy if exists "events_insert_owner" on public.events;
+create policy "events_insert_owner"
+on public.events for insert
+to authenticated
+with check (
+  owner_id = auth.uid()
+  or exists (
+    select 1 from public.profiles owner_profile
+    where owner_profile.id = auth.uid()
+      and owner_profile.role = 'owner'
+  )
+);
+
+drop policy if exists "events_update_client_or_owner" on public.events;
+create policy "events_update_client_or_owner"
+on public.events for update
+to authenticated
+using (
+  client_id = auth.uid()
+  or owner_id = auth.uid()
+  or exists (
+    select 1 from public.profiles owner_profile
+    where owner_profile.id = auth.uid()
+      and owner_profile.role = 'owner'
+  )
+)
+with check (
   client_id = auth.uid()
   or owner_id = auth.uid()
   or exists (
@@ -110,11 +173,121 @@ using (
   )
 );
 
+drop policy if exists "guests_insert_by_event_access" on public.guests;
+create policy "guests_insert_by_event_access"
+on public.guests for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = guests.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+);
+
+drop policy if exists "guests_update_by_event_access" on public.guests;
+create policy "guests_update_by_event_access"
+on public.guests for update
+to authenticated
+using (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = guests.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+)
+with check (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = guests.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+);
+
 drop policy if exists "wishes_select_by_event_access" on public.wishes;
 create policy "wishes_select_by_event_access"
 on public.wishes for select
 to authenticated
 using (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = wishes.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+);
+
+drop policy if exists "wishes_insert_authenticated" on public.wishes;
+create policy "wishes_insert_authenticated"
+on public.wishes for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = wishes.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+);
+
+drop policy if exists "wishes_update_by_event_access" on public.wishes;
+create policy "wishes_update_by_event_access"
+on public.wishes for update
+to authenticated
+using (
+  exists (
+    select 1 from public.events event_row
+    where event_row.id = wishes.event_id
+      and (
+        event_row.client_id = auth.uid()
+        or event_row.owner_id = auth.uid()
+        or exists (
+          select 1 from public.profiles owner_profile
+          where owner_profile.id = auth.uid()
+            and owner_profile.role = 'owner'
+        )
+      )
+  )
+)
+with check (
   exists (
     select 1 from public.events event_row
     where event_row.id = wishes.event_id

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type LoginStatus = "idle" | "loading" | "error";
 
@@ -33,6 +34,36 @@ export function LoginForm() {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const demoUser = DEMO_USERS[normalizedEmail as keyof typeof DEMO_USERS];
+      const supabase = tryCreateSupabaseBrowserClient();
+
+      if (supabase) {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+
+        if (!authError && authData.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", authData.user.id)
+            .single();
+          const role = profile?.role === "owner" ? "owner" : "client";
+
+          localStorage.setItem(
+            "occasio_demo_session",
+            JSON.stringify({
+              email: normalizedEmail,
+              role,
+              loggedInAt: new Date().toISOString(),
+              source: "supabase",
+            }),
+          );
+
+          router.push(role === "owner" ? "/owner/dashboard" : "/client/dashboard");
+          return;
+        }
+      }
 
       if (!demoUser || demoUser.password !== password) {
         throw new Error("Email atau password demo belum cocok.");
@@ -44,6 +75,7 @@ export function LoginForm() {
           email: normalizedEmail,
           role: demoUser.role,
           loggedInAt: new Date().toISOString(),
+          source: "demo",
         }),
       );
 
