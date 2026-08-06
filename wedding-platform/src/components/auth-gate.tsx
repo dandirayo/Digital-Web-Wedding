@@ -19,6 +19,15 @@ type DemoSession = {
   source?: "demo" | "supabase";
 };
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs = 1800): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => {
+      window.setTimeout(() => resolve(null), timeoutMs);
+    }),
+  ]);
+}
+
 export function AuthGate({ role, children }: AuthGateProps) {
   const router = useRouter();
   const [state, setState] = useState<GateState>("checking");
@@ -29,17 +38,37 @@ export function AuthGate({ role, children }: AuthGateProps) {
 
     async function checkSession() {
       try {
+        const rawSession = localStorage.getItem("occasio_demo_session");
+        const session = rawSession ? (JSON.parse(rawSession) as DemoSession) : null;
+
+        if (session?.role) {
+          if (session.role !== role) {
+            router.replace(session.role === "owner" ? "/owner/dashboard" : "/client/dashboard");
+            return;
+          }
+
+          if (!active) return;
+          setState("allowed");
+          return;
+        }
+
         const supabase = tryCreateSupabaseBrowserClient();
         if (supabase) {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const userId = sessionData.session?.user.id;
+          const sessionResult = await withTimeout(supabase.auth.getSession());
+          const sessionData = sessionResult?.data;
+          const userId = sessionData?.session?.user.id;
 
           if (userId) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", userId)
-              .single();
+            const profileResult = await withTimeout(
+              Promise.resolve(
+                supabase
+                  .from("profiles")
+                  .select("role")
+                  .eq("id", userId)
+                  .single(),
+              ),
+            );
+            const profile = profileResult?.data;
             const profileRole = profile?.role === "owner" ? "owner" : "client";
 
             if (profileRole === role) {
@@ -53,35 +82,9 @@ export function AuthGate({ role, children }: AuthGateProps) {
           }
         }
 
-        const rawSession = localStorage.getItem("occasio_demo_session");
-        const session = rawSession ? (JSON.parse(rawSession) as DemoSession) : null;
-
-        if (!session?.role) {
-          if (!active) return;
-          setState("blocked");
-          setMessage("Silakan login demo terlebih dahulu dari halaman utama.");
-          return;
-        }
-
-        if (session.role !== role) {
-          if (session.role === "owner") {
-            router.replace("/owner/dashboard");
-            return;
-          }
-
-          if (session.role === "client") {
-            router.replace("/client/dashboard");
-            return;
-          }
-
-          if (!active) return;
-          setState("blocked");
-          setMessage("Role akun belum dikenali.");
-          return;
-        }
-
         if (!active) return;
-        setState("allowed");
+        setState("blocked");
+        setMessage("Silakan login demo terlebih dahulu dari halaman utama.");
       } catch (error) {
         if (!active) return;
         setState("setup");

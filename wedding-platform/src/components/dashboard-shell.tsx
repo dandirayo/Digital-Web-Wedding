@@ -57,14 +57,14 @@ export function DashboardShell({ role, title, description, children }: Dashboard
         </div>
       </aside>
 
-      <main className="lg:pl-72">
-        <header className="border-b border-[#e0d4c7] bg-[#fffaf4]/90 px-5 py-5 backdrop-blur lg:px-8">
+      <main className="min-w-0 lg:pl-72">
+        <header className="border-b border-[#e0d4c7] bg-[#fffaf4]/90 px-4 py-5 backdrop-blur sm:px-5 lg:px-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
                 {role === "client" ? "Client Dashboard" : "Owner Dashboard"}
               </div>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">{description}</p>
             </div>
             <LogoutButton />
@@ -81,7 +81,7 @@ export function DashboardShell({ role, title, description, children }: Dashboard
             ))}
           </nav>
         </header>
-        <div className="px-5 py-6 lg:px-8">{children}</div>
+        <div className="min-w-0 px-4 py-5 sm:px-5 sm:py-6 lg:px-8">{children}</div>
       </main>
     </div>
   );

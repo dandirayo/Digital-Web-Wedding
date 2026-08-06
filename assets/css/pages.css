@@ -1,7 +1,7 @@
 .hero-section {
   position: relative;
   overflow: hidden;
-  padding: 90px 0 64px;
+  padding: clamp(56px, 7vw, 78px) 0 clamp(44px, 6vw, 60px);
 }
 
 .feature-section {
@@ -16,7 +16,7 @@
 .feature-section .section-title {
   max-width: 760px;
   margin-inline: auto;
-  font-size: clamp(2.75rem, 4.6vw, 4.25rem);
+  font-size: clamp(2.25rem, 4.1vw, 3.75rem);
   line-height: 1.02;
 }
 
@@ -41,7 +41,7 @@
 .workflow-section .section-title {
   max-width: 620px;
   margin-inline: auto;
-  font-size: clamp(2.65rem, 4.2vw, 4rem);
+  font-size: clamp(2.2rem, 3.8vw, 3.55rem);
   line-height: 1.03;
 }
 
@@ -62,15 +62,15 @@
 .hero-grid {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-  gap: 46px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.86fr);
+  gap: clamp(26px, 4vw, 42px);
   align-items: center;
 }
 
 .hero-title {
   margin-bottom: 18px;
-  font-size: clamp(3.35rem, 8vw, 7rem);
-  letter-spacing: -0.03em;
+  font-size: clamp(2.75rem, 7vw, 5.9rem);
+  letter-spacing: 0;
 }
 
 .hero-title span {
@@ -155,6 +155,8 @@
 
 .product-mockup {
   position: relative;
+  width: min(100%, 520px);
+  justify-self: center;
   border-radius: 34px;
   background: linear-gradient(145deg, var(--charcoal), #34313b);
   padding: 18px;
@@ -178,6 +180,7 @@
 
 .mockup-screen img {
   width: 100%;
+  max-height: min(68vh, 620px);
   aspect-ratio: 4 / 5;
   object-fit: cover;
 }

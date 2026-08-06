@@ -154,7 +154,7 @@ export default function ClientDashboardPage() {
           <GuestExcelUpload onImport={handleImportGuests} />
 
           <div id="content" className="rounded-md border border-[#e0d4c7] bg-white p-5">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold">Konten Undangan</h2>
                 <p className="mt-1 text-sm leading-6 text-[#6b6056]">
@@ -164,7 +164,7 @@ export default function ClientDashboardPage() {
               <Link
                 href={`/wedding/${clientEvent.slug}`}
                 target="_blank"
-                className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white"
               >
                 View Website
               </Link>
@@ -229,8 +229,8 @@ export default function ClientDashboardPage() {
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div id="guests" className="rounded-md border border-[#e0d4c7] bg-white p-5">
-          <div className="flex items-center justify-between gap-4">
+          <div id="guests" className="min-w-0 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Daftar Tamu Terbaru</h2>
               <p className="mt-1 text-sm text-[#6b6056]">Data ini nanti diambil dari table `guests` milik event client.</p>
@@ -238,8 +238,8 @@ export default function ClientDashboardPage() {
             <AddGuestAction onAdd={handleAddGuest} />
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-md border border-[#eadfd2]">
-            <table className="w-full text-left text-sm">
+          <div className="mt-5 overflow-x-auto rounded-md border border-[#eadfd2]">
+            <table className="min-w-[620px] w-full text-left text-sm">
               <thead className="bg-[#f7f3ed] text-[#756a60]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Nama</th>

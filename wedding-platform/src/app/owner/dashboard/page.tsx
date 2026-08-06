@@ -89,7 +89,7 @@ export default function OwnerDashboardPage() {
         </section>
 
       <section id="monitoring" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold">Event Yang Sedang Dikelola</h2>
             <p className="mt-1 text-sm text-[#6b6056]">Owner bisa membuka detail client, memantau progres, dan membantu edit konten.</p>
@@ -110,18 +110,18 @@ export default function OwnerDashboardPage() {
                     {event.clientName} / {event.packageName} / {event.date}
                   </p>
                 </div>
-                <div className="grid grid-cols-4 gap-3 text-center text-sm">
+                <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
                   <MiniStat label="Tamu" value={event.guests} />
                   <MiniStat label="RSVP" value={event.rsvpYes + event.rsvpNo} />
                   <MiniStat label="Ucapan" value={event.wishes} />
                   <MiniStat label="Check-in" value={event.checkIns} />
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#eadfd2] pt-4">
+              <div className="mt-4 flex flex-col gap-3 border-t border-[#eadfd2] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <Link
                   href={`/wedding/${event.slug}`}
                   target="_blank"
-                  className="rounded-md bg-[#241f1a] px-4 py-2 text-sm font-semibold text-white"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white"
                 >
                   View Website
                 </Link>
@@ -139,7 +139,7 @@ export default function OwnerDashboardPage() {
                     <option value="completed">completed</option>
                   </select>
                 </label>
-                <span className="text-sm text-[#6b6056]">/wedding/{event.slug}</span>
+                <span className="break-all text-sm text-[#6b6056]">/wedding/{event.slug}</span>
               </div>
               <div className="mt-4">
                 <EventReadiness event={event} />

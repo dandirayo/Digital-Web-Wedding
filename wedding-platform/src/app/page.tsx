@@ -66,15 +66,15 @@ export default function Home() {
       </header>
 
       <section className="relative overflow-hidden border-b border-[#e4d8ca] bg-[#fffaf4]">
-        <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl grid-cols-1 gap-10 px-5 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-5 py-8 sm:py-10 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.05fr_0.82fr] lg:px-8">
           <div className="flex flex-col justify-center">
             <div className="text-sm font-semibold uppercase tracking-[0.28em] text-[#9a6a3a]">
               Wedding business platform
             </div>
-            <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-tight md:text-7xl">
+            <h1 className="mt-4 max-w-3xl text-[clamp(2.55rem,10vw,4.35rem)] font-semibold leading-[1.02] tracking-tight lg:text-6xl xl:text-7xl">
               Kelola banyak undangan digital dari satu sistem.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#6b6056]">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#6b6056] md:text-lg md:leading-8">
               Occasio membantu studio undangan digital menjual website wedding,
               memberikan dashboard untuk klien, dan memantau semua event dari sisi owner.
             </p>
@@ -82,7 +82,7 @@ export default function Home() {
               <strong className="text-[#241f1a]">Tahap aplikasi:</strong> frontend platform demo.
               Login masih demo lokal, sedangkan Supabase/database produksi disiapkan untuk tahap backend berikutnya.
             </div>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <LoginModal label="Masuk Dashboard" />
               <a
                 href="#paket"
@@ -97,34 +97,11 @@ export default function Home() {
                 Preview Wedding
               </Link>
             </div>
-            <div className="mt-6 grid max-w-3xl gap-3 md:grid-cols-3">
-              {quickPaths.map((item) => (
-                <article key={item.title} className="rounded-md border border-[#e0d4c7] bg-white/78 p-4">
-                  <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">
-                    {item.title}
-                  </div>
-                  <p className="mt-2 min-h-12 text-sm leading-6 text-[#6b6056]">{item.description}</p>
-                  <div className="mt-4">{item.action}</div>
-                </article>
-              ))}
-            </div>
-            <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3">
-              {[
-                ["12+", "event aktif"],
-                ["3.2k", "tamu dikelola"],
-                ["98%", "ready mobile"],
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-md border border-[#e0d4c7] bg-white/70 p-4">
-                  <div className="text-2xl font-semibold">{value}</div>
-                  <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="flex items-end">
-            <div className="w-full rounded-md border border-[#e0d4c7] bg-white p-4 shadow-[0_24px_80px_rgba(82,57,38,0.12)]">
-              <div className="aspect-[4/5] rounded-md bg-[linear-gradient(rgba(36,31,26,0.02),rgba(36,31,26,0.56)),url('/sample-wedding.svg')] bg-cover bg-center p-5 text-white">
+            <div className="mx-auto w-full max-w-[520px] rounded-md border border-[#e0d4c7] bg-white p-3 shadow-[0_24px_80px_rgba(82,57,38,0.12)] sm:p-4">
+              <div className="aspect-[16/11] max-h-[340px] rounded-md bg-[linear-gradient(rgba(36,31,26,0.02),rgba(36,31,26,0.56)),url('/sample-wedding.svg')] bg-cover bg-center p-4 text-white sm:aspect-[4/5] sm:max-h-[520px] sm:p-5">
                 <div className="flex h-full flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] backdrop-blur">
@@ -136,8 +113,8 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="text-sm uppercase tracking-[0.24em]">Wedding of</div>
-                    <div className="mt-2 text-4xl font-semibold">Sheila & Yoga</div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
+                    <div className="mt-2 text-3xl font-semibold sm:text-4xl">Sheila & Yoga</div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs sm:text-sm">
                       <Metric value="184" label="RSVP" />
                       <Metric value="76" label="Ucapan" />
                       <Metric value="320" label="Tamu" />
@@ -150,12 +127,40 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="fitur" className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-3 md:grid-cols-3">
+            {quickPaths.map((item) => (
+              <article key={item.title} className="rounded-md border border-[#e0d4c7] bg-white p-4">
+                <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">
+                  {item.title}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[#6b6056]">{item.description}</p>
+                <div className="mt-4">{item.action}</div>
+              </article>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            {[
+              ["12+", "event aktif"],
+              ["3.2k", "tamu dikelola"],
+              ["98%", "ready mobile"],
+            ].map(([value, label]) => (
+              <div key={label} className="rounded-md border border-[#e0d4c7] bg-white p-4">
+                <div className="text-2xl font-semibold">{value}</div>
+                <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="fitur" className="mx-auto max-w-7xl px-5 py-12 sm:py-16 lg:px-8">
         <div className="mb-8 max-w-2xl">
           <div className="text-sm font-semibold uppercase tracking-[0.22em] text-[#9a6a3a]">
             Fitur produk
           </div>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Dibuat untuk studio yang menangani banyak pasangan.
           </h2>
         </div>
@@ -170,12 +175,12 @@ export default function Home() {
       </section>
 
       <section id="alur" className="border-y border-[#e4d8ca] bg-[#fffaf4]">
-        <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl px-5 py-12 sm:py-16 lg:px-8">
           <div className="mb-8 max-w-2xl">
             <div className="text-sm font-semibold uppercase tracking-[0.22em] text-[#9a6a3a]">
               Alur kerja
             </div>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight">Dari order sampai hari H.</h2>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Dari order sampai hari H.</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-5">
             {workflow.map((item, index) => (
@@ -188,7 +193,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+      <section className="mx-auto max-w-7xl px-5 py-12 sm:py-16 lg:px-8">
         <div className="grid gap-5 lg:grid-cols-3">
           {[
             ["Owner", "Login sebagai owner untuk membuat event, mengubah status draft/active/completed, dan memantau readiness."],
@@ -206,17 +211,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="paket" className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+      <section id="paket" className="mx-auto max-w-7xl px-5 py-12 sm:py-16 lg:px-8">
         <div className="mb-8 max-w-2xl">
           <div className="text-sm font-semibold uppercase tracking-[0.22em] text-[#9a6a3a]">
             Paket jualan
           </div>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight">Mulai dari template, naik ke dashboard.</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Mulai dari template, naik ke dashboard.</h2>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {packages.map((item) => (
             <article key={item.name} className="rounded-md border border-[#e0d4c7] bg-white p-6">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="text-2xl font-semibold">{item.name}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6b6056]">{item.description}</p>

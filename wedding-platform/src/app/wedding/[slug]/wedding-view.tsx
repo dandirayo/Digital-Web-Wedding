@@ -258,38 +258,38 @@ export function WeddingView({ slug }: { slug: string }) {
 
   return (
     <main className="min-h-screen bg-[#f3ebdf] text-[#2b241f]">
-      <section className="relative min-h-screen overflow-hidden bg-[#776859] text-white">
+      <section className="relative min-h-[100svh] overflow-hidden bg-[#776859] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url('${TEMPLATE_PATH}/images/cover.jpg')` }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,29,23,0.72),rgba(37,29,23,0.2),rgba(37,29,23,0.76))]" />
-        <div className="absolute left-1/2 top-0 h-[52vw] max-h-[520px] min-h-[320px] w-[52vw] min-w-[320px] max-w-[520px] -translate-x-[90%] -translate-y-[20%] rounded-full bg-white/22" />
-        <div className="absolute right-1/2 top-0 h-[52vw] max-h-[520px] min-h-[320px] w-[52vw] min-w-[320px] max-w-[520px] translate-x-[92%] -translate-y-[20%] rounded-full bg-white/18" />
+        <div className="absolute left-1/2 top-0 hidden h-[52vw] max-h-[520px] min-h-[260px] w-[52vw] min-w-[260px] max-w-[520px] -translate-x-[90%] -translate-y-[20%] rounded-full bg-white/22 sm:block" />
+        <div className="absolute right-1/2 top-0 hidden h-[52vw] max-h-[520px] min-h-[260px] w-[52vw] min-w-[260px] max-w-[520px] translate-x-[92%] -translate-y-[20%] rounded-full bg-white/18 sm:block" />
 
-        <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between px-5 py-8">
-          <header className="flex items-center justify-between gap-4">
-            <Link href="/" className="rounded-full bg-white/18 px-5 py-2 text-sm font-semibold backdrop-blur">
+        <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-between px-4 py-5 sm:px-5 sm:py-8">
+          <header className="flex items-center justify-between gap-3">
+            <Link href="/" className="rounded-full bg-white/18 px-4 py-2 text-sm font-semibold backdrop-blur sm:px-5">
               Occasio
             </Link>
-            <span className="rounded-full bg-white/18 px-5 py-2 text-sm font-semibold backdrop-blur">
+            <span className="rounded-full bg-white/18 px-4 py-2 text-right text-sm font-semibold backdrop-blur sm:px-5">
               {resolved.date}
             </span>
           </header>
 
-          <div className="py-20 text-center">
-            <div className="text-sm font-semibold uppercase tracking-[0.38em]">The Wedding of</div>
-            <h1 className="mt-6 text-6xl font-semibold leading-none md:text-8xl">
+          <div className="py-12 text-center sm:py-16 md:py-20">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] sm:text-sm sm:tracking-[0.38em]">The Wedding of</div>
+            <h1 className="mt-5 text-[clamp(3.2rem,18vw,5.8rem)] font-semibold leading-none md:text-8xl">
               {firstName}
-              <span className="block py-1 text-4xl font-normal italic md:text-6xl">&</span>
+              <span className="block py-1 text-[clamp(2.2rem,11vw,3.75rem)] font-normal italic md:text-6xl">&</span>
               {secondName}
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base font-medium leading-8 text-white/88">
+            <p className="mx-auto mt-6 max-w-2xl text-sm font-medium leading-7 text-white/88 sm:text-base sm:leading-8">
               {resolved.greeting}
             </p>
           </div>
 
-          <div className="grid gap-3 rounded-md border border-white/22 bg-white/14 p-4 backdrop-blur md:grid-cols-3">
+          <div className="grid gap-3 rounded-md border border-white/22 bg-white/14 p-3 backdrop-blur sm:p-4 md:grid-cols-3">
             <MiniInfo label="Tanggal" value={resolved.date} />
             <MiniInfo label="Lokasi" value={resolved.venue} />
             <MiniInfo label="RSVP" value={`${resolved.rsvp} konfirmasi`} />
@@ -297,7 +297,7 @@ export function WeddingView({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="relative overflow-hidden px-5 py-20 text-center">
+      <section className="relative overflow-hidden px-5 py-14 text-center sm:py-20">
         <Image
           src={`${TEMPLATE_PATH}/images/flower-left.png`}
           alt=""
@@ -322,18 +322,18 @@ export function WeddingView({ slug }: { slug: string }) {
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-5 px-5 pb-20 md:grid-cols-[1fr_0.75fr_1fr] md:items-center">
+      <section className="mx-auto grid max-w-6xl gap-5 px-5 pb-14 sm:pb-20 md:grid-cols-[1fr_0.75fr_1fr] md:items-center">
         <CoupleCard image="bride.jpg" name={firstName} role="Putri pertama" parent="Bapak Rahman & Ibu Sari" />
         <div className="text-center text-5xl font-semibold italic text-[#9a6a3a]">&</div>
         <CoupleCard image="groom.jpg" name={secondName} role="Putra pertama" parent="Bapak Darma & Ibu Lestari" />
       </section>
 
-      <section className="bg-[#2b241f] px-5 py-20 text-white">
+      <section className="bg-[#2b241f] px-5 py-14 text-white sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-end">
             <div>
               <SectionLabel dark>Save The Date</SectionLabel>
-              <h2 className="mt-4 text-4xl font-semibold md:text-6xl">{resolved.date}</h2>
+              <h2 className="mt-4 text-3xl font-semibold md:text-6xl">{resolved.date}</h2>
               <p className="mt-4 max-w-xl leading-8 text-white/70">
                 Simpan tanggalnya dan hadir bersama orang-orang tersayang.
               </p>
@@ -346,7 +346,7 @@ export function WeddingView({ slug }: { slug: string }) {
                 ["12", "Detik"],
               ].map(([value, label]) => (
                 <div key={label} className="rounded-md border border-white/12 bg-white/8 p-5 text-center">
-                  <div className="text-4xl font-semibold">{value}</div>
+                  <div className="text-3xl font-semibold sm:text-4xl">{value}</div>
                   <div className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/58">
                     {label}
                   </div>
@@ -372,10 +372,10 @@ export function WeddingView({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-20">
+      <section className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
         <div className="text-center">
           <SectionLabel>Our Gallery</SectionLabel>
-          <h2 className="mt-4 text-4xl font-semibold md:text-5xl">Momen Bahagia</h2>
+          <h2 className="mt-4 text-3xl font-semibold md:text-5xl">Momen Bahagia</h2>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <button
@@ -424,14 +424,14 @@ export function WeddingView({ slug }: { slug: string }) {
         </div>
         <video
           src={`${TEMPLATE_PATH}/videos/intro.mp4`}
-          className="mt-4 aspect-video w-full rounded-md bg-[#2b241f] object-cover"
+          className="mt-4 aspect-video max-h-[560px] w-full rounded-md bg-[#2b241f] object-cover"
           controls
           muted
           playsInline
         />
       </section>
 
-      <section className="bg-[#fffaf4] px-5 py-20">
+      <section className="bg-[#fffaf4] px-5 py-14 sm:py-20">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
           <Panel title="RSVP" eyebrow={`${resolved.guests} tamu`}>
             <p className="leading-7 text-[#6b6056]">
@@ -553,9 +553,9 @@ export function WeddingView({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 py-20 text-center">
+      <section className="mx-auto max-w-5xl px-5 py-14 text-center sm:py-20">
         <SectionLabel>Love Story</SectionLabel>
-        <h2 className="mt-4 text-4xl font-semibold">Cerita Kami</h2>
+        <h2 className="mt-4 text-3xl font-semibold sm:text-4xl">Cerita Kami</h2>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
             ["Pertama Bertemu", "Sebuah pertemuan sederhana yang menjadi awal cerita panjang."],

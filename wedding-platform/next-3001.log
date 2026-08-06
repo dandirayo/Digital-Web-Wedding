@@ -1,0 +1,19 @@
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://10.70.78.61:3001
+- Environments: .env.local
+✓ Ready in 939ms
+
+ GET / 200 in 655ms (next.js: 254ms, application-code: 402ms)
+ GET / 200 in 48ms (next.js: 10ms, application-code: 38ms)
+ GET / 200 in 47ms (next.js: 23ms, application-code: 24ms)
+ GET / 200 in 47ms (next.js: 34ms, application-code: 13ms)
+ GET /wedding/sheila-yoga 200 in 690ms (next.js: 570ms, application-code: 120ms)
+ GET /wedding/sheila-yoga 200 in 377ms (next.js: 251ms, application-code: 126ms)
+ GET /wedding/sheila-yoga 200 in 117ms (next.js: 19ms, application-code: 99ms)
+ GET /wedding/sheila-yoga 200 in 113ms (next.js: 18ms, application-code: 95ms)
+ GET / 200 in 383ms (next.js: 5ms, application-code: 379ms)
+ GET /wedding/sheila-yoga 200 in 156ms (next.js: 9ms, application-code: 147ms)
+ GET /wedding/sheila-yoga 200 in 78ms (next.js: 14ms, application-code: 65ms)
+ GET /wedding/sheila-yoga 200 in 121ms (next.js: 21ms, application-code: 100ms)
+ GET /wedding/sheila-yoga 200 in 94ms (next.js: 12ms, application-code: 82ms)

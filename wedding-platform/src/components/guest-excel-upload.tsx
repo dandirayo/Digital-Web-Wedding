@@ -123,7 +123,7 @@ export function GuestExcelUpload({ onImport }: GuestExcelUploadProps) {
           </div>
 
           <div className="max-h-72 overflow-auto rounded-md border border-[#eadfd2]">
-            <table className="w-full text-left text-sm">
+            <table className="min-w-[520px] w-full text-left text-sm">
               <thead className="sticky top-0 bg-[#f7f3ed] text-[#756a60]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Nama</th>

@@ -19,6 +19,15 @@ const DEMO_USERS = {
   },
 } as const;
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs = 1800): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => {
+      window.setTimeout(() => resolve(null), timeoutMs);
+    }),
+  ]);
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("owner@occasio.app");
@@ -36,18 +45,42 @@ export function LoginForm() {
       const demoUser = DEMO_USERS[normalizedEmail as keyof typeof DEMO_USERS];
       const supabase = tryCreateSupabaseBrowserClient();
 
-      if (supabase) {
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
+      if (demoUser && demoUser.password === password) {
+        localStorage.setItem(
+          "occasio_demo_session",
+          JSON.stringify({
+            email: normalizedEmail,
+            role: demoUser.role,
+            loggedInAt: new Date().toISOString(),
+            source: "demo",
+          }),
+        );
 
-        if (!authError && authData.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", authData.user.id)
-            .single();
+        router.push(demoUser.path);
+        return;
+      }
+
+      if (supabase) {
+        const authResult = await withTimeout(
+          supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password,
+          }),
+        );
+        const authData = authResult?.data;
+        const authError = authResult?.error;
+
+        if (!authError && authData?.user) {
+          const profileResult = await withTimeout(
+            Promise.resolve(
+              supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", authData.user.id)
+                .single(),
+            ),
+          );
+          const profile = profileResult?.data;
           const role = profile?.role === "owner" ? "owner" : "client";
 
           localStorage.setItem(
@@ -65,21 +98,7 @@ export function LoginForm() {
         }
       }
 
-      if (!demoUser || demoUser.password !== password) {
-        throw new Error("Email atau password demo belum cocok.");
-      }
-
-      localStorage.setItem(
-        "occasio_demo_session",
-        JSON.stringify({
-          email: normalizedEmail,
-          role: demoUser.role,
-          loggedInAt: new Date().toISOString(),
-          source: "demo",
-        }),
-      );
-
-      router.push(demoUser.path);
+      throw new Error("Email atau password demo belum cocok.");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Login gagal. Coba lagi.");
