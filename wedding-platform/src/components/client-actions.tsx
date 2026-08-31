@@ -2,17 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { DemoActionModal } from "./demo-action-modal";
-
-export type ClientGuest = {
-  name: string;
-  status: string;
-  pax: number;
-  code: string;
-  time: string;
-};
+import type { Guest } from "@/lib/types";
 
 type AddGuestActionProps = {
-  onAdd: (guest: ClientGuest) => void;
+  onAdd: (guest: Omit<Guest, "id" | "createdAt" | "qrCode" | "checkedInAt" | "eventId">) => void;
 };
 
 export function AddGuestAction({ onAdd }: AddGuestActionProps) {
@@ -26,18 +19,12 @@ export function AddGuestAction({ onAdd }: AddGuestActionProps) {
     const cleanName = name.trim();
     if (!cleanName) return;
 
-    const safeCode = cleanName
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      .slice(0, 12);
-
     onAdd({
       name: cleanName,
-      status: "Belum",
-      pax: Number(pax) || 1,
-      code: `SA-${safeCode || "TAMU"}-${Date.now().toString(36).toUpperCase()}`,
-      time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+      phone,
+      paxLimit: Number(pax) || 1,
+      rsvpStatus: "pending",
+      paxConfirmed: 0,
     });
 
     setName("");

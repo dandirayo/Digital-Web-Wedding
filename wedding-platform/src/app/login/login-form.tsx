@@ -1,32 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { initStore, login } from "@/lib/store";
 
 type LoginStatus = "idle" | "loading" | "error";
-
-const DEMO_USERS = {
-  "owner@occasio.app": {
-    password: "OccasioOwner123!",
-    role: "owner",
-    path: "/owner/dashboard",
-  },
-  "client@occasio.app": {
-    password: "OccasioClient123!",
-    role: "client",
-    path: "/client/dashboard",
-  },
-} as const;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs = 1800): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => {
-      window.setTimeout(() => resolve(null), timeoutMs);
-    }),
-  ]);
-}
 
 export function LoginForm() {
   const router = useRouter();
@@ -35,6 +14,10 @@ export function LoginForm() {
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    initStore();
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("loading");
@@ -42,63 +25,9 @@ export function LoginForm() {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const demoUser = DEMO_USERS[normalizedEmail as keyof typeof DEMO_USERS];
-      const supabase = tryCreateSupabaseBrowserClient();
-
-      if (demoUser && demoUser.password === password) {
-        localStorage.setItem(
-          "occasio_demo_session",
-          JSON.stringify({
-            email: normalizedEmail,
-            role: demoUser.role,
-            loggedInAt: new Date().toISOString(),
-            source: "demo",
-          }),
-        );
-
-        router.push(demoUser.path);
-        return;
-      }
-
-      if (supabase) {
-        const authResult = await withTimeout(
-          supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-          }),
-        );
-        const authData = authResult?.data;
-        const authError = authResult?.error;
-
-        if (!authError && authData?.user) {
-          const profileResult = await withTimeout(
-            Promise.resolve(
-              supabase
-                .from("profiles")
-                .select("role")
-                .eq("id", authData.user.id)
-                .single(),
-            ),
-          );
-          const profile = profileResult?.data;
-          const role = profile?.role === "owner" ? "owner" : "client";
-
-          localStorage.setItem(
-            "occasio_demo_session",
-            JSON.stringify({
-              email: normalizedEmail,
-              role,
-              loggedInAt: new Date().toISOString(),
-              source: "supabase",
-            }),
-          );
-
-          router.push(role === "owner" ? "/owner/dashboard" : "/client/dashboard");
-          return;
-        }
-      }
-
-      throw new Error("Email atau password demo belum cocok.");
+      const session = await login(normalizedEmail, password);
+      
+      router.push(session.role === "owner" ? "/owner/dashboard" : "/client/dashboard");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Login gagal. Coba lagi.");

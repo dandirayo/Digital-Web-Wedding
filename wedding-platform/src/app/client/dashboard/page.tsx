@@ -1,13 +1,25 @@
 "use client";
 
 import { AuthGate } from "@/components/auth-gate";
-import { AddGuestAction, type ClientGuest } from "@/components/client-actions";
+import { AddGuestAction } from "@/components/client-actions";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { GuestExcelUpload, type ImportedGuest } from "@/components/guest-excel-upload";
 import { StatCard } from "@/components/stat-card";
-import { clientEvent, recentGuests, recentWishes } from "@/lib/demo-data";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import {
+  initStore,
+  getCurrentSession,
+  getEvents,
+  getGuests,
+  getWishes,
+  getEventContent,
+  updateEventContent,
+  updateEvent,
+  addGuest,
+  importGuests
+} from "@/lib/store";
+import type { WeddingEvent, Guest, Wish, EventContent } from "@/lib/types";
 
 type WeddingContent = {
   couple: string;
@@ -17,86 +29,123 @@ type WeddingContent = {
   greeting: string;
 };
 
-const GUESTS_KEY = "occasio_demo_guests_sheila-yoga";
-const CONTENT_KEY = "occasio_demo_content_sheila-yoga";
-
-const defaultContent: WeddingContent = {
-  couple: clientEvent.couple,
-  date: clientEvent.date,
-  venue: clientEvent.venue,
-  packageName: clientEvent.packageName,
-  greeting: "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
-};
-
 export default function ClientDashboardPage() {
-  const [guests, setGuests] = useState<ClientGuest[]>(() => {
-    if (typeof window === "undefined") return recentGuests;
-    try {
-      const storedGuests = localStorage.getItem(GUESTS_KEY);
-      return storedGuests ? (JSON.parse(storedGuests) as ClientGuest[]) : recentGuests;
-    } catch {
-      return recentGuests;
-    }
+  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState<WeddingEvent | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [wishes, setWishes] = useState<Wish[]>([]);
+  const [content, setContent] = useState<WeddingContent>({
+    couple: "",
+    date: "",
+    venue: "",
+    packageName: "",
+    greeting: "",
   });
-  const [content, setContent] = useState<WeddingContent>(() => {
-    if (typeof window === "undefined") return defaultContent;
-    try {
-      const storedContent = localStorage.getItem(CONTENT_KEY);
-      return storedContent
-        ? { ...defaultContent, ...(JSON.parse(storedContent) as Partial<WeddingContent>) }
-        : defaultContent;
-    } catch {
-      return defaultContent;
-    }
-  });
+  
   const [contentSaved, setContentSaved] = useState(false);
-  const pending = Math.max(guests.length - clientEvent.rsvpYes - clientEvent.rsvpNo, 0);
+
+  useEffect(() => {
+    async function loadData() {
+      await initStore();
+      const session = await getCurrentSession();
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+
+      const events = await getEvents({ clientId: session.userId });
+      if (events.length > 0) {
+        const ev = events[0];
+        setEvent(ev);
+
+        const [loadedGuests, loadedWishes, loadedContent] = await Promise.all([
+          getGuests(ev.id),
+          getWishes(ev.id),
+          getEventContent(ev.id)
+        ]);
+
+        setGuests(loadedGuests);
+        setWishes(loadedWishes);
+        
+        setContent({
+          couple: ev.coupleName,
+          date: ev.eventDate ? new Date(ev.eventDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "",
+          venue: ev.venue,
+          packageName: ev.packageTier || "silver",
+          greeting: loadedContent?.greeting || "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
+        });
+      }
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <AuthGate role="client">
+        <DashboardShell
+          role="client"
+          title="Loading..."
+          description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
+        >
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-[#9a6a3a]">Memuat data...</div>
+          </div>
+        </DashboardShell>
+      </AuthGate>
+    );
+  }
+
+  if (!event) {
+    return (
+      <AuthGate role="client">
+        <DashboardShell
+          role="client"
+          title="Client Dashboard"
+          description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
+        >
+          <div className="flex h-64 items-center justify-center rounded-md border border-[#e0d4c7] bg-white p-5 text-center">
+            <div className="text-lg font-semibold text-[#6b6056]">Belum ada undangan yang di-assign. Hubungi Owner.</div>
+          </div>
+        </DashboardShell>
+      </AuthGate>
+    );
+  }
+
+  const pending = Math.max(guests.length - event.rsvpYes - event.rsvpNo, 0);
   const setupItems = [
     { label: "Konten utama", done: Boolean(content.couple && content.date && content.venue && content.greeting) },
     { label: "Daftar tamu", done: guests.length > 0 },
-    { label: "RSVP masuk", done: clientEvent.rsvpYes + clientEvent.rsvpNo > 0 },
-    { label: "Ucapan tampil", done: clientEvent.wishes > 0 },
+    { label: "RSVP masuk", done: event.rsvpYes + event.rsvpNo > 0 },
+    { label: "Ucapan tampil", done: event.wishCount > 0 },
     { label: "Website preview", done: true },
   ];
   const setupScore = Math.round((setupItems.filter((item) => item.done).length / setupItems.length) * 100);
 
-  function handleAddGuest(guest: ClientGuest) {
-    setGuests((current) => {
-      const next = [guest, ...current];
-      localStorage.setItem(GUESTS_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function handleAddGuest(guestData: Omit<Guest, "id" | "createdAt" | "qrCode" | "checkedInAt" | "eventId">) {
+    if (!event) return;
+    const newGuest = await addGuest(event.id, guestData);
+    setGuests((current) => [newGuest, ...current]);
   }
 
-  function handleImportGuests(importedGuests: ImportedGuest[]) {
-    const importedAt = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-    const nextGuests = importedGuests.map((guest, index) => {
-      const safeCode = guest.name
-        .toUpperCase()
-        .replace(/[^A-Z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
-        .slice(0, 12);
-
-      return {
-        name: guest.name,
-        status: "Belum",
-        pax: guest.paxLimit,
-        code: `XL-${safeCode || "TAMU"}-${index + 1}`,
-        time: importedAt,
-      };
-    });
-
-    setGuests((current) => {
-      const next = [...nextGuests, ...current];
-      localStorage.setItem(GUESTS_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function handleImportGuests(importedGuests: ImportedGuest[]) {
+    if (!event) return;
+    const newGuests = await importGuests(event.id, importedGuests);
+    setGuests((current) => [...newGuests, ...current]);
   }
 
-  function handleSaveContent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
+  async function handleSaveContent(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!event) return;
+    
+    await updateEventContent(event.id, { greeting: content.greeting });
+    await updateEvent(event.id, { 
+      coupleName: content.couple,
+      venue: content.venue,
+    });
+    
     setContentSaved(true);
+    setTimeout(() => setContentSaved(false), 3000);
   }
 
   return (
@@ -107,10 +156,10 @@ export default function ClientDashboardPage() {
         description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
       >
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Tamu" value={String(guests.length)} helper="Demo tersimpan lokal" />
-          <StatCard label="Hadir" value={String(clientEvent.rsvpYes)} helper="RSVP sudah konfirmasi" />
+          <StatCard label="Total Tamu" value={String(guests.length)} helper="Dari tabel database" />
+          <StatCard label="Hadir" value={String(event.rsvpYes)} helper="RSVP sudah konfirmasi" />
           <StatCard label="Belum Jawab" value={String(pending)} helper="Perlu follow-up" />
-          <StatCard label="Ucapan" value={String(clientEvent.wishes)} helper="Masuk dari web" />
+          <StatCard label="Ucapan" value={String(event.wishCount)} helper="Masuk dari web" />
         </section>
 
         <section className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
@@ -162,7 +211,7 @@ export default function ClientDashboardPage() {
                 </p>
               </div>
               <Link
-                href={`/wedding/${clientEvent.slug}`}
+                href={`/wedding/${event.slug}`}
                 target="_blank"
                 className="inline-flex h-10 items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white"
               >
@@ -174,13 +223,13 @@ export default function ClientDashboardPage() {
                 <div className="flex h-full flex-col justify-end">
                   <div className="text-xs uppercase tracking-[0.2em]">Website Preview</div>
                   <div className="mt-1 text-3xl font-semibold">{content.couple}</div>
-                  <div className="mt-2 text-sm text-white/80">/wedding/{clientEvent.slug}</div>
+                  <div className="mt-2 text-sm text-white/80">/wedding/{event.slug}</div>
                 </div>
               </div>
             </div>
             <div className="mt-5 space-y-4">
               {[
-                ["Slug Website", `/wedding/${clientEvent.slug}`],
+                ["Slug Website", `/wedding/${event.slug}`],
                 ["Tanggal", content.date],
                 ["Venue", content.venue],
                 ["Paket", content.packageName],
@@ -199,7 +248,7 @@ export default function ClientDashboardPage() {
             <div>
               <h2 className="text-xl font-semibold">Edit Konten Website</h2>
               <p className="mt-1 text-sm leading-6 text-[#6b6056]">
-                Perubahan ini tersimpan lokal dan dibaca oleh halaman `/wedding/sheila-yoga`.
+                Perubahan ini akan tersimpan ke database.
               </p>
             </div>
             {contentSaved ? (
@@ -219,7 +268,7 @@ export default function ClientDashboardPage() {
               <textarea
                 className="mt-2 min-h-28 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-3 text-sm outline-none transition focus:border-[#9a6a3a]"
                 value={content.greeting}
-                onChange={(event) => setContent((current) => ({ ...current, greeting: event.target.value }))}
+                onChange={(e) => setContent((current) => ({ ...current, greeting: e.target.value }))}
               />
             </label>
             <button className="h-11 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white md:col-span-2">
@@ -233,7 +282,7 @@ export default function ClientDashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Daftar Tamu Terbaru</h2>
-              <p className="mt-1 text-sm text-[#6b6056]">Data ini nanti diambil dari table `guests` milik event client.</p>
+              <p className="mt-1 text-sm text-[#6b6056]">Data ini terhubung ke tabel `guests`.</p>
             </div>
             <AddGuestAction onAdd={handleAddGuest} />
           </div>
@@ -245,16 +294,16 @@ export default function ClientDashboardPage() {
                   <th className="px-4 py-3 font-semibold">Nama</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">PAX</th>
-                  <th className="px-4 py-3 font-semibold">Kode</th>
+                  <th className="px-4 py-3 font-semibold">Kode QR</th>
                 </tr>
               </thead>
               <tbody>
                 {guests.map((guest) => (
-                  <tr key={guest.code} className="border-t border-[#eadfd2]">
+                  <tr key={guest.id} className="border-t border-[#eadfd2]">
                     <td className="px-4 py-3 font-medium">{guest.name}</td>
-                    <td className="px-4 py-3 text-[#6b6056]">{guest.status}</td>
-                    <td className="px-4 py-3 text-[#6b6056]">{guest.pax || "-"}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#9a6a3a]">{guest.code}</td>
+                    <td className="px-4 py-3 text-[#6b6056]">{guest.rsvpStatus}</td>
+                    <td className="px-4 py-3 text-[#6b6056]">{guest.paxLimit || "-"}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[#9a6a3a]">{guest.qrCode}</td>
                   </tr>
                 ))}
               </tbody>
@@ -267,10 +316,10 @@ export default function ClientDashboardPage() {
             <div className="mt-5 space-y-3">
               {[
                 ["Upload daftar tamu", "#guests"],
-                ["Cek RSVP masuk", "/wedding/sheila-yoga"],
+                ["Cek RSVP masuk", `/wedding/${event.slug}`],
                 ["Review ucapan tamu", "#wishes"],
                 ["Lengkapi konten undangan", "#content"],
-                ["Download QR tamu", "/wedding/sheila-yoga"],
+                ["Download QR tamu", `/wedding/${event.slug}`],
               ].map(([item, href], index) => (
                 <Link key={item} href={href} className="flex items-center gap-3 rounded-md border border-[#eadfd2] p-3 transition hover:bg-[#fffaf4]">
                   <div className="grid h-7 w-7 place-items-center rounded-full bg-[#efe5d8] text-xs font-semibold text-[#9a6a3a]">
@@ -286,15 +335,20 @@ export default function ClientDashboardPage() {
         <section id="wishes" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
         <h2 className="text-xl font-semibold">Ucapan Terbaru</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {recentWishes.map((wish) => (
-            <article key={`${wish.name}-${wish.time}`} className="rounded-md border border-[#eadfd2] p-4">
+          {wishes.map((wish) => (
+            <article key={wish.id} className="rounded-md border border-[#eadfd2] p-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="font-semibold">{wish.name}</div>
-                <div className="text-xs text-[#9a6a3a]">{wish.time}</div>
+                <div className="font-semibold">{wish.guestName}</div>
+                <div className="text-xs text-[#9a6a3a]">{new Date(wish.createdAt).toLocaleDateString("id-ID")}</div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[#6b6056]">{wish.text}</p>
+              <p className="mt-3 text-sm leading-6 text-[#6b6056]">{wish.message}</p>
             </article>
           ))}
+          {wishes.length === 0 && (
+            <div className="col-span-3 text-center text-sm text-[#6b6056] py-4">
+              Belum ada ucapan
+            </div>
+          )}
         </div>
       </section>
       </DashboardShell>

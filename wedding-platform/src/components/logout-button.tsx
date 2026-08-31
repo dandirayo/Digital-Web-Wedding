@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { logout } from "@/lib/store";
 
 export function LogoutButton() {
   const router = useRouter();
 
   async function handleLogout() {
-    const supabase = tryCreateSupabaseBrowserClient();
-    await supabase?.auth.signOut();
-    localStorage.removeItem("occasio_demo_session");
+    await logout();
     router.push("/");
     router.refresh();
   }

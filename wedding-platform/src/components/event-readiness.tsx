@@ -1,4 +1,4 @@
-import type { WeddingEvent } from "@/lib/demo-data";
+import type { WeddingEvent } from "@/lib/types";
 
 type ReadinessItem = {
   label: string;
@@ -8,10 +8,10 @@ type ReadinessItem = {
 export function getEventReadiness(event: WeddingEvent) {
   const items: ReadinessItem[] = [
     { label: "Status publish", done: event.status === "active" || event.status === "completed" },
-    { label: "Daftar tamu", done: event.guests > 0 },
+    { label: "Daftar tamu", done: event.guestCount > 0 },
     { label: "RSVP masuk", done: event.rsvpYes + event.rsvpNo > 0 },
-    { label: "Ucapan tampil", done: event.wishes > 0 },
-    { label: "Check-in siap", done: event.checkIns > 0 || event.packageName !== "Classic" },
+    { label: "Ucapan tampil", done: event.wishCount > 0 },
+    { label: "Check-in siap", done: event.checkInCount > 0 || event.packageTier !== "silver" },
   ];
   const done = items.filter((item) => item.done).length;
   const score = Math.round((done / items.length) * 100);

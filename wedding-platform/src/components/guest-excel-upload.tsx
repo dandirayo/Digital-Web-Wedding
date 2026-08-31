@@ -2,19 +2,17 @@
 
 import { ChangeEvent, useMemo, useState } from "react";
 
-type GuestPreview = {
+export type ImportedGuest = {
   name: string;
   phone: string;
   paxLimit: number;
 };
 
-export type ImportedGuest = GuestPreview;
-
 type GuestExcelUploadProps = {
   onImport?: (guests: ImportedGuest[]) => void;
 };
 
-function normalizeGuest(row: Record<string, unknown>): GuestPreview | null {
+function normalizeGuest(row: Record<string, unknown>): ImportedGuest | null {
   const rawName = row.nama ?? row.Nama ?? row.name ?? row.Name;
   const rawPhone = row.telepon ?? row.Telepon ?? row.phone ?? row.Phone ?? row.whatsapp ?? row.Whatsapp;
   const rawPax = row.pax ?? row.PAX ?? row.pax_limit ?? row["PAX Limit"];
@@ -34,7 +32,7 @@ function normalizeGuest(row: Record<string, unknown>): GuestPreview | null {
 
 export function GuestExcelUpload({ onImport }: GuestExcelUploadProps) {
   const [fileName, setFileName] = useState("");
-  const [guests, setGuests] = useState<GuestPreview[]>([]);
+  const [guests, setGuests] = useState<ImportedGuest[]>([]);
   const [error, setError] = useState("");
   const [imported, setImported] = useState(false);
 
@@ -60,7 +58,7 @@ export function GuestExcelUpload({ onImport }: GuestExcelUploadProps) {
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, {
         defval: "",
       });
-      const parsed = rows.map(normalizeGuest).filter((guest): guest is GuestPreview => Boolean(guest));
+      const parsed = rows.map(normalizeGuest).filter((guest): guest is ImportedGuest => Boolean(guest));
 
       if (parsed.length === 0) {
         throw new Error("File terbaca, tapi tidak ada kolom nama yang valid.");

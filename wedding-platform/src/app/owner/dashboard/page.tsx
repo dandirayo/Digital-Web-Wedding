@@ -10,44 +10,39 @@ import {
   PipelineAction,
 } from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
-import { events as defaultEvents, type WeddingEvent } from "@/lib/demo-data";
+import { getEvents, createEvent, updateEvent, initStore } from "@/lib/store";
+import type { WeddingEvent } from "@/lib/types";
 import Link from "next/link";
-import { useState } from "react";
-
-const EVENTS_KEY = "occasio_demo_events";
+import { useEffect, useState } from "react";
 
 export default function OwnerDashboardPage() {
-  const [events, setEvents] = useState<WeddingEvent[]>(() => {
-    if (typeof window === "undefined") return defaultEvents;
-    try {
-      const storedEvents = localStorage.getItem(EVENTS_KEY);
-      return storedEvents ? (JSON.parse(storedEvents) as WeddingEvent[]) : defaultEvents;
-    } catch {
-      return defaultEvents;
+  const [events, setEvents] = useState<WeddingEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      await initStore();
+      const loaded = await getEvents();
+      setEvents(loaded);
+      setIsLoading(false);
     }
-  });
+    loadData();
+  }, []);
+
   const active = events.filter((event) => event.status === "active").length;
-  const totalGuests = events.reduce((sum, event) => sum + event.guests, 0);
+  const totalGuests = events.reduce((sum, event) => sum + event.guestCount, 0);
   const totalRsvp = events.reduce((sum, event) => sum + event.rsvpYes + event.rsvpNo, 0);
-  const totalWishes = events.reduce((sum, event) => sum + event.wishes, 0);
+  const totalWishes = events.reduce((sum, event) => sum + event.wishCount, 0);
   const draft = events.filter((event) => event.status === "draft").length;
 
-  function handleCreateEvent(event: WeddingEvent) {
-    setEvents((current) => {
-      const next = [event, ...current];
-      localStorage.setItem(EVENTS_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function handleCreateEvent(eventData: Omit<WeddingEvent, 'id' | 'createdAt' | 'guestCount' | 'rsvpYes' | 'rsvpNo' | 'wishCount' | 'checkInCount' | 'lastActivity'>) {
+    const newEvent = await createEvent(eventData);
+    setEvents((current) => [newEvent, ...current]);
   }
 
-  function handleStatusChange(id: string, status: WeddingEvent["status"]) {
-    setEvents((current) => {
-      const next = current.map((event) =>
-        event.id === id ? { ...event, status, lastActivity: "Status baru diubah" } : event,
-      );
-      localStorage.setItem(EVENTS_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function handleStatusChange(id: string, status: WeddingEvent["status"]) {
+    const updated = await updateEvent(id, { status });
+    setEvents((current) => current.map((e) => (e.id === id ? updated : e)));
   }
 
   return (
@@ -97,56 +92,61 @@ export default function OwnerDashboardPage() {
           <ExportReportAction events={events} />
         </div>
 
-        <div className="mt-5 grid gap-4">
-          {events.map((event) => (
-            <article key={event.id} className="rounded-md border border-[#eadfd2] p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-xl font-semibold">{event.couple}</h3>
-                    <StatusBadge status={event.status} />
+        {isLoading ? (
+          <div className="p-10 text-center text-sm text-[#6b6056]">Memuat event...</div>
+        ) : (
+          <div className="mt-5 grid gap-4">
+            {events.map((event) => (
+              <article key={event.id} className="rounded-md border border-[#eadfd2] p-5">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-xl font-semibold">{event.coupleName}</h3>
+                      <StatusBadge status={event.status} />
+                    </div>
+                    <p className="mt-2 text-sm text-[#6b6056]">
+                      {event.clientId || "Client Baru"} / {event.packageTier} / {event.eventDate}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm text-[#6b6056]">
-                    {event.clientName} / {event.packageName} / {event.date}
-                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
+                    <MiniStat label="Tamu" value={event.guestCount} />
+                    <MiniStat label="RSVP" value={event.rsvpYes + event.rsvpNo} />
+                    <MiniStat label="Ucapan" value={event.wishCount} />
+                    <MiniStat label="Check-in" value={event.checkInCount} />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
-                  <MiniStat label="Tamu" value={event.guests} />
-                  <MiniStat label="RSVP" value={event.rsvpYes + event.rsvpNo} />
-                  <MiniStat label="Ucapan" value={event.wishes} />
-                  <MiniStat label="Check-in" value={event.checkIns} />
-                </div>
-              </div>
-              <div className="mt-4 flex flex-col gap-3 border-t border-[#eadfd2] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
-                <Link
-                  href={`/wedding/${event.slug}`}
-                  target="_blank"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white"
-                >
-                  View Website
-                </Link>
-                <label className="inline-flex items-center gap-2 text-sm text-[#6b6056]">
-                  Status
-                  <select
-                    value={event.status}
-                    onChange={(selectEvent) =>
-                      handleStatusChange(event.id, selectEvent.target.value as WeddingEvent["status"])
-                    }
-                    className="h-10 rounded-md border border-[#cdbba8] bg-white px-3 text-sm font-semibold text-[#5a4028] outline-none"
+                <div className="mt-4 flex flex-col gap-3 border-t border-[#eadfd2] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+                  <Link
+                    href={`/wedding/${event.slug}`}
+                    target="_blank"
+                    className="inline-flex h-10 items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white"
                   >
-                    <option value="draft">draft</option>
-                    <option value="active">active</option>
-                    <option value="completed">completed</option>
-                  </select>
-                </label>
-                <span className="break-all text-sm text-[#6b6056]">/wedding/{event.slug}</span>
-              </div>
-              <div className="mt-4">
-                <EventReadiness event={event} />
-              </div>
-            </article>
-          ))}
-        </div>
+                    View Website
+                  </Link>
+                  <label className="inline-flex items-center gap-2 text-sm text-[#6b6056]">
+                    Status
+                    <select
+                      value={event.status}
+                      onChange={(selectEvent) =>
+                        handleStatusChange(event.id, selectEvent.target.value as WeddingEvent["status"])
+                      }
+                      className="h-10 rounded-md border border-[#cdbba8] bg-white px-3 text-sm font-semibold text-[#5a4028] outline-none"
+                    >
+                      <option value="draft">draft</option>
+                      <option value="active">active</option>
+                      <option value="completed">completed</option>
+                      <option value="archived">archived</option>
+                    </select>
+                  </label>
+                  <span className="break-all text-sm text-[#6b6056]">/wedding/{event.slug}</span>
+                </div>
+                <div className="mt-4">
+                  <EventReadiness event={event} />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section id="pipeline" className="mt-6 grid gap-6 xl:grid-cols-3">

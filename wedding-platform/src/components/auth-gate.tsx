@@ -4,29 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
-
+import { initStore, getCurrentSession } from "@/lib/store";
 type AuthGateProps = {
   role: "client" | "owner";
   children: ReactNode;
 };
 
 type GateState = "checking" | "allowed" | "blocked" | "setup";
-
-type DemoSession = {
-  email: string;
-  role: "client" | "owner";
-  loggedInAt: string;
-  source?: "demo" | "supabase";
-};
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs = 1800): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => {
-      window.setTimeout(() => resolve(null), timeoutMs);
-    }),
-  ]);
-}
 
 export function AuthGate({ role, children }: AuthGateProps) {
   const router = useRouter();
@@ -38,8 +22,8 @@ export function AuthGate({ role, children }: AuthGateProps) {
 
     async function checkSession() {
       try {
-        const rawSession = localStorage.getItem("occasio_demo_session");
-        const session = rawSession ? (JSON.parse(rawSession) as DemoSession) : null;
+        await initStore();
+        const session = await getCurrentSession();
 
         if (session?.role) {
           if (session.role !== role) {
@@ -50,36 +34,6 @@ export function AuthGate({ role, children }: AuthGateProps) {
           if (!active) return;
           setState("allowed");
           return;
-        }
-
-        const supabase = tryCreateSupabaseBrowserClient();
-        if (supabase) {
-          const sessionResult = await withTimeout(supabase.auth.getSession());
-          const sessionData = sessionResult?.data;
-          const userId = sessionData?.session?.user.id;
-
-          if (userId) {
-            const profileResult = await withTimeout(
-              Promise.resolve(
-                supabase
-                  .from("profiles")
-                  .select("role")
-                  .eq("id", userId)
-                  .single(),
-              ),
-            );
-            const profile = profileResult?.data;
-            const profileRole = profile?.role === "owner" ? "owner" : "client";
-
-            if (profileRole === role) {
-              if (!active) return;
-              setState("allowed");
-              return;
-            }
-
-            router.replace(profileRole === "owner" ? "/owner/dashboard" : "/client/dashboard");
-            return;
-          }
         }
 
         if (!active) return;

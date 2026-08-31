@@ -1,11 +1,11 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import type { WeddingEvent } from "@/lib/demo-data";
+import type { WeddingEvent, PackageTier } from "@/lib/types";
 import { DemoActionModal } from "./demo-action-modal";
 
 type CreateEventActionProps = {
-  onCreate: (event: WeddingEvent) => void;
+  onCreate: (event: Omit<WeddingEvent, 'id' | 'createdAt' | 'guestCount' | 'rsvpYes' | 'rsvpNo' | 'wishCount' | 'checkInCount' | 'lastActivity'>) => void;
 };
 
 export function CreateEventAction({ onCreate }: CreateEventActionProps) {
@@ -28,20 +28,19 @@ export function CreateEventAction({ onCreate }: CreateEventActionProps) {
     if (!cleanCouple || !cleanSlug) return;
 
     onCreate({
-      id: `evt_${Date.now().toString(36)}`,
       slug: cleanSlug,
-      couple: cleanCouple,
-      clientName: clientEmail || "Client Baru",
-      packageName: "Premium",
-      date: date || "Belum ditentukan",
+      coupleName: cleanCouple,
+      clientId: clientEmail || "Client Baru",
+      ownerId: "demo-owner",
+      templateId: "tpl-1",
+      packageId: "pkg-silver",
+      packageTier: "silver",
+      eventDate: date || "Belum ditentukan",
       venue: "Venue belum diisi",
       status: "draft",
-      guests: 0,
-      rsvpYes: 0,
-      rsvpNo: 0,
-      wishes: 0,
-      checkIns: 0,
-      lastActivity: "Baru dibuat",
+      isPublished: false,
+      publishedAt: null,
+      expiresAt: null
     });
 
     setCouple("");
@@ -66,6 +65,20 @@ export function CreateEventAction({ onCreate }: CreateEventActionProps) {
         <Field label="Email client" placeholder="client@email.com" type="email" value={clientEmail} onChange={setClientEmail} />
         <Field label="Slug website" placeholder="andi-rina" value={slug} onChange={setSlug} />
         <Field label="Tanggal event" placeholder="2027-02-14" type="date" value={date} onChange={setDate} />
+        <div className="grid grid-cols-2 gap-4">
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Template</span>
+            <select disabled className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm text-[#6b6056] outline-none opacity-70">
+              <option value="tpl-1">Classic Elegant (Default)</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Package</span>
+            <select disabled className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm text-[#6b6056] outline-none opacity-70">
+              <option value="pkg-silver">Silver Tier (Default)</option>
+            </select>
+          </label>
+        </div>
         {saved ? (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             Event tersimpan di demo dashboard.
@@ -82,14 +95,14 @@ export function CreateEventAction({ onCreate }: CreateEventActionProps) {
 export function ExportReportAction({ events }: { events: WeddingEvent[] }) {
   const csv = useMemo(() => {
     const rows = [
-      ["couple", "status", "guests", "rsvp", "wishes", "check_ins"],
+      ["coupleName", "status", "guestCount", "rsvp", "wishCount", "checkInCount"],
       ...events.map((event) => [
-        event.couple,
+        event.coupleName,
         event.status,
-        String(event.guests),
+        String(event.guestCount),
         String(event.rsvpYes + event.rsvpNo),
-        String(event.wishes),
-        String(event.checkIns),
+        String(event.wishCount),
+        String(event.checkInCount),
       ]),
     ];
 
