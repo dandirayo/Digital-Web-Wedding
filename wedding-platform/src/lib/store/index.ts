@@ -24,8 +24,7 @@ const generateId = () => {
 // Helper for simulating async operations
 const delay = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Generic storage accessors
-const getStorageItem = <T>(key: string, defaultValue: T): T => {
+export const getStorageItem = <T>(key: string, defaultValue: T): T => {
   if (typeof window === 'undefined') return defaultValue;
   try {
     const item = localStorage.getItem(key);
@@ -37,7 +36,7 @@ const getStorageItem = <T>(key: string, defaultValue: T): T => {
   }
 };
 
-const setStorageItem = <T>(key: string, value: T): void => {
+export const setStorageItem = <T>(key: string, value: T): void => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -216,7 +215,7 @@ export const getGuests = async (eventId: string): Promise<Guest[]> => {
   return guests.filter(g => g.eventId === eventId);
 };
 
-export const addGuest = async (eventId: string, data: Omit<Guest, 'id' | 'createdAt' | 'qrCode' | 'checkedInAt'>): Promise<Guest> => {
+export const addGuest = async (eventId: string, data: Omit<Guest, 'id' | 'createdAt' | 'qrCode' | 'checkedInAt' | 'eventId'>): Promise<Guest> => {
   await delay();
   const guests = getStorageItem<Guest[]>('occasio_guests', []);
   const id = generateId();
@@ -358,7 +357,7 @@ export const getMedia = async (eventId: string): Promise<EventMedia[]> => {
   return media.filter(m => m.eventId === eventId).sort((a, b) => a.sortOrder - b.sortOrder);
 };
 
-export const addMedia = async (eventId: string, data: Omit<EventMedia, 'id' | 'createdAt'>): Promise<EventMedia> => {
+export const addMedia = async (eventId: string, data: Omit<EventMedia, 'id' | 'createdAt' | 'eventId'>): Promise<EventMedia> => {
   await delay();
   const media = getStorageItem<EventMedia[]>('occasio_media', []);
   const newMedia: EventMedia = {
@@ -385,7 +384,7 @@ export const getLiveGallery = async (eventId: string): Promise<LiveGalleryPhoto[
   return gallery.filter(g => g.eventId === eventId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
 
-export const addLiveGalleryPhoto = async (eventId: string, data: Omit<LiveGalleryPhoto, 'id' | 'createdAt'>): Promise<LiveGalleryPhoto> => {
+export const addLiveGalleryPhoto = async (eventId: string, data: Omit<LiveGalleryPhoto, 'id' | 'createdAt' | 'eventId'>): Promise<LiveGalleryPhoto> => {
   await delay();
   const gallery = getStorageItem<LiveGalleryPhoto[]>('occasio_live_gallery', []);
   const newPhoto: LiveGalleryPhoto = {
