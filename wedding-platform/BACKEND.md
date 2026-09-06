@@ -6,6 +6,7 @@ Status project saat ini:
 - Supabase Auth sudah disiapkan di kode login.
 - Fallback demo lokal tetap aktif supaya app bisa dipakai walau Supabase belum reachable.
 - Schema database ada di `src/lib/supabase/schema.sql`.
+- Migration hardening ada di `supabase/migrations/20260906015352_harden_existing_schema.sql`.
 - Seed user dan seed data demo ada di folder `scripts`.
 
 ## 1. Cek environment
@@ -36,6 +37,15 @@ Schema ini membuat:
 - `wishes`
 - enum role/status
 - RLS select, insert, dan update untuk owner/client
+
+Setelah schema dasar berhasil dijalankan, jalankan migration hardening satu kali.
+Migration ini memperbaiki role escalation, menutup akses anonim ke tabel `guests`,
+membatasi event/content/media publik hanya untuk event yang sudah dipublish, dan
+mengunci upload live gallery berdasarkan akses event.
+
+Untuk environment yang sudah memakai Supabase CLI dan project sudah ter-link,
+gunakan migration sebagai sumber perubahan berikutnya. Jangan menjalankan
+`supabase db push` sebelum URL project dapat di-resolve dan migration sudah direview.
 
 ## 3. Cek koneksi backend
 

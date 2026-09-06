@@ -11,15 +11,19 @@ type DashboardShellProps = {
 
 const nav = {
   client: [
-    { href: "/client/dashboard", label: "Overview" },
+    { href: "/client/dashboard", label: "Ringkasan" },
+    { href: "/client/dashboard#brief", label: "Brief" },
+    { href: "/chat", label: "Chat" },
     { href: "/client/dashboard#guests", label: "Tamu" },
     { href: "/client/dashboard#wishes", label: "Ucapan" },
     { href: "/client/dashboard#content", label: "Konten" },
   ],
   owner: [
-    { href: "/owner/dashboard", label: "Semua Event" },
+    { href: "/owner/dashboard", label: "Ringkasan" },
+    { href: "/chat", label: "Chat" },
     { href: "/owner/dashboard#pipeline", label: "Pipeline" },
     { href: "/owner/dashboard#monitoring", label: "Monitoring" },
+    { href: "/owner/dashboard#tasks", label: "Task" },
     { href: "/owner/dashboard#billing", label: "Billing" },
   ],
 };
@@ -32,7 +36,7 @@ export function DashboardShell({ role, title, description, children }: Dashboard
           <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">
             Occasio
           </div>
-          <div className="mt-1 text-2xl font-semibold">Control Room</div>
+          <div className="mt-1 text-2xl font-semibold">{role === "client" ? "Wedding Workspace" : "Business Workspace"}</div>
         </Link>
 
         <nav className="mt-10 space-y-2">
@@ -49,10 +53,10 @@ export function DashboardShell({ role, title, description, children }: Dashboard
 
         <div className="absolute bottom-6 left-5 right-5 rounded-md border border-[#e0d4c7] bg-white p-4">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
-            Login Demo
+            Status Workspace
           </div>
           <p className="mt-2 text-sm text-[#6b6056]">
-            Role ini nanti memakai Supabase Auth, session, dan Row Level Security.
+            {role === "client" ? "Kelola brief, konten, tamu, dan kesiapan publish dari satu tempat." : "Pantau lead, order, produksi, event, dan pembayaran dari satu tempat."}
           </p>
         </div>
       </aside>
@@ -62,7 +66,7 @@ export function DashboardShell({ role, title, description, children }: Dashboard
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
-                {role === "client" ? "Client Dashboard" : "Owner Dashboard"}
+                {role === "client" ? "Workspace Klien" : "Workspace Owner"}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">{description}</p>

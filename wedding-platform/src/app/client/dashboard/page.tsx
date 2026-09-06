@@ -7,6 +7,7 @@ import { GuestExcelUpload, type ImportedGuest } from "@/components/guest-excel-u
 import { StatCard } from "@/components/stat-card";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { BulkShare } from "@/components/bulk-share";
 import {
   initStore,
   getCurrentSession,
@@ -19,7 +20,24 @@ import {
   addGuest,
   importGuests
 } from "@/lib/store";
-import type { WeddingEvent, Guest, Wish, EventContent } from "@/lib/types";
+import type { WeddingEvent, Guest, Wish } from "@/lib/types";
+import { getPackageLabel } from "@/lib/demo-data";
+import { ContentReview } from "@/components/content-review";
+
+const MESSAGE_TEMPLATE = `Kepada Yth. \${guest.name},
+
+Dengan hormat, kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara pernikahan kami:
+
+\${event.coupleName}
+📅 \${formattedDate}
+📍 \${event.venue}
+
+Silakan buka undangan digital kami di:
+\${invitationLink}
+
+Mohon konfirmasi kehadiran melalui link di atas.
+
+Terima kasih 🙏`;
 
 type WeddingContent = {
   couple: string;
@@ -43,6 +61,8 @@ export default function ClientDashboardPage() {
   });
   
   const [contentSaved, setContentSaved] = useState(false);
+  const [sharedGuestIds, setSharedGuestIds] = useState<string[]>([]);
+  const [previewGuestId, setPreviewGuestId] = useState<string>("");
 
   useEffect(() => {
     async function loadData() {
@@ -58,6 +78,11 @@ export default function ClientDashboardPage() {
         const ev = events[0];
         setEvent(ev);
 
+        const storedShared = localStorage.getItem(`occasio_shared_${ev.id}`);
+        if (storedShared) {
+          setSharedGuestIds(JSON.parse(storedShared));
+        }
+
         const [loadedGuests, loadedWishes, loadedContent] = await Promise.all([
           getGuests(ev.id),
           getWishes(ev.id),
@@ -71,7 +96,7 @@ export default function ClientDashboardPage() {
           couple: ev.coupleName,
           date: ev.eventDate ? new Date(ev.eventDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "",
           venue: ev.venue,
-          packageName: ev.packageTier || "silver",
+          packageName: getPackageLabel(ev.packageTier),
           greeting: loadedContent?.greeting || "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
         });
       }
@@ -101,7 +126,7 @@ export default function ClientDashboardPage() {
       <AuthGate role="client">
         <DashboardShell
           role="client"
-          title="Client Dashboard"
+          title="Workspace Klien"
           description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
         >
           <div className="flex h-64 items-center justify-center rounded-md border border-[#e0d4c7] bg-white p-5 text-center">
@@ -137,7 +162,7 @@ export default function ClientDashboardPage() {
   async function handleSaveContent(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!event) return;
-    
+
     await updateEventContent(event.id, { greeting: content.greeting });
     await updateEvent(event.id, { 
       coupleName: content.couple,
@@ -148,15 +173,107 @@ export default function ClientDashboardPage() {
     setTimeout(() => setContentSaved(false), 3000);
   }
 
+  const getGuestLink = (guest: Guest) => {
+    if (!event) return "";
+    return `${window.location.origin}/wedding/${event.slug}?to=${encodeURIComponent(guest.name)}`;
+  };
+
+  const getWhatsappLink = (guest: Guest) => {
+    if (!event) return "";
+    const formattedDate = event.eventDate
+      ? new Date(event.eventDate).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "";
+    const message = MESSAGE_TEMPLATE
+      .replace(/\$\{guest\.name\}/g, guest.name)
+      .replace(/\$\{event\.coupleName\}/g, event.coupleName)
+      .replace(/\$\{formattedDate\}/g, formattedDate)
+      .replace(/\$\{event\.venue\}/g, event.venue)
+      .replace(/\$\{invitationLink\}/g, getGuestLink(guest));
+
+    return `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const copyLink = async (guest: Guest) => {
+    try {
+      await navigator.clipboard.writeText(getGuestLink(guest));
+      // Optional: add a toast library here for success notification
+      alert(`Link untuk ${guest.name} tersalin!`);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+    }
+  };
+
+  const markAsShared = (guestIds: string[]) => {
+    if (!event) return;
+    const newShared = Array.from(new Set([...sharedGuestIds, ...guestIds]));
+    setSharedGuestIds(newShared);
+    localStorage.setItem(`occasio_shared_${event.id}`, JSON.stringify(newShared));
+  };
+
+  const shareWhatsApp = (guest: Guest) => {
+    window.open(getWhatsappLink(guest), "_blank");
+    markAsShared([guest.id]);
+  };
+
   return (
     <AuthGate role="client">
       <DashboardShell
         role="client"
         title={content.couple}
-        description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
+        description="Kelola brief, konten, tamu, RSVP, dan kesiapan publish undangan Anda."
       >
+        <section id="brief" className="mb-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">Brief pesanan</div>
+              <h2 className="mt-2 text-2xl font-semibold">{content.couple}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b6056]">Brief yang sudah dikonfirmasi owner menjadi acuan pengerjaan konten dan publish.</p>
+            </div>
+            <span className="inline-flex rounded-full bg-[#efe5d8] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7b552f]">Produksi berjalan</span>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <BriefItem label="Paket" value={content.packageName} />
+            <BriefItem label="Tanggal acara" value={content.date} />
+            <BriefItem label="Lokasi" value={content.venue} />
+            <BriefItem label="Alamat website" value={`/wedding/${event.slug}`} />
+          </div>
+        </section>
+
+        <section className="mb-6 flex flex-col items-start gap-4 rounded-md border border-[#e0d4c7] bg-white p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Preview Undangan</h2>
+            <p className="mt-1 text-sm text-[#6b6056]">Lihat tampilan website undangan Anda.</p>
+          </div>
+          <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+            <select
+              className="h-10 rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none"
+              value={previewGuestId}
+              onChange={(e) => setPreviewGuestId(e.target.value)}
+            >
+              <option value="">-- Preview sebagai tamu --</option>
+              {guests.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                const guest = guests.find((g) => g.id === previewGuestId);
+                const url = guest ? getGuestLink(guest) : `/wedding/${event.slug}`;
+                window.open(url, "_blank");
+              }}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-[#9a6a3a] px-4 text-sm font-semibold text-white hover:bg-[#865a30]"
+            >
+              👁️ Buka Preview
+            </button>
+          </div>
+        </section>
+
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Tamu" value={String(guests.length)} helper="Dari tabel database" />
+          <StatCard label="Total Tamu" value={String(guests.length)} helper="Tersimpan di workspace" />
           <StatCard label="Hadir" value={String(event.rsvpYes)} helper="RSVP sudah konfirmasi" />
           <StatCard label="Belum Jawab" value={String(pending)} helper="Perlu follow-up" />
           <StatCard label="Ucapan" value={String(event.wishCount)} helper="Masuk dari web" />
@@ -199,6 +316,10 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
+        <div className="mt-6">
+          <ContentReview eventId={event.id} role="client" />
+        </div>
+
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <GuestExcelUpload onImport={handleImportGuests} />
 
@@ -207,7 +328,7 @@ export default function ClientDashboardPage() {
               <div>
                 <h2 className="text-xl font-semibold">Konten Undangan</h2>
                 <p className="mt-1 text-sm leading-6 text-[#6b6056]">
-                  Ringkasan konten utama yang akan muncul di website undangan client.
+                  Ringkasan konten utama yang akan muncul di website undangan Anda.
                 </p>
               </div>
               <Link
@@ -248,7 +369,7 @@ export default function ClientDashboardPage() {
             <div>
               <h2 className="text-xl font-semibold">Edit Konten Website</h2>
               <p className="mt-1 text-sm leading-6 text-[#6b6056]">
-                Perubahan ini akan tersimpan ke database.
+                Perubahan disimpan ke workspace dan dapat direview sebelum publish.
               </p>
             </div>
             {contentSaved ? (
@@ -262,7 +383,6 @@ export default function ClientDashboardPage() {
             <ContentField label="Nama pasangan" value={content.couple} onChange={(value) => setContent((current) => ({ ...current, couple: value }))} />
             <ContentField label="Tanggal" value={content.date} onChange={(value) => setContent((current) => ({ ...current, date: value }))} />
             <ContentField label="Venue" value={content.venue} onChange={(value) => setContent((current) => ({ ...current, venue: value }))} />
-            <ContentField label="Paket" value={content.packageName} onChange={(value) => setContent((current) => ({ ...current, packageName: value }))} />
             <label className="block md:col-span-2">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Kalimat pembuka</span>
               <textarea
@@ -278,40 +398,83 @@ export default function ClientDashboardPage() {
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div id="guests" className="min-w-0 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div id="guests" className="min-w-0 rounded-md border border-[#e0d4c7] bg-white p-5 xl:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Daftar Tamu Terbaru</h2>
-              <p className="mt-1 text-sm text-[#6b6056]">Data ini terhubung ke tabel `guests`.</p>
+              <p className="mt-1 text-sm text-[#6b6056]">Tambah, impor, dan kirim link personal kepada tamu.</p>
             </div>
-            <AddGuestAction onAdd={handleAddGuest} />
+            <div className="flex items-center gap-3">
+              <BulkShare
+                event={event}
+                guests={guests}
+                messageTemplate={MESSAGE_TEMPLATE}
+                onShared={markAsShared}
+              />
+              <AddGuestAction onAdd={handleAddGuest} />
+            </div>
           </div>
 
           <div className="mt-5 overflow-x-auto rounded-md border border-[#eadfd2]">
-            <table className="min-w-[620px] w-full text-left text-sm">
+            <table className="min-w-[800px] w-full text-left text-sm">
               <thead className="bg-[#f7f3ed] text-[#756a60]">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Nama</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">PAX</th>
-                  <th className="px-4 py-3 font-semibold">Kode QR</th>
+                  <th className="px-4 py-3 font-semibold">Nama & Link</th>
+                  <th className="px-4 py-3 font-semibold">Status RSVP</th>
+                  <th className="px-4 py-3 font-semibold">Status Kirim</th>
+                  <th className="px-4 py-3 font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {guests.map((guest) => (
-                  <tr key={guest.id} className="border-t border-[#eadfd2]">
-                    <td className="px-4 py-3 font-medium">{guest.name}</td>
-                    <td className="px-4 py-3 text-[#6b6056]">{guest.rsvpStatus}</td>
-                    <td className="px-4 py-3 text-[#6b6056]">{guest.paxLimit || "-"}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#9a6a3a]">{guest.qrCode}</td>
-                  </tr>
-                ))}
+                {guests.map((guest) => {
+                  const isShared = sharedGuestIds.includes(guest.id);
+                  return (
+                    <tr key={guest.id} className="border-t border-[#eadfd2]">
+                      <td className="px-4 py-3">
+                        <div className="font-medium">{guest.name}</div>
+                        <div className="mt-1 text-[11px] text-[#9a6a3a] truncate max-w-[250px]" title={getGuestLink(guest)}>
+                          {getGuestLink(guest)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[#6b6056] capitalize">{guest.rsvpStatus}</td>
+                      <td className="px-4 py-3">
+                        {isShared ? (
+                          <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+                            Sudah dikirim
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
+                            Belum dikirim
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => copyLink(guest)}
+                            className="inline-flex h-8 items-center justify-center rounded-md border border-[#e0d4c7] bg-white px-3 text-xs font-medium text-[#241f1a] hover:bg-[#fffaf4]"
+                          >
+                            📋 Copy
+                          </button>
+                          <button
+                            onClick={() => shareWhatsApp(guest)}
+                            disabled={!guest.phone}
+                            className="inline-flex h-8 items-center justify-center rounded-md bg-[#25D366] px-3 text-xs font-medium text-white hover:bg-[#128C7E] disabled:opacity-50"
+                            title={!guest.phone ? "Nomor WhatsApp belum diisi" : ""}
+                          >
+                            📱 {isShared ? "Kirim Ulang" : "Kirim WA"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
 
-          <div className="rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="rounded-md border border-[#e0d4c7] bg-white p-5 xl:col-span-2">
             <h2 className="text-xl font-semibold">Checklist Client</h2>
             <div className="mt-5 space-y-3">
               {[
@@ -374,5 +537,14 @@ function ContentField({
         onChange={(event) => onChange(event.target.value)}
       />
     </label>
+  );
+}
+
+function BriefItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
+      <div className="mt-2 text-sm font-semibold">{value}</div>
+    </div>
   );
 }

@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { ThemeProps } from '../types';
-import { Plane, Calendar, MapPin, Clock, CheckCircle, Ticket, Camera, MessageSquare } from 'lucide-react';
+import { Plane, MapPin, Clock, CheckCircle, Ticket, Camera, MessageSquare } from 'lucide-react';
 import { addGuest, addWish } from '@/lib/store';
 import QRCode from 'qrcode';
 
-export default function BoardingPassTheme({ event, content, guests, wishes, media, guestName }: ThemeProps) {
+export default function BoardingPassTheme({ event, content, wishes, media, guestName }: ThemeProps) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
@@ -14,8 +14,9 @@ export default function BoardingPassTheme({ event, content, guests, wishes, medi
   const [wishText, setWishText] = useState('');
   
   const defaultBg = '/templates/sheila-yoga/assets/hero-bg.jpg';
-  const heroImage = media.length > 0 ? media[0].url : defaultBg;
   const galleryImages = media.length > 1 ? media.slice(1) : Array(4).fill({ url: defaultBg });
+  const ticketCode = event.slug.replace(/[^a-z0-9]/gi, '').slice(0, 12).toUpperCase();
+  const polaroidRotations = [-2, 1.5, -1, 2.5];
 
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +136,7 @@ export default function BoardingPassTheme({ event, content, guests, wishes, medi
             </div>
             
             <p className="font-mono text-xs opacity-70 break-all">
-              {Math.random().toString(36).substring(2, 15).toUpperCase()}
+              {ticketCode}
             </p>
           </div>
         </div>
@@ -149,7 +150,7 @@ export default function BoardingPassTheme({ event, content, guests, wishes, medi
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {galleryImages.map((img, idx) => (
-              <div key={idx} className="bg-white p-3 pb-8 md:pb-12 shadow-lg transform hover:-translate-y-2 transition duration-300" style={{ transform: `rotate(${Math.random() * 6 - 3}deg)` }}>
+              <div key={idx} className="bg-white p-3 pb-8 md:pb-12 shadow-lg transform hover:-translate-y-2 transition duration-300" style={{ transform: `rotate(${polaroidRotations[idx % polaroidRotations.length]}deg)` }}>
                 <div className="aspect-square bg-gray-200 mb-3 overflow-hidden">
                   <img src={img.url} alt={`Memory ${idx}`} className="w-full h-full object-cover filter contrast-110 sepia-[.2]" />
                 </div>

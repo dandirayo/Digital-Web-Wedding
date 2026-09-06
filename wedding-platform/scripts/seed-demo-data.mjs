@@ -38,8 +38,8 @@ async function ensureUser(user) {
     email_confirm: true,
     user_metadata: {
       full_name: user.fullName,
-      role: user.role,
     },
+    app_metadata: { role: user.role },
   });
 
   const exists =
@@ -63,8 +63,8 @@ async function ensureUser(user) {
     email_confirm: true,
     user_metadata: {
       full_name: user.fullName,
-      role: user.role,
     },
+    app_metadata: { role: user.role },
   });
   if (updateError) throw updateError;
 

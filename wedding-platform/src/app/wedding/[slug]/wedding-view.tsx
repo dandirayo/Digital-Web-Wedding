@@ -49,17 +49,22 @@ export function WeddingView({ slug }: { slug: string }) {
           return;
         }
 
+        const isExpired = event.expiresAt ? new Date(event.expiresAt) < new Date() : false;
+        const guestData = guestName ? guests.find(g => g.name.toLowerCase() === guestName.toLowerCase()) || null : null;
+
         setData({
           event,
           content,
           guests,
           wishes,
           media,
+          guestData,
+          isExpired,
         });
         
         setThemeComponent(() => getThemeComponent(template.slug));
         
-      } catch (err) {
+      } catch {
         setError("Error loading event");
       } finally {
         setLoading(false);
@@ -67,7 +72,7 @@ export function WeddingView({ slug }: { slug: string }) {
     }
     
     loadData();
-  }, [slug]);
+  }, [guestName, slug]);
 
   if (loading) {
     return (
@@ -82,6 +87,15 @@ export function WeddingView({ slug }: { slug: string }) {
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#f7f3ed] p-5 text-center">
         <h1 className="text-4xl font-bold text-[#241f1a]">404</h1>
         <p className="mt-4 text-lg text-[#6b6056]">{error || "Event not found"}</p>
+      </div>
+    );
+  }
+
+  if (data.isExpired) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f7f3ed] p-5 text-center">
+        <h1 className="text-3xl font-bold text-[#241f1a]">Undangan Berakhir</h1>
+        <p className="mt-4 text-lg text-[#6b6056]">Maaf, acara untuk undangan ini sudah berakhir.</p>
       </div>
     );
   }

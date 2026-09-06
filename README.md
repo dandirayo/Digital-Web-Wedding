@@ -1,5 +1,15 @@
 # Occasio Digital Wedding Platform
 
+## Alamat Development Lokal
+
+- Website static lama: `http://localhost:4174`
+- Aplikasi Next.js utama: `http://localhost:3001`
+- Gallery template Next.js: `http://localhost:3001/gallery`
+- Demo undangan: `http://localhost:3001/wedding/sheila-yoga`
+
+Port `3000` tidak digunakan. Seluruh flow owner, client, dan wedding production
+dikembangkan di aplikasi Next.js pada port `3001`.
+
 Occasio adalah layanan pembuatan undangan pernikahan digital interaktif dan elegan. Platform ini menyediakan solusi lengkap bagi pasangan yang ingin membagikan momen spesial mereka dengan cara yang modern, praktis, dan ramah lingkungan.
 
 ## Fitur Utama

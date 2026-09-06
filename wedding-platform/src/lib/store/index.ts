@@ -60,6 +60,24 @@ export const initStore = async () => {
     setStorageItem('occasio_profiles', seedData.profiles);
     setStorageItem('occasio_seeded', true);
   }
+
+  const contentVersion = getStorageItem('occasio_content_version', 0);
+  if (contentVersion < 2) {
+    const currentPackages = getStorageItem<Package[]>('occasio_packages', []);
+    const normalizedPackages = currentPackages.map((item) => {
+      const canonical = seedData.packages.find((candidate) => candidate.id === item.id);
+      return canonical ? { ...item, ...canonical } : item;
+    });
+    setStorageItem('occasio_packages', normalizedPackages.length ? normalizedPackages : seedData.packages);
+
+    const currentTemplates = getStorageItem<Template[]>('occasio_templates', []);
+    const normalizedTemplates = currentTemplates.map((item) => {
+      const canonical = seedData.templates.find((candidate) => candidate.id === item.id);
+      return canonical ? { ...item, name: canonical.name, description: canonical.description } : item;
+    });
+    setStorageItem('occasio_templates', normalizedTemplates.length ? normalizedTemplates : seedData.templates);
+    setStorageItem('occasio_content_version', 2);
+  }
 };
 
 // API implementation
@@ -405,6 +423,7 @@ export const getCurrentSession = async (): Promise<DemoSession | null> => {
 };
 
 export const login = async (email: string, _password: string): Promise<DemoSession> => {
+  void _password;
   await delay(500); // Simulate network
   
   // Simple mock login

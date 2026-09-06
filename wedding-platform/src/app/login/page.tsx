@@ -26,16 +26,16 @@ export default function LoginPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {["Auth", "Roles", "RLS"].map((item) => (
+          {["Event", "Tamu", "Chat"].map((item) => (
             <div key={item} className="rounded-md border border-[#e0d4c7] bg-white p-4">
               <div className="text-sm font-semibold text-[#9a6a3a]">{item}</div>
-              <div className="mt-1 text-xs text-[#756a60]">Supabase ready</div>
+              <div className="mt-1 text-xs text-[#756a60]">Workspace aktif</div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="flex items-center justify-center px-5 py-10">
+      <section className="flex items-start justify-start px-5 py-10 sm:px-10 lg:px-14 lg:py-16">
         <div className="w-full max-w-xl">
           <div className="lg:hidden">
             <Link href="/" className="flex items-center gap-3">
@@ -52,8 +52,7 @@ export default function LoginPage() {
             </div>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">Masuk ke workspace.</h2>
             <p className="mt-3 text-sm leading-6 text-[#6b6056]">
-            Gunakan akun demo owner atau client. Dashboard tetap dipisahkan berdasarkan
-            role supaya flow produk bisa diuji dulu.
+            Pilih akses sesuai peran Anda untuk melanjutkan ke workspace Occasio.
             </p>
           </div>
 

@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThemeProps } from '../types';
-import { Play, Info, Plus, Check, ThumbsUp, Volume2, Calendar, MapPin, Clock } from 'lucide-react';
+import { Play, Info, Plus, Check, ThumbsUp, MapPin } from 'lucide-react';
 import { addGuest, addWish } from '@/lib/store';
 import QRCode from 'qrcode';
-import Image from 'next/image';
 
-export default function NetflixTheme({ event, content, guests, wishes, media, guestName }: ThemeProps) {
+export default function NetflixTheme({ event, content, wishes, media, guestName }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [rsvpStatus, setRsvpStatus] = useState<'pending' | 'attending' | 'declined'>('pending');
+  const [, setRsvpStatus] = useState<'pending' | 'attending' | 'declined'>('pending');
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
   const [name, setName] = useState(guestName || '');
@@ -70,7 +69,7 @@ export default function NetflixTheme({ event, content, guests, wishes, media, gu
           </div>
 
           <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-xl">
-            Two lives intertwine in this romantic feature. Watch as they say "I do" and begin their forever journey together.
+            Two lives intertwine in this romantic feature. Watch as they say &quot;I do&quot; and begin their forever journey together.
           </p>
 
           <div className="flex space-x-4">

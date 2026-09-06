@@ -7,6 +7,8 @@ export type ThemeProps = {
   wishes: Wish[];
   media: EventMedia[];
   guestName?: string; // from URL ?to=NamaTamu
+  guestData?: Guest | null;  // Full guest record if found by name
+  isExpired?: boolean;        // True if event has passed expiresAt
 };
 
 export type ThemeComponent = React.ComponentType<ThemeProps>;

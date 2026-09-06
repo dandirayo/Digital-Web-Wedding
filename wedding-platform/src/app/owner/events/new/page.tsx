@@ -22,6 +22,11 @@ type LocalMedia = {
   type: MediaType;
 };
 
+function createEventSlug(brideName: string, groomName: string) {
+  if (!brideName || !groomName) return "";
+  return `${brideName}-${groomName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
 export default function CreateEventPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -65,18 +70,15 @@ export default function CreateEventPage() {
     loadData();
   }, []);
 
-  // Auto-generate slug when bride/groom changes
-  useEffect(() => {
-    if (brideName && groomName && !slug) {
-      setSlug(`${brideName}-${groomName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
-    }
-  }, [brideName, groomName, slug]);
+  const generatedSlug = createEventSlug(brideName, groomName);
 
   const handleNext = () => setStep((s) => Math.min(5, s + 1));
   const handlePrev = () => setStep((s) => Math.max(1, s - 1));
 
   const handleSubmit = async () => {
-    if (!templateId || !packageId || !clientId || !slug) {
+    const eventSlug = slug || generatedSlug;
+
+    if (!templateId || !packageId || !clientId || !eventSlug) {
       alert("Please ensure template, package, client, and slug are selected.");
       return;
     }
@@ -95,7 +97,7 @@ export default function CreateEventPage() {
       const newEvent = await createEvent({
         ownerId: session.userId,
         clientId,
-        slug,
+        slug: eventSlug,
         coupleName,
         templateId,
         packageId,
@@ -361,7 +363,7 @@ export default function CreateEventPage() {
                         </span>
                         <input
                           type="text"
-                          value={slug}
+                          value={slug || generatedSlug}
                           onChange={(e) => setSlug(e.target.value)}
                           className="flex-1 block w-full min-w-0 rounded-none rounded-r-md p-2 border border-[#e0d4c7] focus:ring-[#9a6a3a] focus:border-[#9a6a3a] sm:text-sm"
                         />

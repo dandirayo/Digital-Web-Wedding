@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { ThemeProps } from '../types';
-import { Play, Shuffle, Heart, MoreHorizontal, Clock, MapPin, Music, CheckCircle, Pause } from 'lucide-react';
+import { Play, Heart, MoreHorizontal, Clock, MapPin, Music, CheckCircle, Pause } from 'lucide-react';
 import { addGuest, addWish } from '@/lib/store';
 import QRCode from 'qrcode';
 
-export default function SpotifyTheme({ event, content, guests, wishes, media, guestName }: ThemeProps) {
+export default function SpotifyTheme({ event, content, wishes, media, guestName }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
@@ -18,8 +18,7 @@ export default function SpotifyTheme({ event, content, guests, wishes, media, gu
   const coverImage = media.length > 0 ? media[0].url : defaultBg;
   const galleryImages = media.length > 1 ? media.slice(1) : Array(4).fill({ url: defaultBg });
 
-  const handleRSVP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitRsvp = async () => {
     if (name && !isSaved) {
       try {
         const qr = await QRCode.toDataURL(name);
@@ -82,9 +81,8 @@ export default function SpotifyTheme({ event, content, guests, wishes, media, gu
           )}
         </button>
         <button 
-          onClick={(e) => {
-             // trigger rsvp
-             if(!isSaved && name) handleRSVP(e as any);
+          onClick={() => {
+            if (!isSaved && name) void submitRsvp();
           }}
           className="text-gray-400 hover:text-white transition"
           title="Save to Library (RSVP)"
@@ -169,7 +167,13 @@ export default function SpotifyTheme({ event, content, guests, wishes, media, gu
           <h2 className="text-2xl font-bold mb-6">Save to Library</h2>
           <div className="bg-[#181818] p-6 rounded-xl border border-white/5">
             {!qrCodeData ? (
-              <form onSubmit={handleRSVP} className="space-y-4">
+              <form
+                onSubmit={(submitEvent) => {
+                  submitEvent.preventDefault();
+                  void submitRsvp();
+                }}
+                className="space-y-4"
+              >
                 <p className="text-gray-400 text-sm mb-4">Add your name to follow this event and secure your spot.</p>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Your Name</label>

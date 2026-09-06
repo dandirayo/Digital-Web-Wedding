@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Occasio Wedding Platform
 
-## Getting Started
+Aplikasi utama Occasio untuk owner, client, undangan publik, RSVP, dan QR
+check-in. Project ini menggunakan Next.js dan dijalankan pada port `3001` selama
+development agar tidak tertukar dengan website static lama.
 
-First, run the development server:
+## Jalankan aplikasi utama
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm exec next dev --webpack -p 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Alamat lokal:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Homepage platform: `http://localhost:3001`
+- Gallery template: `http://localhost:3001/gallery`
+- Login: `http://localhost:3001/login`
+- Owner dashboard: `http://localhost:3001/owner/dashboard`
+- Client dashboard: `http://localhost:3001/client/dashboard`
+- Demo wedding: `http://localhost:3001/wedding/sheila-yoga`
+- Demo check-in: `http://localhost:3001/checkin/sheila-yoga`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Port `3000` tidak digunakan dalam setup project ini.
 
-## Learn More
+## Website static lama
 
-To learn more about Next.js, take a look at the following resources:
+Website static berada di root repository dan dipakai sebagai pembanding selama
+migrasi. Jalankan static server dari root repository pada port `4174`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Verifikasi
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+pnpm backend:check
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Panduan backend dan Supabase tersedia di `BACKEND.md`.

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { initStore, getCurrentSession } from "@/lib/store";
 type AuthGateProps = {
   role: "client" | "owner";

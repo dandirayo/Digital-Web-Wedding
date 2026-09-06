@@ -27,7 +27,7 @@ export function openConsultationForm(templateId = "", trigger = null) {
       ${field("eventDate", "Tanggal acara", "date", "", draft.eventDate)}
       ${selectField("eventType", "Jenis acara", ["Pernikahan", "Engagement", "Akad", "Resepsi", "Lainnya"], draft.eventType)}
       ${selectField("template", "Template pilihan", templates.map((item) => item.name), selectedTemplate?.name || draft.template || "")}
-      ${selectField("package", "Paket", ["Basic", "Premium", "Custom"], draft.package)}
+      ${selectField("package", "Paket", ["Basic", "Premium", "Signature"], draft.package)}
       ${selectField("budget", "Kisaran budget", siteConfig.budgetOptions, draft.budget)}
       <div class="field field-wide" data-field="notes">
         <label for="notes">Catatan</label>
@@ -76,20 +76,27 @@ export function openConsultationForm(templateId = "", trigger = null) {
 
     const data = getFormData(form);
     const message = buildConsultationMessage(data);
+    const managementUrl = buildManagementIntakeUrl(data);
+    const managementTab = window.open("", "_blank");
     localStorage.removeItem(siteConfig.consultationDraftKey);
     dirty = false;
     submitted = true;
 
     setTimeout(() => {
-      window.open(buildWhatsappUrl(message), "_blank", "noopener");
-      showToast("Form valid. WhatsApp dibuka dengan pesan konsultasi.");
+      if (managementTab) {
+        managementTab.location.href = managementUrl;
+        window.location.href = buildWhatsappUrl(message);
+      } else {
+        window.location.href = managementUrl;
+      }
+      showToast("Brief konsultasi dikirim ke management dan WhatsApp.");
       closeModal({ force: true });
     }, 450);
   });
 
   openModal({
     title: "Form Konsultasi",
-    description: "Isi kebutuhan event. Data belum disimpan ke server; pesan akan dikirim lewat WhatsApp.",
+    description: "Isi kebutuhan event. Brief akan masuk ke management Occasio dan WhatsApp.",
     content: formWrap,
     trigger,
     closeGuard: () => {
@@ -174,17 +181,26 @@ function buildConsultationMessage(data) {
   ].join("\n");
 }
 
+function buildManagementIntakeUrl(data) {
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+    ...data,
+    source: "Website Occasio",
+    submittedAt: new Date().toISOString(),
+  }))));
+  return `http://localhost:3001/consultation#intake=${encodeURIComponent(payload)}`;
+}
+
 function openPackageDetail(name, trigger) {
   openModal({
     title: name,
-    description: "Detail paket frontend demo. Fitur produksi seperti database RSVP dan pembayaran akan masuk tahap backend.",
+    description: "Cakupan layanan, kapasitas tamu, revisi, dan dukungan berbeda di setiap paket.",
     trigger,
     content: `
-      <p>Paket dapat disesuaikan dengan jumlah halaman, kebutuhan konten, domain, dan fitur tambahan.</p>
+      <p>Kebutuhan khusus dapat ditambahkan sebagai add-on tanpa mengubah struktur tiga paket utama.</p>
       <ul class="feature-list">
         <li>Desain undangan digital responsive</li>
-        <li>Form RSVP dan QR check-in berstatus demo jika belum ada backend</li>
-        <li>Gallery, ucapan, maps, gift, dan copywriting acara</li>
+        <li>RSVP, daftar tamu, ucapan, maps, gift, dan personalisasi link</li>
+        <li>QR check-in tersedia mulai paket Premium</li>
       </ul>
       <button class="btn btn-primary" type="button" data-open-consultation>Konsultasi Paket</button>
     `,

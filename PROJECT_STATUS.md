@@ -1,10 +1,21 @@
 # Occasio Project Status
 
-Update: 12 Juli 2026
+Update: 6 September 2026
 
 ## Tahap Berjalan
 
-Proyek sudah masuk **Tahap 4: Platform Next.js dashboard demo**.
+Proyek sudah masuk **Tahap 5B: Backend & Security Foundation**.
+
+Tahap 5A sudah selesai: error lint diperbaiki sampai 0 error, TypeScript dan
+production build berhasil, serta route utama diuji HTTP 200. Dev server preview
+tersedia di `http://localhost:3001`.
+
+Konsolidasi Next.js sudah dimulai: homepage dan gallery template utama kini
+tersedia di aplikasi Next.js, masing-masing pada `/` dan `/gallery`.
+
+Tahap 5B sedang berjalan: migration hardening Supabase sudah disiapkan, tetapi
+belum diterapkan ke remote karena hostname Supabase pada `.env.local` saat ini
+tidak dapat di-resolve (`ENOTFOUND`).
 
 ## Tahap Selesai
 
@@ -35,6 +46,7 @@ Proyek sudah masuk **Tahap 4: Platform Next.js dashboard demo**.
 
 - Static company profile: `http://localhost:4174`
 - Next.js platform demo: `http://localhost:3001`
+- Next.js gallery template: `http://localhost:3001/gallery`
 
 ## Login Demo Next.js
 
@@ -44,15 +56,15 @@ Proyek sudah masuk **Tahap 4: Platform Next.js dashboard demo**.
 ## Hasil QA Terbaru
 
 - Static `index.html` dan `gallery.html`: HTTP 200.
-- Next.js `/`, `/wedding/sheila-yoga`, `/owner/dashboard`, `/client/dashboard`: HTTP 200.
+- Next.js `/`, `/gallery`, `/wedding/sheila-yoga`, `/owner/dashboard`, `/client/dashboard`: HTTP 200.
 - `pnpm.cmd lint`: sukses.
 - `pnpm.cmd build`: sukses.
 
 ## Lanjutan Berikutnya
 
-1. Hubungkan data demo localStorage ke Supabase.
-2. Aktifkan login Supabase Auth lagi setelah schema dan user siap.
-3. Buat database event, guests, wishes, rsvp, invoices, dan check-in logs.
-4. Jadikan upload Excel masuk database.
-5. Jadikan QR check-in demo sebagai QR produksi dengan scanner dan check-in logs.
-6. Tambahkan owner tools untuk publish/unpublish, duplicate event, dan assign client.
+1. Pulihkan URL project Supabase dan jalankan migration hardening setelah review.
+2. Hubungkan session Supabase Auth ke route owner/client.
+3. Ganti akses data halaman dari localStorage ke repository Supabase.
+4. Tambahkan entitas bisnis `leads`, `orders`, `workflow_tasks`, dan `invoices`.
+5. Jadikan upload Excel, RSVP, dan QR check-in memakai database produksi.
+6. Tambahkan approval/revision workflow client sebelum publish.

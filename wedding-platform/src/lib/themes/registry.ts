@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import type { ThemeComponent } from './types';
 
-const themeRegistry: Record<string, React.ComponentType<any>> = {
+const themeRegistry: Record<string, ThemeComponent> = {
   'classic-elegant': dynamic(() => import('./classic-elegant/theme')),
   'netflix': dynamic(() => import('./netflix/theme')),
   'spotify': dynamic(() => import('./spotify/theme')),
@@ -10,7 +10,7 @@ const themeRegistry: Record<string, React.ComponentType<any>> = {
 
 const fallbackTheme = 'classic-elegant';
 
-export function getThemeComponent(slug: string): React.ComponentType<any> {
+export function getThemeComponent(slug: string): ThemeComponent {
   return themeRegistry[slug] || themeRegistry[fallbackTheme];
 }
 

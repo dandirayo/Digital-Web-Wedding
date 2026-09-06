@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useEffect } from "react";
-import { tryCreateSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { initStore, login } from "@/lib/store";
 
 type LoginStatus = "idle" | "loading" | "error";

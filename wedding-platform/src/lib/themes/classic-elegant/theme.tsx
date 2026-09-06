@@ -6,7 +6,10 @@ import QRCode from "qrcode";
 import { FormEvent, useState, useMemo } from "react";
 import { addWish, addGuest, updateGuest } from "@/lib/store";
 import type { ThemeProps } from "../types";
-import { Wish, Guest, EventMedia } from "@/lib/types";
+import { Wish, Guest } from "@/lib/types";
+import { Countdown } from "@/components/wedding/countdown";
+import { MusicPlayer } from "@/components/wedding/music-player";
+import { PersonalizedGreeting } from "@/components/wedding/personalized-greeting";
 
 const TEMPLATE_PATH = "/templates/sheila-yoga/assets";
 
@@ -22,6 +25,7 @@ export default function ClassicElegantTheme({
   wishes: initialWishes,
   media,
   guestName,
+  guestData,
 }: ThemeProps) {
   const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
   
@@ -34,7 +38,7 @@ export default function ClassicElegantTheme({
   const [giftStatus, setGiftStatus] = useState("");
 
   const [rsvpGuest, setRsvpGuest] = useState<Guest | null>(
-    guestName ? guests.find(g => g.name.toLowerCase() === guestName.toLowerCase()) || null : null
+    guestData || (guestName ? guests.find(g => g.name.toLowerCase() === guestName.toLowerCase()) || null : null)
   );
 
   const resolved = {
@@ -120,7 +124,7 @@ export default function ClassicElegantTheme({
           ? "RSVP berhasil. QR check-in sudah dibuat."
           : "RSVP berhasil. Terima kasih sudah memberi kabar."
       );
-    } catch (error) {
+    } catch {
       setRsvpStatus("Terjadi kesalahan saat menyimpan RSVP.");
     }
   }
@@ -150,7 +154,7 @@ export default function ClassicElegantTheme({
       setWishes([newWish, ...wishes]);
       setWishStatus("Ucapan berhasil ditampilkan.");
       form.reset();
-    } catch (error) {
+    } catch {
       setWishStatus("Terjadi kesalahan saat menyimpan ucapan.");
     }
   }
@@ -214,9 +218,13 @@ export default function ClassicElegantTheme({
               <span className="block py-1 text-[clamp(2.2rem,11vw,3.75rem)] font-normal italic md:text-6xl">&</span>
               {secondName}
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-sm font-medium leading-7 text-white/88 sm:text-base sm:leading-8">
-              {resolved.greeting}
-            </p>
+            <div className="mt-6">
+              <PersonalizedGreeting
+                guestName={guestName}
+                guestData={guestData}
+                greeting={resolved.greeting}
+              />
+            </div>
           </div>
 
           <div className="grid gap-3 rounded-md border border-white/22 bg-white/14 p-3 backdrop-blur sm:p-4 md:grid-cols-3">
@@ -278,21 +286,7 @@ export default function ClassicElegantTheme({
                 Simpan tanggalnya dan hadir bersama orang-orang tersayang.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-4">
-              {[
-                ["120", "Hari"],
-                ["08", "Jam"],
-                ["45", "Menit"],
-                ["12", "Detik"],
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-md border border-white/12 bg-white/8 p-5 text-center">
-                  <div className="text-3xl font-semibold sm:text-4xl">{value}</div>
-                  <div className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/58">
-                    {label}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Countdown targetDate={event.eventDate} />
           </div>
 
           <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -380,33 +374,35 @@ export default function ClassicElegantTheme({
               Konfirmasi kehadiran. Jika memilih hadir,
               sistem akan membuat QR check-in.
             </p>
-            <form key={rsvpGuest?.id || "new-rsvp"} onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
-              <input
-                name="rsvpName"
-                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
-                placeholder="Nama tamu"
-                defaultValue={rsvpGuest?.name || guestName || ""}
-              />
-              <select
-                name="rsvpStatus"
-                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
-                defaultValue={rsvpGuest?.rsvpStatus === "attending" ? "attending" : "declined"}
-              >
-                <option value="attending">Hadir</option>
-                <option value="declined">Tidak hadir</option>
-              </select>
-              <select
-                name="rsvpPax"
-                className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
-                defaultValue={String(rsvpGuest?.paxConfirmed || 1)}
-              >
-                <option value="1">1 orang</option>
-                <option value="2">2 orang</option>
-                <option value="3">3 orang</option>
-                <option value="4">4 orang</option>
-              </select>
-              <button className="h-12 rounded-md bg-[#2b241f] font-semibold text-white">Kirim RSVP</button>
-            </form>
+            {(!rsvpGuest || rsvpGuest.rsvpStatus === "pending") && (
+              <form key={rsvpGuest?.id || "new-rsvp"} onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
+                <input
+                  name="rsvpName"
+                  className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                  placeholder="Nama tamu"
+                  defaultValue={rsvpGuest?.name || guestName || ""}
+                />
+                <select
+                  name="rsvpStatus"
+                  className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                  defaultValue="attending"
+                >
+                  <option value="attending">Hadir</option>
+                  <option value="declined">Tidak hadir</option>
+                </select>
+                <select
+                  name="rsvpPax"
+                  className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
+                  defaultValue={String(rsvpGuest?.paxConfirmed || 1)}
+                >
+                  <option value="1">1 orang</option>
+                  <option value="2">2 orang</option>
+                  <option value="3">3 orang</option>
+                  <option value="4">4 orang</option>
+                </select>
+                <button className="h-12 rounded-md bg-[#2b241f] font-semibold text-white">Kirim RSVP</button>
+              </form>
+            )}
             {rsvpStatus ? <p className="mt-3 text-sm font-semibold text-[#9a6a3a]">{rsvpStatus}</p> : null}
             {rsvpGuest && rsvpGuest.rsvpStatus !== "pending" ? (
               <div className="mt-5 rounded-md border border-[#eadfd2] bg-white p-4">
@@ -433,6 +429,10 @@ export default function ClassicElegantTheme({
                     >
                       Download QR
                     </a>
+                  </div>
+                ) : rsvpGuest.rsvpStatus === "declined" ? (
+                  <div className="mt-4 text-center text-sm text-[#6b6056]">
+                    Terima kasih atas responnya. Kami memaklumi ketidakhadiran Anda.
                   </div>
                 ) : null}
                 <button
@@ -575,6 +575,8 @@ export default function ClassicElegantTheme({
           </figure>
         </div>
       ) : null}
+
+      <MusicPlayer musicUrl={content.musicUrl || `${TEMPLATE_PATH}/audio/background.mp3`} />
     </main>
   );
 }

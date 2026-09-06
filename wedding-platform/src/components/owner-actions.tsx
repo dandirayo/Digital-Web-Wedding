@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import type { WeddingEvent, PackageTier } from "@/lib/types";
+import type { WeddingEvent } from "@/lib/types";
 import { DemoActionModal } from "./demo-action-modal";
 
 type CreateEventActionProps = {
@@ -75,7 +75,7 @@ export function CreateEventAction({ onCreate }: CreateEventActionProps) {
           <label className="block">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Package</span>
             <select disabled className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm text-[#6b6056] outline-none opacity-70">
-              <option value="pkg-silver">Silver Tier (Default)</option>
+              <option value="pkg-silver">Basic (Default)</option>
             </select>
           </label>
         </div>
@@ -185,7 +185,7 @@ export function CreateInvoiceAction() {
         }}
       >
         <LooseField label="Client" placeholder="Sheila & Yoga" />
-        <LooseField label="Paket" placeholder="Premium" />
+        <LooseField label="Paket" placeholder="Basic / Premium / Signature" />
         <LooseField label="Nominal" placeholder="1490000" type="number" />
         <LooseField label="Jatuh tempo" placeholder="2027-01-01" type="date" />
         {saved ? (
