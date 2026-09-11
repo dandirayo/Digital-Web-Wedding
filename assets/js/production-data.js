@@ -17,6 +17,7 @@ function renderPackages() {
       (item) => `
         <article class="card price-card ${item.featured ? "is-featured" : ""}">
           <span class="badge">${item.name}</span>
+          <small>${item.availability}</small>
           <div class="price">${item.price}</div>
           <p>${item.description}</p>
           <ul class="feature-list">
@@ -25,10 +26,10 @@ function renderPackages() {
           <button
             class="btn ${item.featured ? "btn-primary" : "btn-secondary"}"
             type="button"
-            data-open-package
+            ${item.orderable ? "data-open-package" : "disabled"}
             data-package-name="${item.name}"
           >
-            Detail Paket
+            ${item.orderable ? "Detail Paket" : "Belum Tersedia"}
           </button>
         </article>
       `,

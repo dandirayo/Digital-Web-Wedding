@@ -62,7 +62,7 @@ export default function CreateEventPage() {
   useEffect(() => {
     async function loadData() {
       const pkgs = await getPackages();
-      setPackages(pkgs);
+      setPackages(pkgs.filter((pkg) => pkg.isActive));
 
       const allProfiles = getStorageItem<UserProfile[]>("occasio_profiles", []);
       setClients(allProfiles.filter((p) => p.role === "client"));
@@ -104,9 +104,9 @@ export default function CreateEventPage() {
         packageTier: selectedPackage.slug,
         eventDate: eventDate || new Date().toISOString(),
         venue: resepsiVenue || akadVenue || "TBD",
-        status: "active",
-        isPublished: true,
-        publishedAt: new Date().toISOString(),
+        status: "draft",
+        isPublished: false,
+        publishedAt: null,
         expiresAt: null,
       });
 

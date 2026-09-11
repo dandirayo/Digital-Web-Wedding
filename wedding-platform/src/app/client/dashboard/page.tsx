@@ -143,7 +143,7 @@ export default function ClientDashboardPage() {
     { label: "Daftar tamu", done: guests.length > 0 },
     { label: "RSVP masuk", done: event.rsvpYes + event.rsvpNo > 0 },
     { label: "Ucapan tampil", done: event.wishCount > 0 },
-    { label: "Website preview", done: true },
+    { label: "Undangan published", done: event.isPublished },
   ];
   const setupScore = Math.round((setupItems.filter((item) => item.done).length / setupItems.length) * 100);
 
@@ -226,6 +226,9 @@ export default function ClientDashboardPage() {
         title={content.couple}
         description="Kelola brief, konten, tamu, RSVP, dan kesiapan publish undangan Anda."
       >
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          Mode development lokal: perubahan pada workspace ini masih tersimpan di browser dan belum menjadi data layanan produksi.
+        </div>
         <section id="brief" className="mb-6 rounded-md border border-[#e0d4c7] bg-white p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -283,7 +286,7 @@ export default function ClientDashboardPage() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
-                Setup progress
+                Progress data lokal
               </div>
               <h2 className="mt-2 text-2xl font-semibold">Kesiapan undangan {content.couple}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">
@@ -293,7 +296,7 @@ export default function ClientDashboardPage() {
             <div className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4 text-center">
               <div className="text-4xl font-semibold">{setupScore}%</div>
               <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
-                siap publish
+                terisi
               </div>
             </div>
           </div>
@@ -440,11 +443,11 @@ export default function ClientDashboardPage() {
                       <td className="px-4 py-3">
                         {isShared ? (
                           <span className="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                            Sudah dikirim
+                            WhatsApp pernah dibuka
                           </span>
                         ) : (
                           <span className="inline-flex rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
-                            Belum dikirim
+                            Belum dibuka
                           </span>
                         )}
                       </td>

@@ -11,12 +11,12 @@ export type Feature =
 
 const featureMatrix: Record<Feature, PackageTier[]> = {
   qr_checkin: ['gold', 'platinum'],
-  live_gallery: ['gold', 'platinum'],
-  digital_angpao: ['gold', 'platinum'],
-  photo_booth: ['platinum'],
+  live_gallery: [],
+  digital_angpao: ['silver', 'gold', 'platinum'],
+  photo_booth: [],
   custom_theme: ['platinum'],
   custom_music: ['platinum'],
-  tablet_mode: ['gold', 'platinum'],
+  tablet_mode: [],
 };
 
 const featureLabels: Record<Feature, string> = {

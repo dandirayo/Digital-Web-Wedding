@@ -4,13 +4,14 @@ import { cookies } from "next/headers";
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error("Konfigurasi publik Supabase belum lengkap.");
   }
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(supabaseUrl, supabasePublicKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

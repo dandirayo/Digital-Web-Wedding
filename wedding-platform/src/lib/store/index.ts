@@ -62,7 +62,7 @@ export const initStore = async () => {
   }
 
   const contentVersion = getStorageItem('occasio_content_version', 0);
-  if (contentVersion < 2) {
+  if (contentVersion < 4) {
     const currentPackages = getStorageItem<Package[]>('occasio_packages', []);
     const normalizedPackages = currentPackages.map((item) => {
       const canonical = seedData.packages.find((candidate) => candidate.id === item.id);
@@ -73,10 +73,10 @@ export const initStore = async () => {
     const currentTemplates = getStorageItem<Template[]>('occasio_templates', []);
     const normalizedTemplates = currentTemplates.map((item) => {
       const canonical = seedData.templates.find((candidate) => candidate.id === item.id);
-      return canonical ? { ...item, name: canonical.name, description: canonical.description } : item;
+      return canonical ? { ...item, ...canonical } : item;
     });
     setStorageItem('occasio_templates', normalizedTemplates.length ? normalizedTemplates : seedData.templates);
-    setStorageItem('occasio_content_version', 2);
+    setStorageItem('occasio_content_version', 4);
   }
 };
 

@@ -7,11 +7,11 @@ type ReadinessItem = {
 
 export function getEventReadiness(event: WeddingEvent) {
   const items: ReadinessItem[] = [
-    { label: "Status publish", done: event.status === "active" || event.status === "completed" },
+    { label: "Published lokal", done: event.isPublished },
     { label: "Daftar tamu", done: event.guestCount > 0 },
     { label: "RSVP masuk", done: event.rsvpYes + event.rsvpNo > 0 },
     { label: "Ucapan tampil", done: event.wishCount > 0 },
-    { label: "Check-in siap", done: event.checkInCount > 0 || event.packageTier !== "silver" },
+    { label: "Aktivitas tercatat", done: event.rsvpYes + event.rsvpNo + event.wishCount + event.checkInCount > 0 },
   ];
   const done = items.filter((item) => item.done).length;
   const score = Math.round((done / items.length) * 100);
@@ -19,7 +19,7 @@ export function getEventReadiness(event: WeddingEvent) {
   return {
     score,
     items,
-    label: score >= 80 ? "Siap dijalankan" : score >= 50 ? "Perlu dilengkapi" : "Masih draft",
+    label: score >= 80 ? "Data demo lengkap" : score >= 50 ? "Data demo sebagian" : "Data demo minim",
   };
 }
 
@@ -31,7 +31,7 @@ export function EventReadiness({ event }: { event: WeddingEvent }) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
-            Readiness
+            Indikator data lokal
           </div>
           <div className="mt-1 text-sm font-semibold">{readiness.label}</div>
         </div>

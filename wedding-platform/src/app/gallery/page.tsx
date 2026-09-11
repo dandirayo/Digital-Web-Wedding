@@ -141,9 +141,9 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
       <section className="mx-auto max-w-7xl px-5 pb-14 lg:px-8">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Template tersedia</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Katalog konsep template</h2>
             <p className="mt-1 text-sm text-[#6b6056]">
-              {templates.length} template cocok untuk kategori yang dipilih.
+              {templates.filter((template) => template.demoHref).length} preview aktif; konsep lain belum dapat dipilih untuk order.
             </p>
           </div>
           <Link href="/#paket" className="text-sm font-semibold text-[#5a4028] transition hover:text-[#241f1a]">
@@ -210,15 +210,17 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
                       disabled
                       className="inline-flex h-10 cursor-not-allowed items-center justify-center rounded-md bg-[#d8cdbc] px-4 text-sm font-semibold text-white"
                     >
-                      Preview menyusul
+                      Konsep — belum tersedia
                     </button>
                   )}
-                  <Link
-                    href="/login"
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
-                  >
-                    Masuk untuk Pilih
-                  </Link>
+                  {template.demoHref ? (
+                    <Link
+                      href="/login"
+                      className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
+                    >
+                      Masuk untuk Pilih
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </article>

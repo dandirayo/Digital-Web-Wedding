@@ -5,6 +5,8 @@ import { getReviewStatus, setReviewStatus, type ReviewStatus } from "@/lib/revie
 
 export function ContentReview({ eventId, role, onApproved }: { eventId: string; role: "owner" | "client"; onApproved?: () => void | Promise<void> }) {
   const [status, setStatus] = useState<ReviewStatus>("draft");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     const refresh = () => setStatus(getReviewStatus(eventId));
@@ -36,16 +38,36 @@ export function ContentReview({ eventId, role, onApproved }: { eventId: string; 
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         {role === "client" && status !== "approved" ? (
-          <button type="button" onClick={() => setStatus(setReviewStatus(eventId, "review_requested"))} disabled={status === "review_requested"} className="inline-flex h-10 items-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{status === "review_requested" ? "Sudah Dikirim" : "Kirim untuk Review"}</button>
+          <button type="button" onClick={() => setStatus(setReviewStatus(eventId, "review_requested"))} disabled={status === "review_requested"} className="inline-flex h-10 items-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{status === "review_requested" ? "Review demo diminta" : "Minta Review (Demo Lokal)"}</button>
         ) : null}
         {role === "owner" && status === "review_requested" ? (
           <>
-            <button type="button" onClick={async () => { setStatus(setReviewStatus(eventId, "approved")); await onApproved?.(); }} className="inline-flex h-10 items-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white">Setujui & Publish</button>
+            <button
+              type="button"
+              disabled={isPublishing}
+              onClick={async () => {
+                setActionError(null);
+                setIsPublishing(true);
+                try {
+                  await onApproved?.();
+                  setStatus(setReviewStatus(eventId, "approved"));
+                } catch {
+                  setActionError("Simulasi publish gagal. Status persetujuan tidak diubah.");
+                } finally {
+                  setIsPublishing(false);
+                }
+              }}
+              className="inline-flex h-10 items-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPublishing ? "Memproses..." : "Setujui & Publish (Demo Lokal)"}
+            </button>
             <button type="button" onClick={() => setStatus(setReviewStatus(eventId, "changes_requested"))} className="inline-flex h-10 items-center rounded-md border border-rose-200 px-4 text-sm font-semibold text-rose-700">Minta Perubahan</button>
           </>
         ) : null}
         {role === "owner" && status === "approved" ? <span className="text-sm font-semibold text-emerald-700">Siap dipublish ke tamu.</span> : null}
       </div>
+      {actionError ? <p className="mt-3 text-sm font-medium text-rose-700">{actionError}</p> : null}
+      <p className="mt-3 text-xs leading-5 text-[#887a6d]">Status review pada tahap ini hanya tersimpan di browser dan belum menjadi persetujuan bisnis yang sah.</p>
     </section>
   );
 }

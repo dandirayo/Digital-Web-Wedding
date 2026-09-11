@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState, useEffect } from "react";
-import { initStore, login } from "@/lib/store";
+import { FormEvent, useState } from "react";
+import { signInWithPassword } from "@/lib/auth";
 
 type LoginStatus = "idle" | "loading" | "error";
 
@@ -13,10 +13,6 @@ export function LoginForm() {
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    initStore();
-  }, []);
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("loading");
@@ -24,12 +20,14 @@ export function LoginForm() {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const session = await login(normalizedEmail, password);
+      const session = await signInWithPassword(normalizedEmail, password);
       
-      router.push(session.role === "owner" ? "/owner/dashboard" : "/client/dashboard");
+      router.replace(session.role === "owner" ? "/owner/dashboard" : "/client/dashboard");
+      router.refresh();
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Login gagal. Coba lagi.");
+      return;
     } finally {
       setStatus("idle");
     }
@@ -38,15 +36,16 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="rounded-md border border-[#e0d4c7] bg-white p-6 shadow-[0_18px_48px_rgba(82,57,38,0.08)]">
       <div className="inline-flex rounded-full bg-[#efe5d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
-        Demo Login
+        Login aman
       </div>
 
       <h3 className="mt-5 text-2xl font-semibold">Login akun Occasio</h3>
       <p className="mt-3 text-sm leading-6 text-[#6b6056]">
-        Sementara Supabase Auth dinonaktifkan. Gunakan akun demo owner atau client,
-        lalu dashboard akan terbuka sesuai role.
+        Masuk menggunakan akun yang dibuat atau diundang oleh owner Occasio.
+        Password diverifikasi oleh Supabase Auth.
       </p>
 
+      {process.env.NODE_ENV === "development" ? (
       <div className="mt-5 grid gap-2 text-sm md:grid-cols-2">
         <button
           type="button"
@@ -71,6 +70,7 @@ export function LoginForm() {
           Pakai Client
         </button>
       </div>
+      ) : null}
 
       <div className="mt-6 space-y-4">
         <label className="block">
@@ -93,7 +93,7 @@ export function LoginForm() {
             onChange={(event) => setPassword(event.target.value)}
             type="password"
             autoComplete="current-password"
-            placeholder="Isi password demo"
+            placeholder="Masukkan password"
             required
           />
         </label>

@@ -35,6 +35,12 @@ export function WeddingView({ slug }: { slug: string }) {
           return;
         }
 
+        if (!event.isPublished) {
+          setError("Undangan belum dipublikasikan");
+          setLoading(false);
+          return;
+        }
+
         const [content, guests, wishes, media, template] = await Promise.all([
           getEventContent(event.id),
           getGuests(event.id),

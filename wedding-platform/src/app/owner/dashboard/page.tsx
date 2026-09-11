@@ -34,6 +34,7 @@ export default function OwnerDashboardPage() {
   const totalGuests = events.reduce((sum, event) => sum + event.guestCount, 0);
   const totalRsvp = events.reduce((sum, event) => sum + event.rsvpYes + event.rsvpNo, 0);
   const totalWishes = events.reduce((sum, event) => sum + event.wishCount, 0);
+  const totalCheckIns = events.reduce((sum, event) => sum + event.checkInCount, 0);
   const draft = events.filter((event) => event.status === "draft").length;
   const pipelineStages = ["Lead Baru", "Proses Setup", "Siap Publish"] as const;
 
@@ -58,6 +59,9 @@ export default function OwnerDashboardPage() {
         title="Monitoring Semua Event"
         description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
       >
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          Mode development lokal: event dapat disimpan di browser, sedangkan pipeline, task, dan billing di bawah masih memakai data contoh.
+        </div>
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />
           <StatCard label="Total Tamu" value={String(totalGuests)} helper="Dari semua client" />
@@ -71,7 +75,7 @@ export default function OwnerDashboardPage() {
             <div className="mt-5 grid gap-3 md:grid-cols-3">
               <OwnerMiniCard label="Event aktif" value={String(active)} helper="Perlu dimonitor" />
               <OwnerMiniCard label="Draft setup" value={String(draft)} helper="Butuh publish" />
-              <OwnerMiniCard label="Check-in hari ini" value="27" helper="Live dari semua event" />
+              <OwnerMiniCard label="Total check-in" value={String(totalCheckIns)} helper="Data event lokal" />
             </div>
           </div>
 
@@ -188,7 +192,7 @@ export default function OwnerDashboardPage() {
         {pipelineStages.map((stage) => (
           <div key={stage} className="rounded-md border border-[#e0d4c7] bg-white p-5">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-semibold">{stage}</h2>
+              <h2 className="font-semibold">{stage} <span className="ml-1 text-xs font-medium text-[#9a6a3a]">(contoh)</span></h2>
               <span className="rounded-full bg-[#f7f3ed] px-3 py-1 text-xs font-semibold text-[#9a6a3a]">
                 {businessOrders.filter((order) => order.stage === stage).length}
               </span>
@@ -227,7 +231,7 @@ export default function OwnerDashboardPage() {
       <section id="tasks" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Task Produksi</h2>
+            <h2 className="text-xl font-semibold">Task Produksi <span className="text-sm font-medium text-[#9a6a3a]">(data contoh)</span></h2>
             <p className="mt-1 text-sm text-[#6b6056]">
               Daftar kerja internal untuk menjaga order tidak berhenti di tengah proses.
             </p>
@@ -254,7 +258,7 @@ export default function OwnerDashboardPage() {
       <section id="billing" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Billing & Paket</h2>
+            <h2 className="text-xl font-semibold">Billing & Paket <span className="text-sm font-medium text-[#9a6a3a]">(data contoh)</span></h2>
             <p className="mt-1 text-sm text-[#6b6056]">
               Section ini membuat menu Billing di sidebar aktif. Nanti bisa dihubungkan ke invoice dan payment status.
             </p>
@@ -263,9 +267,9 @@ export default function OwnerDashboardPage() {
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           {[
-            ["Pendapatan Bulan Ini", formatRupiah(billingSummary.revenueThisMonth), `Dari ${billingSummary.paidInvoices} invoice paid`],
-            ["Invoice Pending", String(billingSummary.pendingInvoices), "Menunggu pembayaran"],
-            ["Paket Terlaris", billingSummary.bestPackage, "2 event aktif"],
+            ["Contoh Pendapatan", formatRupiah(billingSummary.revenueThisMonth), `Simulasi ${billingSummary.paidInvoices} invoice`],
+            ["Contoh Invoice Pending", String(billingSummary.pendingInvoices), "Belum terhubung pembayaran"],
+            ["Contoh Paket Terlaris", billingSummary.bestPackage, "Berdasarkan seed lokal"],
           ].map(([label, value, helper]) => (
             <div key={label} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
