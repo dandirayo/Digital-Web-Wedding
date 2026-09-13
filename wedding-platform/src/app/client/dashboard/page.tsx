@@ -8,18 +8,7 @@ import { StatCard } from "@/components/stat-card";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { BulkShare } from "@/components/bulk-share";
-import {
-  initStore,
-  getCurrentSession,
-  getEvents,
-  getGuests,
-  getWishes,
-  getEventContent,
-  updateEventContent,
-  updateEvent,
-  addGuest,
-  importGuests
-} from "@/lib/store";
+import { getClientWorkspace, updateClientContent, addClientGuest, importClientGuests } from "@/lib/supabase/client-workspace";
 import type { WeddingEvent, Guest, Wish } from "@/lib/types";
 import { getPackageLabel } from "@/lib/demo-data";
 import { ContentReview } from "@/components/content-review";
@@ -66,16 +55,10 @@ export default function ClientDashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      await initStore();
-      const session = await getCurrentSession();
-      if (!session) {
-        setLoading(false);
-        return;
-      }
-
-      const events = await getEvents({ clientId: session.userId });
-      if (events.length > 0) {
-        const ev = events[0];
+      try {
+        const workspace = await getClientWorkspace();
+        const ev = workspace.event;
+        if (ev) {
         setEvent(ev);
 
         const storedShared = localStorage.getItem(`occasio_shared_${ev.id}`);
@@ -83,11 +66,9 @@ export default function ClientDashboardPage() {
           setSharedGuestIds(JSON.parse(storedShared));
         }
 
-        const [loadedGuests, loadedWishes, loadedContent] = await Promise.all([
-          getGuests(ev.id),
-          getWishes(ev.id),
-          getEventContent(ev.id)
-        ]);
+        const loadedGuests = workspace.guests;
+        const loadedWishes = workspace.wishes;
+        const loadedContent = workspace.content;
 
         setGuests(loadedGuests);
         setWishes(loadedWishes);
@@ -99,8 +80,12 @@ export default function ClientDashboardPage() {
           packageName: getPackageLabel(ev.packageTier),
           greeting: loadedContent?.greeting || "Dengan penuh sukacita kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada hari bahagia kami.",
         });
+        }
+      } catch (error) {
+        console.error("Gagal memuat workspace klien", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadData();
   }, []);
@@ -149,13 +134,13 @@ export default function ClientDashboardPage() {
 
   async function handleAddGuest(guestData: Omit<Guest, "id" | "createdAt" | "qrCode" | "checkedInAt" | "eventId">) {
     if (!event) return;
-    const newGuest = await addGuest(event.id, guestData);
+    const newGuest = await addClientGuest(event.id, guestData);
     setGuests((current) => [newGuest, ...current]);
   }
 
   async function handleImportGuests(importedGuests: ImportedGuest[]) {
     if (!event) return;
-    const newGuests = await importGuests(event.id, importedGuests);
+    const newGuests = await importClientGuests(event.id, importedGuests);
     setGuests((current) => [...newGuests, ...current]);
   }
 
@@ -163,11 +148,7 @@ export default function ClientDashboardPage() {
     e.preventDefault();
     if (!event) return;
 
-    await updateEventContent(event.id, { greeting: content.greeting });
-    await updateEvent(event.id, { 
-      coupleName: content.couple,
-      venue: content.venue,
-    });
+    await updateClientContent(event.id, content.greeting);
     
     setContentSaved(true);
     setTimeout(() => setContentSaved(false), 3000);
@@ -227,7 +208,7 @@ export default function ClientDashboardPage() {
         description="Kelola brief, konten, tamu, RSVP, dan kesiapan publish undangan Anda."
       >
         <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          Mode development lokal: perubahan pada workspace ini masih tersimpan di browser dan belum menjadi data layanan produksi.
+          Data workspace ini dimuat dan disimpan ke Supabase lokal sesuai akses akun Anda.
         </div>
         <section id="brief" className="mb-6 rounded-md border border-[#e0d4c7] bg-white p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -383,9 +364,9 @@ export default function ClientDashboardPage() {
           </div>
 
           <form onSubmit={handleSaveContent} className="mt-5 grid gap-4 md:grid-cols-2">
-            <ContentField label="Nama pasangan" value={content.couple} onChange={(value) => setContent((current) => ({ ...current, couple: value }))} />
-            <ContentField label="Tanggal" value={content.date} onChange={(value) => setContent((current) => ({ ...current, date: value }))} />
-            <ContentField label="Venue" value={content.venue} onChange={(value) => setContent((current) => ({ ...current, venue: value }))} />
+            <ContentField label="Nama pasangan" value={content.couple} onChange={(value) => setContent((current) => ({ ...current, couple: value }))} disabled />
+            <ContentField label="Tanggal" value={content.date} onChange={(value) => setContent((current) => ({ ...current, date: value }))} disabled />
+            <ContentField label="Venue" value={content.venue} onChange={(value) => setContent((current) => ({ ...current, venue: value }))} disabled />
             <label className="block md:col-span-2">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Kalimat pembuka</span>
               <textarea
@@ -526,10 +507,12 @@ function ContentField({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <label className="block">
@@ -538,6 +521,7 @@ function ContentField({
         className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
       />
     </label>
   );

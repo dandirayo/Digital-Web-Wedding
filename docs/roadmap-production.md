@@ -81,7 +81,7 @@ Setiap tahap menghasilkan artefak yang bisa diperiksa: daftar scope, rancangan l
 
 ## 6. Tahap 2 — Database, identitas, dan akses
 
-**Status: sedang berjalan sejak 8 September 2026.** Audit awal, draft baseline migration, seed katalog aman, test akses pgTAP, dan vertical slice Auth awal dicatat di [fondasi-data-g2.md](fondasi-data-g2.md). Proxy route/auth sudah diverifikasi melalui HTTP; eksekusi reset/test database masih menunggu Docker Desktop Linux engine aktif. Belum ada push migration atau perubahan cloud.
+**Status: sedang berjalan sejak 8 September 2026; diperbarui 11 September 2026.** Baseline migration, seed katalog aman, test akses pgTAP, policy staff/Storage, dan vertical slice Auth awal dicatat di [fondasi-data-g2.md](fondasi-data-g2.md). Docker Linux aktif; instalasi awal dan reset database lokal berhasil, 31/31 test awal lulus, lint schema dan security advisor tidak menemukan masalah. Dashboard klien kini memuat dan menyimpan event/konten/tamu/ucapan melalui Supabase lokal. G2 belum lulus: session lintas browser, fixture Auth lokal end-to-end, dan profil/order persisten lebih luas masih diperlukan. Belum ada push migration atau perubahan cloud.
 
 **Dependensi:** G0 dan G1. Ketersediaan project development atau runtime lokal diverifikasi pada awal tahap ini.
 

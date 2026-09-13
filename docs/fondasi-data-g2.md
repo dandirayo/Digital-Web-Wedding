@@ -1,6 +1,6 @@
 # Occasio — Fondasi Data, Identitas, dan Akses (G2)
 
-Versi: implementasi lokal 1.1 · 8 September 2026
+Versi: implementasi lokal 1.4 · 11 September 2026
 
 Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke project cloud dan belum ada deployment.
 
@@ -12,12 +12,17 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 - Role berasal dari `raw_app_meta_data`; kolom role profil tidak dapat diperbarui oleh klien.
 - Bucket `event-media` dan `payment-proofs` bersifat privat. Policy upload mencakup `select`, `insert`, dan `update` agar upsert dapat diuji tanpa membuka file ke publik.
 - Seed lokal hanya mengisi katalog paket/template. Tidak ada user demo, password, event, pembayaran, atau tamu yang dimasukkan ke seed bersama.
-- Test pgTAP `supabase/tests/baseline_access_test.sql` mencakup anon, Client A, Client B, owner, invoice, event, tamu, dan pencegahan promosi role.
-- Vertical slice Auth awal ditambahkan: browser/server client memakai publishable key dengan fallback anon key, `src/proxy.ts` me-refresh cookie dan menahan route owner/client/chat, login memakai `signInWithPassword`, dan logout memakai Supabase Auth. Dashboard masih membaca event dari localStorage sampai slice data persisten berikutnya selesai.
+- Test pgTAP `supabase/tests/baseline_access_test.sql` mencakup anon, Client A, Client B, owner, staff produksi, staff check-in, invoice, event, tamu, Storage privat, upsert-level object update, dan pencegahan promosi role.
+- Vertical slice Auth awal ditambahkan: browser/server client memakai publishable key dengan fallback anon key, `src/proxy.ts` me-refresh cookie dan menahan route owner/client/chat, login memakai `signInWithPassword`, dan logout memakai Supabase Auth.
+- Slice klien persisten ditambahkan pada `src/lib/supabase/client-workspace.ts`: dashboard memuat event milik user, konten, tamu, dan ucapan dari Supabase; perubahan konten serta tambah/import tamu ditulis kembali ke Supabase. Fallback localStorage tidak lagi dipakai untuk data workspace tersebut.
 - Verifikasi HTTP tanpa session: `/owner/dashboard`, `/client/dashboard`, dan `/chat` mengembalikan redirect `307` ke login; `/login` dan undangan publik tetap dapat dibuka.
 - Verifikasi Auth cloud read-only: password benar diterima dan password salah ditolak; akun owner yang saat ini ada di cloud belum mengembalikan `app_metadata.role`, sehingga login aplikasi menolak akun tersebut sampai metadata server diperbaiki melalui proses admin/seed yang disetujui.
 - Lint lulus tanpa error (9 warning optimasi `<img>` yang sudah ada). Build Next.js lulus dan mengenali Proxy.
-- Baseline dan test belum dieksekusi karena Docker Desktop Linux engine belum aktif. Status G2 tetap belum lulus.
+- Docker Desktop Linux engine aktif pada 11 September 2026. Instalasi awal dan `supabase db reset --local` berhasil menjalankan kedua migration serta seed katalog.
+- Migration staff assignment access ditambahkan di `supabase/migrations/20260911134246_staff_assignment_access.sql`: staff aktif hanya memperoleh akses event/konten/media/file pada event yang ditugaskan, staff check-in hanya memperoleh akses baca tamu/log sesuai assignment, assignment kedaluwarsa tidak memberi akses, dan pembayaran tetap owner/client-only.
+- `supabase test db --local`: **31/31 test lulus**. Fixture paket diperbaiki agar tidak berbenturan dengan seed Basic; seluruh data identitas/event/invoice/staff/storage uji di-rollback setelah test.
+- `supabase db lint --local --schema public,private --fail-on error`: tidak ada error schema. `supabase db advisors --local --type security --level warn --fail-on error`: tidak ada temuan.
+- Status G2 tetap belum lulus: session lintas browser, fixture Auth lokal end-to-end, serta slice profil/order yang lebih luas belum selesai diuji.
 
 ## Temuan awal
 
@@ -45,12 +50,12 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 
 1. Bekukan `schema.sql` lama sebagai referensi; jangan eksekusi langsung. **Selesai.**
 2. Susun matriks entitas dan relasi untuk alur Basic lengkap. **Diterapkan pada baseline; review lanjutan tetap diperlukan setelah test database.**
-3. Buat baseline migration baru melalui CLI, kemudian tambahkan enum/tabel/index/grant/RLS/policy secara bertahap. **Draft lokal selesai, belum dieksekusi.**
-4. Buat test allow/deny untuk anon, client A, client B, owner, dan anggota tim. **Draft awal selesai untuk anon/client/owner; skenario staff dilanjutkan setelah baseline lolos reset.**
-5. Jalankan reset database lokal dan database tests jika Docker tersedia.
+3. Buat baseline migration baru melalui CLI, kemudian tambahkan enum/tabel/index/grant/RLS/policy secara bertahap. **Instalasi awal dan reset lokal lulus pada 11 September 2026.**
+4. Buat test allow/deny untuk anon, client A, client B, owner, dan anggota tim. **Cakupan awal selesai: anon/client/owner/staff/Storage diuji pada 11 September 2026.**
+5. Jalankan reset database lokal dan database tests jika Docker tersedia. **Selesai: reset dan 31 test awal lulus pada 11 September 2026. Cakupan lanjutan tetap diperlukan pada vertical slice aplikasi.**
 6. Tambahkan middleware/proxy session refresh dan Auth server-side.
-7. Migrasikan satu vertical slice: login → profil → event milik klien → logout.
-8. Hapus fallback diam-diam ke data demo pada slice yang telah dimigrasikan.
+7. Migrasikan satu vertical slice: login → profil → event milik klien → logout. **Slice event/konten/tamu/ucapan klien sudah terhubung ke Supabase; uji lintas browser masih tersisa.**
+8. Hapus fallback diam-diam ke data demo pada slice yang telah dimigrasikan. **Selesai untuk dashboard klien yang dimigrasikan.**
 
 ## Konfigurasi lokal yang sudah diperbaiki
 
@@ -62,7 +67,7 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 
 - `backend:check`: lulus; URL, key, REST, dan empat tabel lama terjangkau tanpa mencetak nilai secret.
 - Build Next.js: lulus.
-- `supabase status`: belum dapat berjalan karena Docker Desktop Linux engine tidak aktif.
+- Runtime lokal: Docker Linux aktif; Supabase start, reset database, 31 test pgTAP, lint schema, dan security advisor berhasil pada 11 September 2026.
 - Tidak ada SQL, seed, migration, atau perubahan Auth yang dikirim ke project cloud.
 
 ## Syarat lulus G2
