@@ -20,8 +20,8 @@ export default function LoginPage() {
             Satu pintu masuk untuk client dan owner.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-7 text-[#6b6056]">
-            Untuk sementara login memakai mode demo lokal. Supabase Auth bisa
-            diaktifkan lagi setelah flow dashboard sudah matang.
+            Login menggunakan Supabase Auth lokal dengan akses yang dipisahkan
+            untuk client dan owner.
           </p>
         </div>
 

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "backend:check": "node --env-file=.env.local scripts/check-backend.mjs",
+    "seed:local": "node scripts/seed-local-demo.mjs",
     "seed:users": "node --env-file=.env.local scripts/seed-demo-users.mjs",
     "seed:demo": "node --env-file=.env.local scripts/seed-demo-data.mjs"
   },

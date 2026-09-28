@@ -10,7 +10,7 @@ import {
 } from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
 import { billingSummary, businessOrders, formatRupiah, getPackageLabel, workflowTasks } from "@/lib/demo-data";
-import { getEvents, updateEvent, initStore } from "@/lib/store";
+import { getOwnerEvents, publishOwnerEvent, updateOwnerEventStatus } from "@/lib/supabase/owner-workspace";
 import { ContentReview } from "@/components/content-review";
 import type { WeddingEvent } from "@/lib/types";
 import Link from "next/link";
@@ -22,10 +22,11 @@ export default function OwnerDashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      await initStore();
-      const loaded = await getEvents();
-      setEvents(loaded);
-      setIsLoading(false);
+      try {
+        setEvents(await getOwnerEvents());
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, []);
@@ -39,17 +40,14 @@ export default function OwnerDashboardPage() {
   const pipelineStages = ["Lead Baru", "Proses Setup", "Siap Publish"] as const;
 
   async function handleStatusChange(id: string, status: WeddingEvent["status"]) {
-    const updated = await updateEvent(id, { status });
-    setEvents((current) => current.map((e) => (e.id === id ? updated : e)));
+    await updateOwnerEventStatus(id, status);
+    setEvents((current) => current.map((event) => (event.id === id ? { ...event, status } : event)));
   }
 
   async function handlePublish(id: string) {
-    const updated = await updateEvent(id, {
-      status: "active",
-      isPublished: true,
-      publishedAt: new Date().toISOString(),
-    });
-    setEvents((current) => current.map((event) => (event.id === id ? updated : event)));
+    await publishOwnerEvent(id);
+    const publishedAt = new Date().toISOString();
+    setEvents((current) => current.map((event) => (event.id === id ? { ...event, status: "active", isPublished: true, publishedAt } : event)));
   }
 
   return (
@@ -60,7 +58,7 @@ export default function OwnerDashboardPage() {
         description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
       >
         <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          Mode development lokal: event dapat disimpan di browser, sedangkan pipeline, task, dan billing di bawah masih memakai data contoh.
+          Event dan ringkasannya berasal dari Supabase lokal. Pipeline, task, billing, dan approval di bawah masih memakai data contoh.
         </div>
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />

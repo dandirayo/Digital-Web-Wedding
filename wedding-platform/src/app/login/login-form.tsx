@@ -8,7 +8,7 @@ type LoginStatus = "idle" | "loading" | "error";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@occasio.app");
+  const [email, setEmail] = useState("owner@occasio.local");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [message, setMessage] = useState("");
@@ -50,7 +50,7 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => {
-            setEmail("owner@occasio.app");
+            setEmail("owner@occasio.local");
             setPassword("OccasioOwner123!");
             setMessage("");
           }}
@@ -61,7 +61,7 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => {
-            setEmail("client@occasio.app");
+            setEmail("client@occasio.local");
             setPassword("OccasioClient123!");
             setMessage("");
           }}

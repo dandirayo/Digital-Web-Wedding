@@ -1,6 +1,6 @@
 # Occasio — Fondasi Data, Identitas, dan Akses (G2)
 
-Versi: implementasi lokal 1.4 · 11 September 2026
+Versi: implementasi lokal 1.5 · 27 September 2026
 
 Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke project cloud dan belum ada deployment.
 
@@ -15,6 +15,9 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 - Test pgTAP `supabase/tests/baseline_access_test.sql` mencakup anon, Client A, Client B, owner, staff produksi, staff check-in, invoice, event, tamu, Storage privat, upsert-level object update, dan pencegahan promosi role.
 - Vertical slice Auth awal ditambahkan: browser/server client memakai publishable key dengan fallback anon key, `src/proxy.ts` me-refresh cookie dan menahan route owner/client/chat, login memakai `signInWithPassword`, dan logout memakai Supabase Auth.
 - Slice klien persisten ditambahkan pada `src/lib/supabase/client-workspace.ts`: dashboard memuat event milik user, konten, tamu, dan ucapan dari Supabase; perubahan konten serta tambah/import tamu ditulis kembali ke Supabase. Fallback localStorage tidak lagi dipakai untuk data workspace tersebut.
+- Fixture lokal deterministik ditambahkan melalui `pnpm seed:local`. Script menolak target non-local, membuat akun owner/client melalui Auth admin lokal, lalu menyiapkan event draft, konten, tamu, dan ucapan sesuai schema terbaru.
+- Provider email/password lokal diaktifkan untuk akun undangan sementara registrasi publik tetap dimatikan pada level Auth utama. Login client dan owner, pembacaan event, penyimpanan greeting ke database, serta logout telah diuji melalui browser pada 27 September 2026.
+- Monitoring event owner kini membaca event dan ringkasan tamu/RSVP/ucapan/check-in dari Supabase lokal. Pipeline, task, billing, approval, detail event, dan wizard event masih berstatus demo/localStorage sampai slice berikutnya.
 - Verifikasi HTTP tanpa session: `/owner/dashboard`, `/client/dashboard`, dan `/chat` mengembalikan redirect `307` ke login; `/login` dan undangan publik tetap dapat dibuka.
 - Verifikasi Auth cloud read-only: password benar diterima dan password salah ditolak; akun owner yang saat ini ada di cloud belum mengembalikan `app_metadata.role`, sehingga login aplikasi menolak akun tersebut sampai metadata server diperbaiki melalui proses admin/seed yang disetujui.
 - Lint lulus tanpa error (9 warning optimasi `<img>` yang sudah ada). Build Next.js lulus dan mengenali Proxy.
@@ -22,7 +25,7 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 - Migration staff assignment access ditambahkan di `supabase/migrations/20260911134246_staff_assignment_access.sql`: staff aktif hanya memperoleh akses event/konten/media/file pada event yang ditugaskan, staff check-in hanya memperoleh akses baca tamu/log sesuai assignment, assignment kedaluwarsa tidak memberi akses, dan pembayaran tetap owner/client-only.
 - `supabase test db --local`: **31/31 test lulus**. Fixture paket diperbaiki agar tidak berbenturan dengan seed Basic; seluruh data identitas/event/invoice/staff/storage uji di-rollback setelah test.
 - `supabase db lint --local --schema public,private --fail-on error`: tidak ada error schema. `supabase db advisors --local --type security --level warn --fail-on error`: tidak ada temuan.
-- Status G2 tetap belum lulus: session lintas browser, fixture Auth lokal end-to-end, serta slice profil/order yang lebih luas belum selesai diuji.
+- Status G2 tetap belum lulus: session lintas browser/perangkat, profile display yang konsisten, dan slice order/detail-event persisten yang lebih luas masih perlu diselesaikan.
 
 ## Temuan awal
 
@@ -68,6 +71,7 @@ Status: **Tahap 2 sedang berjalan**. Belum ada migration yang didorong ke projec
 - `backend:check`: lulus; URL, key, REST, dan empat tabel lama terjangkau tanpa mencetak nilai secret.
 - Build Next.js: lulus.
 - Runtime lokal: Docker Linux aktif; Supabase start, reset database, 31 test pgTAP, lint schema, dan security advisor berhasil pada 11 September 2026.
+- Verifikasi browser 27 September 2026: login client membuka event miliknya dengan 3 tamu dan 2 ucapan; perubahan greeting terbukti tersimpan di Postgres; logout kembali ke login; akun owner membuka monitoring event yang sama dari Supabase.
 - Tidak ada SQL, seed, migration, atau perubahan Auth yang dikirim ke project cloud.
 
 ## Syarat lulus G2
