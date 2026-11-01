@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { TemplateSelector } from "@/components/template-selector";
 import { MediaUploader } from "@/components/media-uploader";
 import { CreateClientForm } from "@/components/create-client-form";
+import { AuthGate } from "@/components/auth-gate";
+import { DashboardShell } from "@/components/dashboard-shell";
 import { 
   getPackages, 
   getStorageItem, 
@@ -144,11 +146,12 @@ export default function CreateEventPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#241f1a]">Create New Event</h1>
-        <p className="mt-2 text-sm text-gray-600">Follow the steps to set up a new wedding invitation.</p>
-      </div>
+    <AuthGate role="owner">
+      <DashboardShell role="owner" title="Buat event baru" description="Siapkan paket, data pasangan, acara, media, dan akses client dalam satu alur.">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+          Wizard ini masih memakai penyimpanan demo lokal. Integrasi penuh ke tabel Supabase masuk tahap G2 berikutnya.
+        </div>
 
       {/* Progress Bar */}
       <div className="mb-8">
@@ -472,6 +475,8 @@ export default function CreateEventPage() {
           </button>
         )}
       </div>
-    </div>
+      </div>
+      </DashboardShell>
+    </AuthGate>
   );
 }

@@ -1,91 +1,79 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import type { ComponentType, ReactNode } from "react";
+import { CalendarDays, CheckSquare2, CreditCard, LayoutDashboard, ListChecks, MessageCircle, Sparkles, UsersRound } from "lucide-react";
 import { LogoutButton } from "./logout-button";
 
-type DashboardShellProps = {
-  role: "client" | "owner";
-  title: string;
-  description: string;
-  children: ReactNode;
-};
+type DashboardShellProps = { role: "client" | "owner"; title: string; description: string; children: ReactNode };
+type NavItem = { href: string; label: string; icon: ComponentType<{ className?: string }> };
 
-const nav = {
+const nav: Record<DashboardShellProps["role"], NavItem[]> = {
   client: [
-    { href: "/client/dashboard", label: "Ringkasan" },
-    { href: "/client/dashboard#brief", label: "Brief" },
-    { href: "/chat", label: "Chat" },
-    { href: "/client/dashboard#guests", label: "Tamu" },
-    { href: "/client/dashboard#wishes", label: "Ucapan" },
-    { href: "/client/dashboard#content", label: "Konten" },
+    { href: "/client/dashboard", label: "Ringkasan", icon: LayoutDashboard },
+    { href: "/client/dashboard#brief", label: "Brief", icon: ListChecks },
+    { href: "/chat", label: "Chat", icon: MessageCircle },
+    { href: "/client/dashboard#guests", label: "Tamu", icon: UsersRound },
+    { href: "/client/dashboard#content", label: "Konten", icon: Sparkles },
   ],
   owner: [
-    { href: "/owner/dashboard", label: "Ringkasan" },
-    { href: "/chat", label: "Chat" },
-    { href: "/owner/dashboard#pipeline", label: "Pipeline" },
-    { href: "/owner/dashboard#monitoring", label: "Monitoring" },
-    { href: "/owner/dashboard#tasks", label: "Task" },
-    { href: "/owner/dashboard#billing", label: "Billing" },
+    { href: "/owner/dashboard", label: "Ringkasan", icon: LayoutDashboard },
+    { href: "/owner/dashboard#monitoring", label: "Event", icon: CalendarDays },
+    { href: "/chat", label: "Chat", icon: MessageCircle },
+    { href: "/owner/dashboard#pipeline", label: "Pipeline", icon: ListChecks },
+    { href: "/owner/dashboard#tasks", label: "Task", icon: CheckSquare2 },
+    { href: "/owner/dashboard#billing", label: "Billing", icon: CreditCard },
   ],
 };
 
 export function DashboardShell({ role, title, description, children }: DashboardShellProps) {
+  const pathname = usePathname();
+
   return (
-    <div className="min-h-screen bg-[#f7f3ed] text-[#241f1a]">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-[#e0d4c7] bg-[#fffaf4] px-5 py-6 lg:block">
-        <Link href="/" className="block">
-          <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">
-            Occasio
-          </div>
-          <div className="mt-1 text-2xl font-semibold">{role === "client" ? "Wedding Workspace" : "Business Workspace"}</div>
+    <div className="min-h-screen bg-[#f5f1eb] text-[#241f1a]">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-[#e4d9cd] bg-[#1f1b18] px-5 py-6 text-white lg:flex lg:flex-col">
+        <Link href="/" className="flex items-center gap-3 rounded-xl p-2">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c99b66] text-sm font-bold text-[#211b16]">O</span>
+          <span>
+            <span className="block text-lg font-semibold tracking-tight">Occasio</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">{role === "client" ? "Client workspace" : "Business workspace"}</span>
+          </span>
         </Link>
 
-        <nav className="mt-10 space-y-2">
-          {nav[role].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="block rounded-md px-3 py-2 text-sm font-medium text-[#5d5146] transition hover:bg-[#efe5d8] hover:text-[#241f1a]"
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="mt-9 space-y-1" aria-label="Menu workspace">
+          {nav[role].map((item) => {
+            const Icon = item.icon;
+            const active = item.href.split("#")[0] === pathname && !item.href.includes("#");
+            return (
+              <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-white text-[#241f1a] shadow-sm" : "text-white/68 hover:bg-white/8 hover:text-white"}`}>
+                <Icon className="h-[18px] w-[18px]" />{item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="absolute bottom-6 left-5 right-5 rounded-md border border-[#e0d4c7] bg-white p-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
-            Status Workspace
-          </div>
-          <p className="mt-2 text-sm text-[#6b6056]">
-            {role === "client" ? "Kelola brief, konten, tamu, dan kesiapan publish dari satu tempat." : "Pantau lead, order, produksi, event, dan pembayaran dari satu tempat."}
-          </p>
+        <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#ddb98e]"><span className="h-2 w-2 rounded-full bg-emerald-400" />Local workspace</div>
+          <p className="mt-2 text-xs leading-5 text-white/55">{role === "client" ? "Kelola brief, konten, tamu, dan kesiapan publish." : "Pantau order, produksi, event, dan pembayaran."}</p>
         </div>
       </aside>
 
       <main className="min-w-0 lg:pl-72">
-        <header className="border-b border-[#e0d4c7] bg-[#fffaf4]/90 px-4 py-5 backdrop-blur sm:px-5 lg:px-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">
-                {role === "client" ? "Workspace Klien" : "Workspace Owner"}
-              </div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6056]">{description}</p>
+        <header className="sticky top-0 z-20 border-b border-[#e4d9cd] bg-[#fbf8f4]/92 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a6a3a]">{role === "client" ? "Workspace klien" : "Workspace owner"}</div>
+              <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[#756a60]">{description}</p>
             </div>
             <LogoutButton />
           </div>
-          <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Dashboard mobile menu">
-            {nav[role].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="inline-flex h-10 shrink-0 items-center rounded-md border border-[#e0d4c7] bg-white px-3 text-sm font-semibold text-[#5d5146]"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Menu workspace mobile">
+            {nav[role].map((item) => { const Icon = item.icon; return <Link key={item.href} href={item.href} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[#e0d4c7] bg-white px-3 text-sm font-semibold text-[#5d5146]"><Icon className="h-4 w-4" />{item.label}</Link>; })}
           </nav>
         </header>
-        <div className="min-w-0 px-4 py-5 sm:px-5 sm:py-6 lg:px-8">{children}</div>
+        <div className="min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">{children}</div>
       </main>
     </div>
   );

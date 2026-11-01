@@ -12,6 +12,7 @@ import { getClientWorkspace, updateClientContent, addClientGuest, importClientGu
 import type { WeddingEvent, Guest, Wish } from "@/lib/types";
 import { getPackageLabel } from "@/lib/demo-data";
 import { ContentReview } from "@/components/content-review";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 const MESSAGE_TEMPLATE = `Kepada Yth. \${guest.name},
 
@@ -38,6 +39,7 @@ type WeddingContent = {
 
 export default function ClientDashboardPage() {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [event, setEvent] = useState<WeddingEvent | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -82,7 +84,8 @@ export default function ClientDashboardPage() {
         });
         }
       } catch (error) {
-        console.error("Gagal memuat workspace klien", error);
+        console.warn("Gagal memuat workspace klien lokal", error);
+        setLoadError(error instanceof Error ? error.message : "Database lokal tidak dapat dijangkau.");
       } finally {
         setLoading(false);
       }
@@ -100,6 +103,23 @@ export default function ClientDashboardPage() {
         >
           <div className="flex h-64 items-center justify-center">
             <div className="text-[#9a6a3a]">Memuat data...</div>
+          </div>
+        </DashboardShell>
+      </AuthGate>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <AuthGate role="client">
+        <DashboardShell role="client" title="Workspace Klien" description="Kelola undangan, daftar tamu, RSVP, QR, dan ucapan.">
+          <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
+            <AlertTriangle className="h-8 w-8 text-rose-600" />
+            <h2 className="mt-4 text-xl font-semibold text-rose-950">Supabase lokal belum tersambung</h2>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-rose-800">{loadError}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-rose-900 px-4 text-sm font-semibold text-white">
+              <RefreshCw className="h-4 w-4" /> Coba lagi
+            </button>
           </div>
         </DashboardShell>
       </AuthGate>

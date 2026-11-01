@@ -16,4 +16,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #d9b98f;
+  color: #241f1a;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition-duration: 160ms;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(154, 106, 58, 0.28);
+  outline-offset: 2px;
 }

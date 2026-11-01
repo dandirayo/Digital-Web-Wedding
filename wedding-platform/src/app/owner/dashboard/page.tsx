@@ -14,16 +14,21 @@ import { getOwnerEvents, publishOwnerEvent, updateOwnerEventStatus } from "@/lib
 import { ContentReview } from "@/components/content-review";
 import type { WeddingEvent } from "@/lib/types";
 import Link from "next/link";
+import { AlertTriangle, CalendarPlus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function OwnerDashboardPage() {
   const [events, setEvents] = useState<WeddingEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
         setEvents(await getOwnerEvents());
+      } catch (error) {
+        console.warn("Gagal memuat workspace owner lokal", error);
+        setLoadError(error instanceof Error ? error.message : "Database lokal tidak dapat dijangkau.");
       } finally {
         setIsLoading(false);
       }
@@ -57,8 +62,9 @@ export default function OwnerDashboardPage() {
         title="Monitoring Semua Event"
         description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
       >
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          Event dan ringkasannya berasal dari Supabase lokal. Pipeline, task, billing, dan approval di bawah masih memakai data contoh.
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+          <span><strong>Mode pengembangan.</strong> Event berasal dari Supabase lokal; pipeline, task, billing, dan approval masih memakai data contoh.</span>
         </div>
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />
@@ -88,9 +94,9 @@ export default function OwnerDashboardPage() {
             <div className="mt-5">
               <Link
                 href="/owner/events/new"
-                className="inline-flex h-10 w-full items-center justify-center rounded-md bg-[#d6c7a1] px-4 font-semibold text-[#241f1a] transition hover:bg-[#c9b78c]"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#d6c7a1] px-4 font-semibold text-[#241f1a] transition hover:bg-[#c9b78c]"
               >
-                + Buat Undangan Baru
+                <CalendarPlus className="h-4 w-4" /> Buat Undangan Baru
               </Link>
             </div>
           </div>
@@ -105,8 +111,19 @@ export default function OwnerDashboardPage() {
           <ExportReportAction events={events} />
         </div>
 
-        {isLoading ? (
+        {loadError ? (
+          <div className="mt-5 flex flex-col items-center rounded-xl border border-rose-200 bg-rose-50 px-5 py-10 text-center">
+            <AlertTriangle className="h-7 w-7 text-rose-600" />
+            <h3 className="mt-3 font-semibold text-rose-950">Supabase lokal belum tersambung</h3>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-rose-800">{loadError}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-rose-900 px-4 text-sm font-semibold text-white">
+              <RefreshCw className="h-4 w-4" /> Coba lagi
+            </button>
+          </div>
+        ) : isLoading ? (
           <div className="p-10 text-center text-sm text-[#6b6056]">Memuat event...</div>
+        ) : events.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-dashed border-[#cdbba8] bg-[#fffaf4] px-5 py-10 text-center text-sm text-[#6b6056]">Belum ada event. Buat event pertama untuk memulai workspace.</div>
         ) : (
           <div className="mt-5 grid gap-4">
             {events.map((event) => (

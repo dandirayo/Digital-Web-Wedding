@@ -40,8 +40,13 @@ export async function signInWithPassword(email: string, password: string): Promi
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error || !data.user) {
+  if (error?.code === "invalid_credentials" || (!error && !data.user)) {
     throw new Error("Email atau password salah.");
+  }
+
+  if (error) {
+    console.warn("Supabase Auth lokal belum dapat dijangkau", error.code);
+    throw new Error("Server login lokal belum aktif. Pastikan Docker dan Supabase lokal berjalan.");
   }
 
   try {

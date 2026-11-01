@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { ArrowRight, Eye, EyeOff, Server } from "lucide-react";
 import { signInWithPassword } from "@/lib/auth";
 
 type LoginStatus = "idle" | "loading" | "error";
@@ -12,6 +13,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,9 +36,9 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-[#e0d4c7] bg-white p-6 shadow-[0_18px_48px_rgba(82,57,38,0.08)]">
-      <div className="inline-flex rounded-full bg-[#efe5d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">
-        Login aman
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-[#e0d4c7] bg-white p-6 shadow-[0_24px_70px_rgba(82,57,38,0.10)] sm:p-7">
+      <div className="inline-flex items-center gap-2 rounded-full bg-[#efe5d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#7b552f]">
+        <Server className="h-3.5 w-3.5" /> Supabase Auth
       </div>
 
       <h3 className="mt-5 text-2xl font-semibold">Login akun Occasio</h3>
@@ -76,7 +78,7 @@ export function LoginForm() {
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Email</span>
           <input
-            className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
+            className="mt-2 h-12 w-full rounded-xl border border-[#e0d4c7] bg-[#fffaf4] px-4 text-sm outline-none transition focus:border-[#9a6a3a]"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             type="email"
@@ -87,15 +89,12 @@ export function LoginForm() {
 
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">Password</span>
-          <input
-            className="mt-2 h-11 w-full rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 text-sm outline-none transition focus:border-[#9a6a3a]"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            autoComplete="current-password"
-            placeholder="Masukkan password"
-            required
-          />
+          <span className="relative mt-2 block">
+            <input className="h-12 w-full rounded-xl border border-[#e0d4c7] bg-[#fffaf4] px-4 pr-12 text-sm outline-none transition focus:border-[#9a6a3a]" value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Masukkan password" required />
+            <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-[#756a60]" aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}>
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </span>
         </label>
       </div>
 
@@ -108,9 +107,9 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white transition hover:bg-[#3a3129] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#241f1a] px-4 text-sm font-semibold text-white transition hover:bg-[#3a3129] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === "loading" ? "Memproses..." : "Login"}
+        {status === "loading" ? "Memproses..." : <>Masuk ke workspace <ArrowRight className="h-4 w-4" /></>}
       </button>
     </form>
   );
