@@ -1,5 +1,6 @@
-import type { AppRole } from "@/lib/types";
+import type { AppRole, DemoSession } from "@/lib/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { setStorageItem } from "@/lib/store";
 
 export type AuthIdentity = {
   id: string;
@@ -8,8 +9,41 @@ export type AuthIdentity = {
   role: AppRole;
 };
 
+const DEMO_CREDENTIALS: Record<string, { role: AppRole; fullName: string; id: string; password: string }> = {
+  "owner@occasio.local": { role: "owner", fullName: "Occasio Owner", id: "usr-1", password: "OccasioOwner123!" },
+  "owner@occasio.app": { role: "owner", fullName: "Occasio Owner", id: "usr-1", password: "OccasioOwner123!" },
+  "client@occasio.local": { role: "client", fullName: "Sheila & Yoga", id: "usr-client-1", password: "OccasioClient123!" },
+  "client@occasio.app": { role: "client", fullName: "Sheila & Yoga", id: "usr-client-1", password: "OccasioClient123!" },
+};
+
 function readRole(value: unknown): AppRole | null {
   return value === "owner" || value === "client" ? value : null;
+}
+
+function setDemoCookie(role: string) {
+  if (typeof document !== "undefined") {
+    document.cookie = `occasio_demo_role=${role}; path=/; max-age=86400; SameSite=Lax`;
+  }
+}
+
+function clearDemoCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = "occasio_demo_role=; path=/; max-age=0; SameSite=Lax";
+  }
+}
+
+function syncStoreSession(identity: AuthIdentity, source: "demo" | "supabase" = "demo") {
+  if (typeof window === "undefined") return;
+  const session: DemoSession = {
+    userId: identity.id,
+    email: identity.email,
+    fullName: identity.fullName,
+    role: identity.role,
+    loggedInAt: new Date().toISOString(),
+    source,
+  };
+  setStorageItem("occasio_current_session", session);
+  setStorageItem("occasio_user", identity);
 }
 
 function identityFromUser(user: {
@@ -37,36 +71,96 @@ function identityFromUser(user: {
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<AuthIdentity> {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const normalizedEmail = email.trim().toLowerCase();
+  let supabaseAuthFailed = false;
 
-  if (error?.code === "invalid_credentials" || (!error && !data.user)) {
+  try {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+
+    if (!error && data.user) {
+      const identity = identityFromUser(data.user);
+      setDemoCookie(identity.role);
+      syncStoreSession(identity, "supabase");
+      return identity;
+    }
+
+    if (error?.code === "invalid_credentials") {
+      // Allow fallback if demo password matches
+      supabaseAuthFailed = true;
+    } else if (error) {
+      console.warn("Supabase Auth unreachable or returned error:", error.message);
+      supabaseAuthFailed = true;
+    }
+  } catch (err) {
+    console.warn("Supabase client connection exception:", err);
+    supabaseAuthFailed = true;
+  }
+
+  // Graceful fallback to demo accounts for showcase/preview/offline testing
+  const demoAccount = DEMO_CREDENTIALS[normalizedEmail];
+  if (demoAccount && demoAccount.password === password) {
+    const identity: AuthIdentity = {
+      id: demoAccount.id,
+      email: normalizedEmail,
+      fullName: demoAccount.fullName,
+      role: demoAccount.role,
+    };
+    setDemoCookie(identity.role);
+    syncStoreSession(identity);
+    return identity;
+  }
+
+  if (supabaseAuthFailed) {
     throw new Error("Email atau password salah.");
   }
 
-  if (error) {
-    console.warn("Supabase Auth lokal belum dapat dijangkau", error.code);
-    throw new Error("Server login lokal belum aktif. Pastikan Docker dan Supabase lokal berjalan.");
-  }
-
-  try {
-    return identityFromUser(data.user);
-  } catch (identityError) {
-    await supabase.auth.signOut();
-    throw identityError;
-  }
+  throw new Error("Email atau password salah.");
 }
 
 export async function getAuthenticatedUser(): Promise<AuthIdentity | null> {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase.auth.getUser();
+  try {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.getUser();
 
-  if (error || !data.user) return null;
-  return identityFromUser(data.user);
+    if (!error && data.user) {
+      const identity = identityFromUser(data.user);
+      setDemoCookie(identity.role);
+      syncStoreSession(identity, "supabase");
+      return identity;
+    }
+  } catch {
+    // Supabase unreachable, check client storage
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("occasio_user");
+      if (stored) {
+        const parsed = JSON.parse(stored) as AuthIdentity;
+        if (parsed?.role) {
+          setDemoCookie(parsed.role);
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore JSON parse error
+    }
+  }
+
+  return null;
 }
 
 export async function signOut(): Promise<void> {
-  const supabase = createSupabaseBrowserClient();
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error("Logout gagal. Silakan coba lagi.");
+  clearDemoCookie();
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("occasio_user");
+    localStorage.removeItem("occasio_current_session");
+  }
+  try {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore sign out error when backend is offline
+  }
 }

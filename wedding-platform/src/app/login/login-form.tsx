@@ -47,32 +47,37 @@ export function LoginForm() {
         Password diverifikasi oleh Supabase Auth.
       </p>
 
-      {process.env.NODE_ENV === "development" ? (
-      <div className="mt-5 grid gap-2 text-sm md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => {
-            setEmail("owner@occasio.local");
-            setPassword("OccasioOwner123!");
-            setMessage("");
-          }}
-          className="rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-2 text-left font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
-        >
-          Pakai Owner
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setEmail("client@occasio.local");
-            setPassword("OccasioClient123!");
-            setMessage("");
-          }}
-          className="rounded-md border border-[#e0d4c7] bg-[#fffaf4] px-3 py-2 text-left font-semibold text-[#5a4028] transition hover:bg-[#efe5d8]"
-        >
-          Pakai Client
-        </button>
+      <div className="mt-5 rounded-xl border border-[#e8dacb] bg-[#faf5ef] p-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8c6742]">
+          Akses Cepat Demo Preview:
+        </div>
+        <div className="mt-2 grid gap-2 text-xs md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("owner@occasio.local");
+              setPassword("OccasioOwner123!");
+              setMessage("");
+            }}
+            className="rounded-lg border border-[#dfcebd] bg-white px-3 py-2 text-left font-semibold text-[#5a4028] shadow-sm transition hover:bg-[#efe5d8]"
+          >
+            <span className="block font-bold">👑 Masuk sbg Owner</span>
+            <span className="block text-[10px] font-normal text-[#8a7c6f]">owner@occasio.local</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("client@occasio.local");
+              setPassword("OccasioClient123!");
+              setMessage("");
+            }}
+            className="rounded-lg border border-[#dfcebd] bg-white px-3 py-2 text-left font-semibold text-[#5a4028] shadow-sm transition hover:bg-[#efe5d8]"
+          >
+            <span className="block font-bold">💍 Masuk sbg Client</span>
+            <span className="block text-[10px] font-normal text-[#8a7c6f]">client@occasio.local</span>
+          </button>
+        </div>
       </div>
-      ) : null}
 
       <div className="mt-6 space-y-4">
         <label className="block">

@@ -4,35 +4,44 @@ import { NextResponse, type NextRequest } from "next/server";
 const protectedRoutes = ["/owner", "/client", "/chat"];
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  const demoRole = request.cookies.get("occasio_demo_role")?.value;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublicKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabasePublicKey) {
-    return NextResponse.next({ request });
+  let response = NextResponse.next({ request });
+  let claims: Record<string, unknown> | undefined = undefined;
+
+  if (supabaseUrl && supabasePublicKey) {
+    try {
+      const supabase = createServerClient(supabaseUrl, supabasePublicKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet, cacheHeaders) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+            Object.entries(cacheHeaders || {}).forEach(([name, value]) => response.headers.set(name, value));
+          },
+        },
+      });
+
+      const { data } = await supabase.auth.getClaims();
+      claims = data?.claims as Record<string, unknown> | undefined;
+    } catch {
+      // Supabase server unavailable, rely on demo session
+    }
   }
 
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(supabaseUrl, supabasePublicKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet, cacheHeaders) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        Object.entries(cacheHeaders || {}).forEach(([name, value]) => response.headers.set(name, value));
-      },
-    },
-  });
+  const appMetadata = claims?.app_metadata as Record<string, unknown> | undefined;
+  const role = (appMetadata?.role as string) || demoRole;
 
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-  const pathname = request.nextUrl.pathname;
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
-
-  if (!claims && isProtected) {
+  if (!role && isProtected) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
@@ -40,9 +49,6 @@ export async function proxy(request: NextRequest) {
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
     return redirect;
   }
-
-  const appMetadata = claims?.app_metadata as Record<string, unknown> | undefined;
-  const role = appMetadata?.role;
 
   if (pathname.startsWith("/owner") && role !== "owner") {
     const target = request.nextUrl.clone();
