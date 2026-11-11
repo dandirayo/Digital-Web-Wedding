@@ -4,13 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { FormEvent, useState, useMemo } from "react";
-import { addWish, addGuest, updateGuest } from "@/lib/store";
+import { addWish, submitRsvp } from "@/lib/store";
 import type { ThemeProps } from "../types";
 import { Wish, Guest } from "@/lib/types";
 import { Countdown } from "@/components/wedding/countdown";
 import { MusicPlayer } from "@/components/wedding/music-player";
 import { PersonalizedGreeting } from "@/components/wedding/personalized-greeting";
+import { resolveMedia } from "../media";
 
+// Hiasan bunga milik tema (bukan foto pasangan).
 const TEMPLATE_PATH = "/templates/sheila-yoga/assets";
 
 type GalleryPreview = {
@@ -21,24 +23,23 @@ type GalleryPreview = {
 export default function ClassicElegantTheme({
   event,
   content,
-  guests: initialGuests,
   wishes: initialWishes,
   media,
   guestName,
   guestData,
+  guestToken,
 }: ThemeProps) {
   const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
   
   // Local state for interactive UI
   const [wishes, setWishes] = useState<Wish[]>(initialWishes);
-  const [guests, setGuests] = useState<Guest[]>(initialGuests);
   
   const [rsvpStatus, setRsvpStatus] = useState("");
   const [wishStatus, setWishStatus] = useState("");
   const [giftStatus, setGiftStatus] = useState("");
 
   const [rsvpGuest, setRsvpGuest] = useState<Guest | null>(
-    guestData || (guestName ? guests.find(g => g.name.toLowerCase() === guestName.toLowerCase()) || null : null)
+    guestData || null
   );
 
   const resolved = {
@@ -65,73 +66,29 @@ export default function ClassicElegantTheme({
   async function handleRsvpSubmit(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
     const formData = new FormData(formEvent.currentTarget);
-    const name = String(formData.get("rsvpName") || "").trim();
-    const status = String(formData.get("rsvpStatus") || "attending") as Guest["rsvpStatus"];
+    const status = String(formData.get("rsvpStatus") || "attending") as "attending" | "declined";
     const pax = Number(formData.get("rsvpPax") || 1);
 
-    if (!name) {
-      setRsvpStatus("Nama tamu wajib diisi.");
+    if (!guestToken || !rsvpGuest) {
+      setRsvpStatus("RSVP hanya bisa dikirim lewat link undangan pribadi Anda.");
       return;
     }
 
     try {
-      let updatedGuest: Guest;
-      
-      const existingGuest = guests.find(g => g.name.toLowerCase() === name.toLowerCase());
-      
-      if (existingGuest) {
-        updatedGuest = await updateGuest(existingGuest.id, {
-          rsvpStatus: status,
-          paxConfirmed: status === "attending" ? pax : 0,
-        });
-        setGuests(guests.map(g => g.id === existingGuest.id ? updatedGuest : g));
-      } else {
-        updatedGuest = await addGuest(event.id, {
-          name,
-          phone: "",
-          paxLimit: Math.max(pax, 4),
-          rsvpStatus: status,
-          paxConfirmed: status === "attending" ? pax : 0,
-        });
-        setGuests([...guests, updatedGuest]);
-      }
-      
-      // Generate QR code if attending
-      if (status === "attending") {
-        const qrPayload = JSON.stringify({
-          type: "occasio-checkin",
-          eventId: event.id,
-          guestId: updatedGuest.id,
-        });
-        const qrDataUrl = await QRCode.toDataURL(qrPayload, {
-          errorCorrectionLevel: "M",
-          margin: 2,
-          scale: 8,
-          color: {
-            dark: "#2b241f",
-            light: "#fffaf4",
-          },
-        });
-        
-        // We temporarily store the Data URL in the qrCode field to display it
-        // Note: in a real app this might be saved to storage or just generated on the fly
-        updatedGuest = { ...updatedGuest, qrCode: qrDataUrl };
-      }
-
-      setRsvpGuest(updatedGuest);
-      setRsvpStatus(
-        status === "attending"
-          ? "RSVP berhasil. QR check-in sudah dibuat."
-          : "RSVP berhasil. Terima kasih sudah memberi kabar."
-      );
-    } catch {
-      setRsvpStatus("Terjadi kesalahan saat menyimpan RSVP.");
+      const saved = await submitRsvp(event.id, guestToken, { rsvpStatus: status, paxConfirmed: pax });
+      const qr = status === "attending"
+        ? await QRCode.toDataURL(guestToken, { errorCorrectionLevel: "M", margin: 2, scale: 8, color: { dark: "#2b241f", light: "#fffaf4" } })
+        : "";
+      setRsvpGuest({ ...rsvpGuest, ...saved, qrCode: qr });
+      setRsvpStatus(status === "attending" ? "RSVP berhasil. QR check-in sudah dibuat." : "RSVP berhasil. Terima kasih sudah memberi kabar.");
+    } catch (e) {
+      setRsvpStatus(e instanceof Error ? e.message : "Terjadi kesalahan saat menyimpan RSVP.");
     }
   }
 
   function handleResetRsvp() {
-    setRsvpGuest(null);
-    setRsvpStatus("RSVP sudah direset.");
+    setRsvpGuest((current) => (current ? { ...current, rsvpStatus: "pending", qrCode: "" } : null));
+    setRsvpStatus("Silakan ubah RSVP Anda.");
   }
 
   async function handleWishSubmit(formEvent: FormEvent<HTMLFormElement>) {
@@ -168,42 +125,27 @@ export default function ClassicElegantTheme({
     }
   }
   
-  // Gallery Logic
-  const galleryImages = useMemo(() => {
-    const mediaGallery = media.filter(m => m.category === "gallery" && m.type === "photo");
-    if (mediaGallery.length > 0) {
-      return mediaGallery;
-    }
-    // Fallback
-    return ["g1.jpg", "g2.jpg", "g3.jpg", "g4.jpg", "g5.jpg", "g6.jpg"].map((img, idx) => ({
-      id: `fb-${idx}`,
-      eventId: event.id,
-      type: "photo" as const,
-      url: `${TEMPLATE_PATH}/images/${img}`,
-      altText: "Gallery image",
-      category: "gallery" as const,
-      sortOrder: idx,
-      createdAt: new Date().toISOString()
-    }));
-  }, [media, event.id]);
-
-  const prewedMedia = media.find(m => m.category === "prewedding");
-  const prewedImage = prewedMedia?.url || `${TEMPLATE_PATH}/images/prewed-1.jpg`;
+  const m = useMemo(() => resolveMedia(content, media), [content, media]);
+  const galleryImages = m.gallery;
+  const prewedImage = m.prewedding;
+  const hasGallery = Boolean(prewedImage || galleryImages.length || m.video);
 
   return (
     <main className="min-h-screen bg-[#f3ebdf] text-[#2b241f]">
       <section className="relative min-h-[100svh] overflow-hidden bg-[#776859] text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${media.find(m => m.category === "cover")?.url || `${TEMPLATE_PATH}/images/cover.jpg`}')` }}
-        />
+        {m.cover ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url('${m.cover}')` }}
+          />
+        ) : null}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,29,23,0.72),rgba(37,29,23,0.2),rgba(37,29,23,0.76))]" />
         <div className="absolute left-1/2 top-0 hidden h-[52vw] max-h-[520px] min-h-[260px] w-[52vw] min-w-[260px] max-w-[520px] -translate-x-[90%] -translate-y-[20%] rounded-full bg-white/22 sm:block" />
         <div className="absolute right-1/2 top-0 hidden h-[52vw] max-h-[520px] min-h-[260px] w-[52vw] min-w-[260px] max-w-[520px] translate-x-[92%] -translate-y-[20%] rounded-full bg-white/18 sm:block" />
 
         <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-between px-4 py-5 sm:px-5 sm:py-8">
           <header className="flex items-center justify-between gap-3">
-            <Link href="/" className="rounded-full bg-white/18 px-4 py-2 text-sm font-semibold backdrop-blur sm:px-5">
+            <Link href="/" className="shrink-0 rounded-full bg-white/18 px-4 py-2 text-sm font-semibold backdrop-blur sm:px-5">
               Occasio
             </Link>
             <span className="rounded-full bg-white/18 px-4 py-2 text-right text-sm font-semibold backdrop-blur sm:px-5">
@@ -262,14 +204,14 @@ export default function ClassicElegantTheme({
 
       <section className="mx-auto grid max-w-6xl gap-5 px-5 pb-14 sm:pb-20 md:grid-cols-[1fr_0.75fr_1fr] md:items-center">
         <CoupleCard 
-          image={content.bridePhotoUrl || `${TEMPLATE_PATH}/images/bride.jpg`} 
+          image={m.bride} 
           name={firstName} 
           role="Putri pertama" 
           parent={content.brideParent || "Bapak & Ibu"} 
         />
         <div className="text-center text-5xl font-semibold italic text-[#9a6a3a]">&</div>
         <CoupleCard 
-          image={content.groomPhotoUrl || `${TEMPLATE_PATH}/images/groom.jpg`} 
+          image={m.groom} 
           name={secondName} 
           role="Putra pertama" 
           parent={content.groomParent || "Bapak & Ibu"} 
@@ -294,24 +236,26 @@ export default function ClassicElegantTheme({
               title="Akad Nikah"
               time={content.akadTime || "08.00 - 10.00 WIB"}
               venue={content.akadVenue || resolved.venue}
-              mapImage="maps-akad.jpg"
+              mapImage={m.maps[0]}
             />
             <EventCard
               title="Resepsi"
               time={content.resepsiTime || "11.00 - 14.00 WIB"}
               venue={content.resepsiVenue || resolved.venue}
-              mapImage="maps-resepsi.jpg"
+              mapImage={m.maps[1]}
             />
           </div>
         </div>
       </section>
 
+      {hasGallery ? (
       <section className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
         <div className="text-center">
           <SectionLabel>Our Gallery</SectionLabel>
           <h2 className="mt-4 text-3xl font-semibold md:text-5xl">Momen Bahagia</h2>
         </div>
-        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+        <div className={`mt-10 grid gap-4 ${prewedImage && galleryImages.length ? "lg:grid-cols-2" : ""}`}>
+          {prewedImage ? (
           <button
             type="button"
             onClick={() =>
@@ -325,12 +269,14 @@ export default function ClassicElegantTheme({
           >
             <Image
               src={prewedImage}
+              unoptimized
               alt="Prewedding"
               width={900}
               height={900}
               className="aspect-square w-full object-cover transition duration-300 group-hover:scale-[1.025]"
             />
           </button>
+          ) : null}
           <div className="grid grid-cols-2 gap-4">
             {galleryImages.slice(0, 4).map((image) => (
               <button
@@ -347,6 +293,7 @@ export default function ClassicElegantTheme({
               >
                 <Image
                   src={image.url}
+                  unoptimized
                   alt={image.altText || "Gallery"}
                   width={520}
                   height={520}
@@ -356,16 +303,18 @@ export default function ClassicElegantTheme({
             ))}
           </div>
         </div>
-        {(media.find(m => m.category === "gallery" && m.type === "video")?.url || `${TEMPLATE_PATH}/videos/intro.mp4`) && (
+        {m.video ? (
           <video
-            src={media.find(m => m.category === "gallery" && m.type === "video")?.url || `${TEMPLATE_PATH}/videos/intro.mp4`}
+            src={m.video}
             className="mt-4 aspect-video max-h-[560px] w-full rounded-md bg-[#2b241f] object-cover"
             controls
             muted
             playsInline
+            preload="metadata"
           />
-        )}
+        ) : null}
       </section>
+      ) : null}
 
       <section className="bg-[#fffaf4] px-5 py-14 sm:py-20">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
@@ -374,12 +323,14 @@ export default function ClassicElegantTheme({
               Konfirmasi kehadiran. Jika memilih hadir,
               sistem akan membuat QR check-in.
             </p>
-            {(!rsvpGuest || rsvpGuest.rsvpStatus === "pending") && (
+            {!rsvpGuest ? <p className="mt-4 text-sm font-semibold text-[#9a6a3a]">Buka link undangan pribadi yang dikirim mempelai untuk mengirim RSVP.</p> : null}
+            {rsvpGuest && rsvpGuest.rsvpStatus === "pending" && (
               <form key={rsvpGuest?.id || "new-rsvp"} onSubmit={handleRsvpSubmit} className="mt-5 grid gap-3">
                 <input
                   name="rsvpName"
                   className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
                   placeholder="Nama tamu"
+                  readOnly
                   defaultValue={rsvpGuest?.name || guestName || ""}
                 />
                 <select
@@ -395,10 +346,7 @@ export default function ClassicElegantTheme({
                   className="h-12 rounded-md border border-[#d8c8b8] bg-white px-4"
                   defaultValue={String(rsvpGuest?.paxConfirmed || 1)}
                 >
-                  <option value="1">1 orang</option>
-                  <option value="2">2 orang</option>
-                  <option value="3">3 orang</option>
-                  <option value="4">4 orang</option>
+                  {Array.from({ length: Math.min(rsvpGuest?.paxLimit || 1, 20) }, (_, i) => <option key={i + 1} value={String(i + 1)}>{i + 1} orang</option>)}
                 </select>
                 <button className="h-12 rounded-md bg-[#2b241f] font-semibold text-white">Kirim RSVP</button>
               </form>
@@ -564,6 +512,7 @@ export default function ClassicElegantTheme({
             </button>
             <Image
               src={selectedImage.src}
+              unoptimized
               alt={selectedImage.alt}
               width={1400}
               height={1000}
@@ -576,7 +525,7 @@ export default function ClassicElegantTheme({
         </div>
       ) : null}
 
-      <MusicPlayer musicUrl={content.musicUrl || `${TEMPLATE_PATH}/audio/background.mp3`} />
+      {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
     </main>
   );
 }
@@ -615,13 +564,23 @@ function CoupleCard({
 }) {
   return (
     <article className="rounded-md border border-[#e0d4c7] bg-white p-5 text-center">
-      <Image
-        src={image}
-        alt={name}
-        width={640}
-        height={640}
-        className="mx-auto aspect-square w-full max-w-sm rounded-md object-cover"
-      />
+      {image ? (
+        <Image
+          src={image}
+          alt={name}
+          width={640}
+          height={640}
+          unoptimized
+          className="mx-auto aspect-square w-full max-w-sm rounded-md object-cover"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="mx-auto grid aspect-square w-full max-w-sm place-items-center rounded-md bg-[#efe5d8] text-7xl font-semibold text-[#9a6a3a]"
+        >
+          {name.trim().charAt(0).toUpperCase()}
+        </div>
+      )}
       <h3 className="mt-5 text-4xl font-semibold">{name}</h3>
       <p className="mt-2 text-sm font-semibold uppercase tracking-[0.16em] text-[#9a6a3a]">{role}</p>
       <p className="mt-2 text-sm text-[#6b6056]">{parent}</p>
@@ -638,19 +597,22 @@ function EventCard({
   title: string;
   time: string;
   venue: string;
-  mapImage: string;
+  mapImage?: string;
 }) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
 
   return (
     <article className="overflow-hidden rounded-md border border-white/12 bg-white text-[#2b241f]">
-      <Image
-        src={`${TEMPLATE_PATH}/images/${mapImage}`}
-        alt={title}
-        width={640}
-        height={320}
-        className="h-48 w-full object-cover"
-      />
+      {mapImage ? (
+        <Image
+          src={mapImage}
+          alt={title}
+          width={640}
+          height={320}
+          unoptimized
+          className="h-48 w-full object-cover"
+        />
+      ) : null}
       <div className="p-5">
         <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6a3a]">{title}</div>
         <h3 className="mt-3 text-2xl font-semibold">{time}</h3>

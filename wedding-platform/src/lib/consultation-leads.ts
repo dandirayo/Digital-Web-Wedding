@@ -1,4 +1,7 @@
-export type ConsultationStatus = "Baru" | "Dihubungi" | "Menjadi Klien";
+import { api } from "./api";
+
+export const CONSULTATION_STATUSES = ["Baru", "Dihubungi", "Menjadi Klien", "Batal"] as const;
+export type ConsultationStatus = (typeof CONSULTATION_STATUSES)[number];
 
 export type ConsultationLead = {
   id: string;
@@ -10,64 +13,32 @@ export type ConsultationLead = {
   package: "Basic" | "Premium" | "Signature";
   budget: string;
   notes: string;
+  ownerNote: string;
+  clientId?: string;
+  eventId?: string;
   source: string;
-  submittedAt: string;
   status: ConsultationStatus;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const STORAGE_KEY = "occasio_consultation_leads_v1";
+export type ConsultationInput = Pick<ConsultationLead, "name" | "whatsapp" | "eventDate" | "eventType" | "template" | "package" | "budget" | "notes">;
 
-export const demoConsultationLead: ConsultationLead = {
-  id: "lead-demo-ayu",
-  name: "Ayu Wulandari",
-  whatsapp: "6281234567890",
-  eventDate: "2027-02-14",
-  eventType: "Pernikahan",
-  template: "Rose Editorial",
-  package: "Premium",
-  budget: "Rp1 juta - Rp2 juta",
-  notes: "Membutuhkan undangan untuk sekitar 350 tamu dan QR check-in.",
-  source: "Website Occasio",
-  submittedAt: "2026-09-06T08:30:00.000Z",
-  status: "Baru",
-};
-
-export function getConsultationLeads(): ConsultationLead[] {
-  if (typeof window === "undefined") return [demoConsultationLead];
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as ConsultationLead[];
-    return saved.some((lead) => lead.id === demoConsultationLead.id)
-      ? saved
-      : [demoConsultationLead, ...saved];
-  } catch {
-    return [demoConsultationLead];
-  }
+// Pengiriman brief dari halaman /consultation (origin yang sama dengan API).
+export async function submitConsultation(input: ConsultationInput): Promise<void> {
+  const response = await fetch("/api/leads", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Brief belum terkirim. Coba lagi.");
 }
 
-export function saveConsultationLead(
-  data: Omit<ConsultationLead, "id" | "status">,
-): ConsultationLead {
-  const leads = getConsultationLeads();
-  const duplicate = leads.find(
-    (lead) => lead.whatsapp === data.whatsapp && lead.submittedAt === data.submittedAt,
-  );
-  if (duplicate) return duplicate;
-
-  const lead: ConsultationLead = {
-    ...data,
-    id: `lead-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    status: "Baru",
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([lead, ...leads]));
-  window.dispatchEvent(new CustomEvent("occasio:consultation-updated"));
-  return lead;
-}
-
-export function updateConsultationStatus(id: string, status: ConsultationStatus) {
-  const updated = getConsultationLeads().map((lead) =>
-    lead.id === id ? { ...lead, status } : lead,
-  );
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  window.dispatchEvent(new CustomEvent("occasio:consultation-updated"));
-  return updated;
-}
+export const getConsultationLeads = () => api<ConsultationLead[]>("leads");
+export const updateConsultationLead = (id: string, patch: Partial<Pick<ConsultationLead, "status" | "ownerNote">>) =>
+  api<ConsultationLead>("updateLead", [id, patch]);
+export const deleteConsultationLead = (id: string) => api<void>("deleteLead", [id]);
+export const convertConsultationLead = (id: string, email: string) =>
+  api<{ lead: ConsultationLead; event: { id: string; slug: string }; client: { email: string }; temporaryPassword: string }>("convertLead", [id, { email }]);

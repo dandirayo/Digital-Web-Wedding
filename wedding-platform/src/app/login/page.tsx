@@ -4,7 +4,7 @@ import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
-    <main className="grid min-h-screen bg-[#f5f1eb] text-[#241f1a] lg:grid-cols-[0.94fr_1.06fr]">
+    <main className="mobile-form grid min-h-screen bg-[#f5f1eb] text-[#241f1a] lg:grid-cols-[0.94fr_1.06fr]">
       <section className="relative hidden overflow-hidden bg-[#1f1b18] p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#c99b66]/15 blur-3xl" />
         <Link href="/" className="flex items-center gap-3">
@@ -37,7 +37,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-14 lg:py-16">
+      <section className="flex items-center justify-center px-4 py-6 sm:px-8 sm:py-10 lg:px-14 lg:py-16">
         <div className="w-full max-w-xl">
           <div className="lg:hidden">
             <Link href="/" className="flex items-center gap-3">
@@ -52,7 +52,7 @@ export default function LoginPage() {
             <div className="text-sm font-semibold uppercase tracking-[0.22em] text-[#9a6a3a]">
               Login
             </div>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight">Selamat datang kembali.</h2>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Selamat datang kembali.</h2>
             <p className="mt-3 text-sm leading-6 text-[#6b6056]">
               Masuk sebagai owner atau client. Akses akan diarahkan otomatis berdasarkan akun Anda.
             </p>

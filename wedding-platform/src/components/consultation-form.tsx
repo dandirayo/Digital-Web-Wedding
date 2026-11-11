@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
-import { saveConsultationLead, type ConsultationLead } from "@/lib/consultation-leads";
+import { FormEvent, useState } from "react";
+import { submitConsultation, type ConsultationInput } from "@/lib/consultation-leads";
 
-type IntakeForm = Omit<ConsultationLead, "id" | "status" | "submittedAt" | "source">;
+type IntakeForm = ConsultationInput;
 
 const emptyForm: IntakeForm = {
   name: "",
@@ -12,56 +11,33 @@ const emptyForm: IntakeForm = {
   eventDate: "",
   eventType: "Pernikahan",
   template: "",
-  package: "Premium",
+  package: "Basic",
   budget: "Rp1 juta - Rp2 juta",
   notes: "",
 };
 
 export function ConsultationForm({ initialTemplate = "" }: { initialTemplate?: string }) {
   const [form, setForm] = useState<IntakeForm>({ ...emptyForm, template: initialTemplate });
-  const [savedLead, setSavedLead] = useState<ConsultationLead | null>(null);
-
-  useEffect(() => {
-    const encoded = window.location.hash.match(/intake=([^&]+)/)?.[1];
-    if (!encoded) return;
-
-    try {
-      const decoded = JSON.parse(
-        decodeURIComponent(escape(atob(decodeURIComponent(encoded)))),
-      ) as Partial<ConsultationLead>;
-      if (!decoded.name || !decoded.whatsapp || !decoded.eventDate || !decoded.package) return;
-
-      const lead = saveConsultationLead({
-        name: decoded.name,
-        whatsapp: decoded.whatsapp,
-        eventDate: decoded.eventDate,
-        eventType: decoded.eventType || "Pernikahan",
-        template: decoded.template || "Belum dipilih",
-        package: normalizePackage(decoded.package),
-        budget: decoded.budget || "Belum ditentukan",
-        notes: decoded.notes || "",
-        source: decoded.source || "Website Occasio",
-        submittedAt: decoded.submittedAt || new Date().toISOString(),
-      });
-      queueMicrotask(() => setSavedLead(lead));
-      window.history.replaceState(null, "", "/consultation?received=1");
-    } catch {
-      // Hash yang tidak valid diabaikan agar form tetap dapat digunakan manual.
-    }
-  }, []);
+  const [savedLead, setSavedLead] = useState<IntakeForm | null>(null);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   function update<K extends keyof IntakeForm>(key: K, value: IntakeForm[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const lead = saveConsultationLead({
-      ...form,
-      source: "Management Occasio",
-      submittedAt: new Date().toISOString(),
-    });
-    setSavedLead(lead);
+    setSending(true);
+    setError("");
+    try {
+      await submitConsultation(form);
+      setSavedLead(form);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Brief belum terkirim. Coba lagi.");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (savedLead) {
@@ -72,8 +48,8 @@ export function ConsultationForm({ initialTemplate = "" }: { initialTemplate?: s
         </div>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Terima kasih, {savedLead.name}.</h1>
         <p className="mt-3 max-w-xl text-sm leading-7 text-[#6b6056]">
-          Konsultasi untuk paket {savedLead.package} sudah masuk ke inbox management Occasio.
-          Tim dapat melanjutkan follow-up, membuat order, lalu membuka workspace klien.
+          Konsultasi untuk paket {savedLead.package} sudah masuk ke inbox tim Occasio.
+          Tim akan menghubungi Anda melalui WhatsApp untuk langkah berikutnya.
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Summary label="Paket" value={savedLead.package} />
@@ -81,16 +57,10 @@ export function ConsultationForm({ initialTemplate = "" }: { initialTemplate?: s
           <Summary label="Tanggal" value={formatDate(savedLead.eventDate)} />
         </div>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-md bg-[#241f1a] px-5 text-sm font-semibold text-white">
-            Masuk ke Workspace
-          </Link>
-          <button type="button" onClick={() => setSavedLead(null)} className="inline-flex h-11 items-center justify-center rounded-md border border-[#cdbba8] px-5 text-sm font-semibold text-[#5a4028]">
+          <button type="button" onClick={() => { setSavedLead(null); setForm({ ...emptyForm, template: initialTemplate }); }} className="inline-flex h-11 items-center justify-center rounded-md border border-[#cdbba8] px-5 text-sm font-semibold text-[#5a4028]">
             Buat Brief Lain
           </button>
         </div>
-        <p className="mt-5 text-xs leading-5 text-[#887a6d]">
-          Mode pengembangan: brief tersimpan di perangkat ini sampai database produksi diaktifkan.
-        </p>
       </div>
     );
   }
@@ -117,20 +87,21 @@ export function ConsultationForm({ initialTemplate = "" }: { initialTemplate?: s
         </Field>
         <Field label="Paket" required>
           <select value={form.package} onChange={(event) => update("package", normalizePackage(event.target.value))} className={inputClass}>
-            {['Basic', 'Premium', 'Signature'].map((item) => <option key={item}>{item}</option>)}
+            {['Basic'].map((item) => <option key={item}>{item}</option>)}
           </select>
         </Field>
         <Field label="Kisaran budget" required>
           <select value={form.budget} onChange={(event) => update("budget", event.target.value)} className={inputClass}>
-            {['< Rp1 juta', 'Rp1 juta - Rp2 juta', 'Rp2 juta - Rp5 juta', '> Rp5 juta'].map((item) => <option key={item}>{item}</option>)}
+            {['Di bawah Rp1 juta', 'Rp1 juta - Rp2 juta', 'Rp2 juta - Rp5 juta', 'Di atas Rp5 juta'].map((item) => <option key={item}>{item}</option>)}
           </select>
         </Field>
         <Field label="Catatan kebutuhan" wide>
           <textarea value={form.notes} onChange={(event) => update("notes", event.target.value)} className={`${inputClass} min-h-28 py-3`} placeholder="Jumlah tamu, kebutuhan QR, domain, atau catatan lainnya" />
         </Field>
       </div>
-      <button className="mt-5 h-12 w-full rounded-md bg-[#241f1a] px-5 text-sm font-semibold text-white transition hover:bg-[#3a3129]">
-        Kirim Brief ke Management
+      {error ? <p role="alert" className="mt-4 text-sm font-medium text-rose-700">{error}</p> : null}
+      <button disabled={sending} className="mt-5 h-12 w-full rounded-md bg-[#241f1a] px-5 text-sm font-semibold text-white transition hover:bg-[#3a3129] disabled:opacity-60">
+        {sending ? "Mengirim..." : "Kirim Brief"}
       </button>
     </form>
   );

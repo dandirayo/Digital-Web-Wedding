@@ -70,7 +70,7 @@ export function Countdown({
   }
 
   return (
-    <div className={`grid gap-3 sm:grid-cols-4 ${className}`}>
+    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-4 ${className}`}>
       {[
         [timeLeft.days.toString().padStart(2, "0"), "Hari"],
         [timeLeft.hours.toString().padStart(2, "0"), "Jam"],

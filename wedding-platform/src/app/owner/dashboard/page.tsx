@@ -3,15 +3,12 @@
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { EventReadiness } from "@/components/event-readiness";
-import {
-  CreateInvoiceAction,
-  ExportReportAction,
-  PipelineAction,
-} from "@/components/owner-actions";
+import { ExportReportAction } from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
-import { billingSummary, businessOrders, formatRupiah, getPackageLabel, workflowTasks } from "@/lib/demo-data";
-import { getOwnerEvents, publishOwnerEvent, updateOwnerEventStatus } from "@/lib/supabase/owner-workspace";
-import { ContentReview } from "@/components/content-review";
+import { getPackageLabel } from "@/lib/demo-data";
+import { formatRupiah, getOverview, STAGE_STYLE, type Overview } from "@/lib/business";
+import { getOwnerEvents, updateOwnerEventStatus } from "@/lib/workspace";
+import { ConsultationInbox } from "@/components/consultation-inbox";
 import type { WeddingEvent } from "@/lib/types";
 import Link from "next/link";
 import { AlertTriangle, CalendarPlus, RefreshCw } from "lucide-react";
@@ -21,11 +18,14 @@ export default function OwnerDashboardPage() {
   const [events, setEvents] = useState<WeddingEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [overview, setOverview] = useState<Overview | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
-        setEvents(await getOwnerEvents());
+        const [list, summary] = await Promise.all([getOwnerEvents(), getOverview()]);
+        setEvents(list);
+        setOverview(summary);
       } catch (error) {
         console.warn("Gagal memuat workspace owner lokal", error);
         setLoadError(error instanceof Error ? error.message : "Database lokal tidak dapat dijangkau.");
@@ -42,17 +42,11 @@ export default function OwnerDashboardPage() {
   const totalWishes = events.reduce((sum, event) => sum + event.wishCount, 0);
   const totalCheckIns = events.reduce((sum, event) => sum + event.checkInCount, 0);
   const draft = events.filter((event) => event.status === "draft").length;
-  const pipelineStages = ["Lead Baru", "Proses Setup", "Siap Publish"] as const;
+  const stageById = new Map((overview?.events ?? []).map((item) => [item.id, item]));
 
   async function handleStatusChange(id: string, status: WeddingEvent["status"]) {
     await updateOwnerEventStatus(id, status);
     setEvents((current) => current.map((event) => (event.id === id ? { ...event, status } : event)));
-  }
-
-  async function handlePublish(id: string) {
-    await publishOwnerEvent(id);
-    const publishedAt = new Date().toISOString();
-    setEvents((current) => current.map((event) => (event.id === id ? { ...event, status: "active", isPublished: true, publishedAt } : event)));
   }
 
   return (
@@ -62,11 +56,7 @@ export default function OwnerDashboardPage() {
         title="Monitoring Semua Event"
         description="Command center Occasio untuk melihat event berjalan, status klien, RSVP, dan aktivitas terbaru."
       >
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-          <span><strong>Mode pengembangan.</strong> Event berasal dari Supabase lokal; pipeline, task, billing, dan approval masih memakai data contoh.</span>
-        </div>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatCard label="Event Aktif" value={String(active)} helper="Sedang berjalan" />
           <StatCard label="Total Tamu" value={String(totalGuests)} helper="Dari semua client" />
           <StatCard label="Total RSVP" value={String(totalRsvp)} helper="Konfirmasi masuk" />
@@ -114,7 +104,7 @@ export default function OwnerDashboardPage() {
         {loadError ? (
           <div className="mt-5 flex flex-col items-center rounded-xl border border-rose-200 bg-rose-50 px-5 py-10 text-center">
             <AlertTriangle className="h-7 w-7 text-rose-600" />
-            <h3 className="mt-3 font-semibold text-rose-950">Supabase lokal belum tersambung</h3>
+            <h3 className="mt-3 font-semibold text-rose-950">Backend lokal belum tersambung</h3>
             <p className="mt-2 max-w-lg text-sm leading-6 text-rose-800">{loadError}</p>
             <button type="button" onClick={() => window.location.reload()} className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-rose-900 px-4 text-sm font-semibold text-white">
               <RefreshCw className="h-4 w-4" /> Coba lagi
@@ -140,9 +130,10 @@ export default function OwnerDashboardPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-xl font-semibold">{event.coupleName}</h3>
                       <StatusBadge status={event.status} />
+                      {stageById.get(event.id) ? <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STAGE_STYLE[stageById.get(event.id)!.stage] ?? "bg-gray-100 text-gray-600"}`}>{stageById.get(event.id)!.stage}</span> : null}
                     </div>
                     <p className="mt-2 text-sm text-[#6b6056]">
-                      {event.clientId || "Klien Baru"} / {getPackageLabel(event.packageTier)} / {new Date(event.eventDate).toLocaleDateString("id-ID")}
+                      {getPackageLabel(event.packageTier)} / {new Date(event.eventDate).toLocaleDateString("id-ID")}{stageById.get(event.id) ? ` / Terbayar ${formatRupiah(stageById.get(event.id)!.paid)} dari ${formatRupiah(stageById.get(event.id)!.total)}` : ""}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4 pointer-events-none">
@@ -194,110 +185,102 @@ export default function OwnerDashboardPage() {
                 <div className="relative z-10 mt-4 pointer-events-none">
                   <EventReadiness event={event} />
                 </div>
-                <div className="relative z-10 mt-4" onClick={(e) => e.stopPropagation()}>
-                  <ContentReview eventId={event.id} role="owner" onApproved={() => handlePublish(event.id)} />
-                </div>
               </article>
             ))}
           </div>
         )}
       </section>
 
-      <section id="pipeline" className="mt-6 grid gap-6 xl:grid-cols-3">
-        {pipelineStages.map((stage) => (
-          <div key={stage} className="rounded-md border border-[#e0d4c7] bg-white p-5">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="font-semibold">{stage} <span className="ml-1 text-xs font-medium text-[#9a6a3a]">(contoh)</span></h2>
-              <span className="rounded-full bg-[#f7f3ed] px-3 py-1 text-xs font-semibold text-[#9a6a3a]">
-                {businessOrders.filter((order) => order.stage === stage).length}
-              </span>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-[#6b6056]">
-              {getStageDescription(stage)}
-            </p>
-            <div className="mt-5 grid gap-3">
-              {businessOrders
-                .filter((order) => order.stage === stage)
-                .map((order) => (
-                  <article key={order.id} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">{order.couple}</h3>
-                        <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#9a6a3a]">
-                          {order.packageName} / {order.clientName}
-                        </p>
-                      </div>
-                      <div className="text-right text-sm font-semibold text-[#5a4028]">
-                        {formatRupiah(order.value)}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-[#6b6056]">{order.nextAction}</p>
-                    <div className="mt-3 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#756a60]">
-                      <span>{order.dueDate}</span>
-                      <PipelineAction stage={stage} description={order.nextAction} />
-                    </div>
-                  </article>
-                ))}
-            </div>
+      <ConsultationInbox />
+
+      <section id="pipeline" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+        <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Pipeline Order</h2>
+            <p className="mt-1 text-sm text-[#6b6056]">Posisi setiap event dihitung dari tagihan, versi yang disetujui klien, dan status publikasi.</p>
           </div>
-        ))}
+          {overview ? <span className="text-sm font-semibold text-[#9a6a3a]">Lead: {overview.leads.baru} baru · {overview.leads.dihubungi} dihubungi</span> : null}
+        </div>
+        <div className="mt-5 grid gap-4 xl:grid-cols-4">
+          {PIPELINE.map((column) => {
+            const items = (overview?.events ?? []).filter((item) => column.stages.includes(item.stage));
+            return (
+              <div key={column.title} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold">{column.title}</h3>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#9a6a3a]">{items.length}</span>
+                </div>
+                <div className="mt-3 grid gap-3">
+                  {!items.length ? <p className="text-sm italic text-[#887a6d]">Kosong.</p> : null}
+                  {items.map((item) => (
+                    <Link key={item.id} href={`/owner/events/${item.id}`} className="rounded-md border border-[#eadfd2] bg-white p-3 transition hover:border-[#cdbba8]">
+                      <div className="font-semibold">{item.coupleName}</div>
+                      <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STAGE_STYLE[item.stage] ?? "bg-gray-100 text-gray-600"}`}>{item.stage}</span>
+                      <div className="mt-2 text-xs text-[#6b6056]">{new Date(item.eventDate).toLocaleDateString("id-ID")} · sisa {formatRupiah(item.outstanding)}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section id="tasks" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Task Produksi <span className="text-sm font-medium text-[#9a6a3a]">(data contoh)</span></h2>
-            <p className="mt-1 text-sm text-[#6b6056]">
-              Daftar kerja internal untuk menjaga order tidak berhenti di tengah proses.
-            </p>
+            <h2 className="text-xl font-semibold">Perlu Tindakan</h2>
+            <p className="mt-1 text-sm text-[#6b6056]">Dibuat otomatis dari pembayaran, persetujuan, pesan, lead, dan jadwal acara.</p>
           </div>
-          <span className="text-sm font-semibold text-[#9a6a3a]">
-            {workflowTasks.filter((task) => task.status === "today").length} prioritas hari ini
-          </span>
+          <span className="text-sm font-semibold text-[#9a6a3a]">{overview?.tasks.filter((task) => task.priority === "high").length ?? 0} prioritas tinggi</span>
         </div>
         <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          {workflowTasks.map((task) => (
-            <article key={task.id} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+          {!overview?.tasks.length ? <p className="text-sm italic text-[#6b6056]">Tidak ada yang menunggu. Semua beres.</p> : null}
+          {overview?.tasks.map((task) => (
+            <Link key={task.id} href={task.eventId ? `/owner/events/${task.eventId}` : "#consultations"} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4 transition hover:border-[#cdbba8]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <h3 className="font-semibold">{task.title}</h3>
-                  <p className="mt-1 text-sm text-[#6b6056]">{task.event} / {task.owner}</p>
+                  <p className="mt-1 text-sm text-[#6b6056]">{task.detail}</p>
                 </div>
-                <TaskStatusBadge status={task.status} />
+                <span className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-xs font-semibold uppercase tracking-[0.14em] ${task.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-[#efe5d8] text-[#9a6a3a]"}`}>{task.priority === "high" ? "Segera" : "Biasa"}</span>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>
 
       <section id="billing" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">Billing & Paket <span className="text-sm font-medium text-[#9a6a3a]">(data contoh)</span></h2>
-            <p className="mt-1 text-sm text-[#6b6056]">
-              Section ini membuat menu Billing di sidebar aktif. Nanti bisa dihubungkan ke invoice dan payment status.
-            </p>
-          </div>
-          <CreateInvoiceAction />
+        <div>
+          <h2 className="text-xl font-semibold">Pendapatan & Tagihan</h2>
+          <p className="mt-1 text-sm text-[#6b6056]">Dihitung dari tagihan yang sudah diverifikasi. Buat dan verifikasi tagihan di tab Tagihan pada detail event.</p>
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {[
-            ["Contoh Pendapatan", formatRupiah(billingSummary.revenueThisMonth), `Simulasi ${billingSummary.paidInvoices} invoice`],
-            ["Contoh Invoice Pending", String(billingSummary.pendingInvoices), "Belum terhubung pembayaran"],
-            ["Contoh Paket Terlaris", billingSummary.bestPackage, "Berdasarkan seed lokal"],
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {overview ? [
+            ["Pendapatan bulan ini", formatRupiah(overview.totals.revenueThisMonth), `Total terbayar ${formatRupiah(overview.totals.revenuePaid)}`],
+            ["Belum dibayar", formatRupiah(overview.totals.outstanding), `${overview.totals.invoicesOpen} tagihan terbuka`],
+            ["Menunggu verifikasi", String(overview.totals.awaitingVerification), "Klien sudah melapor bayar"],
+            ["Paket terlaris", overview.packages[0]?.name ?? "-", overview.packages.map((p) => `${p.name} ${p.count}`).join(" · ") || "Belum ada event"],
           ].map(([label, value, helper]) => (
             <div key={label} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6a3a]">{label}</div>
               <div className="mt-2 text-2xl font-semibold">{value}</div>
               <div className="mt-1 text-sm text-[#6b6056]">{helper}</div>
             </div>
-          ))}
+          )) : null}
         </div>
       </section>
       </DashboardShell>
     </AuthGate>
   );
 }
+
+const PIPELINE = [
+  { title: "Penagihan", stages: ["Belum ada tagihan", "Menunggu DP", "Verifikasi DP"] },
+  { title: "Produksi & persetujuan", stages: ["Produksi konten", "Menunggu persetujuan klien", "Perlu revisi"] },
+  { title: "Pelunasan & publish", stages: ["Menunggu pelunasan", "Siap publish"] },
+  { title: "Berjalan", stages: ["Aktif"] },
+];
 
 function StatusBadge({ status }: { status: WeddingEvent["status"] }) {
   const color =
@@ -330,35 +313,5 @@ function MiniStat({ label, value }: { label: string; value: number }) {
       <div className="font-semibold">{value}</div>
       <div className="text-xs text-[#756a60]">{label}</div>
     </div>
-  );
-}
-
-function getStageDescription(stage: "Lead Baru" | "Proses Setup" | "Siap Publish") {
-  const descriptions = {
-    "Lead Baru": "Calon client yang perlu follow-up sebelum dibuatkan event.",
-    "Proses Setup": "Order aktif yang sedang dikerjakan konten, tamu, dan medianya.",
-    "Siap Publish": "Event yang sudah siap dikirim ke client atau dipasang domain.",
-  };
-
-  return descriptions[stage];
-}
-
-function TaskStatusBadge({ status }: { status: "blocked" | "today" | "next" }) {
-  const label = {
-    blocked: "Butuh input",
-    today: "Hari ini",
-    next: "Berikutnya",
-  }[status];
-  const color =
-    status === "blocked"
-      ? "bg-rose-50 text-rose-700"
-      : status === "today"
-        ? "bg-emerald-50 text-emerald-700"
-        : "bg-[#efe5d8] text-[#9a6a3a]";
-
-  return (
-    <span className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-xs font-semibold uppercase tracking-[0.14em] ${color}`}>
-      {label}
-    </span>
   );
 }

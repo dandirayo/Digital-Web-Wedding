@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import { ThemeProps } from '../types';
 import { Play, Heart, MoreHorizontal, Clock, MapPin, Music, CheckCircle, Pause } from 'lucide-react';
-import { addGuest, addWish } from '@/lib/store';
+import { addWish, submitRsvp as sendRsvp } from '@/lib/store';
 import QRCode from 'qrcode';
+import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
+import { MediaImage } from '@/components/wedding/media-image';
+import { MusicPlayer } from '@/components/wedding/music-player';
 
-export default function SpotifyTheme({ event, content, wishes, media, guestName }: ThemeProps) {
+export default function SpotifyTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
@@ -14,20 +17,22 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
   const [name, setName] = useState(guestName || '');
   const [wishText, setWishText] = useState('');
   
-  const defaultBg = '/templates/sheila-yoga/assets/hero-bg.jpg';
-  const coverImage = media.length > 0 ? media[0].url : defaultBg;
-  const galleryImages = media.length > 1 ? media.slice(1) : Array(4).fill({ url: defaultBg });
+  const m = resolveMedia(content, media);
+  const coverImage = pickHero(m);
+  const galleryImages = galleryUrls(m).map((url) => ({ url }));
 
   const submitRsvp = async () => {
-    if (name && !isSaved) {
-      try {
-        const qr = await QRCode.toDataURL(name);
-        setQrCodeData(qr);
-        setIsSaved(true);
-        addGuest(event.id, { name, phone: '', paxLimit: 1, rsvpStatus: 'attending', paxConfirmed: 1 });
-      } catch (err) {
-        console.error(err);
-      }
+    if (isSaved) return;
+    if (!guestToken) {
+      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      return;
+    }
+    try {
+      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: 1 });
+      setQrCodeData(await QRCode.toDataURL(guestToken));
+      setIsSaved(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
     }
   };
 
@@ -41,23 +46,24 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
 
   return (
     <div className="min-h-screen bg-[#121212] text-white font-sans selection:bg-[#1db954] selection:text-white pb-24">
+      {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       {/* Header/Hero Area */}
       <div className="bg-gradient-to-b from-[#4a5568] to-[#121212] px-6 pt-12 pb-6 md:p-8 md:pt-20">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
           <div className="w-52 h-52 md:w-64 md:h-64 shadow-2xl flex-shrink-0">
-            <img src={coverImage} alt="Album Cover" className="w-full h-full object-cover" />
+            {coverImage ? <MediaImage src={coverImage} alt="Album Cover" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-[#1db954] to-[#121212]" aria-hidden="true" />}
           </div>
-          <div className="flex flex-col text-center md:text-left">
+          <div className="min-w-0 flex-1 flex flex-col text-center md:text-left">
             <span className="uppercase text-xs font-bold tracking-widest mb-2 hidden md:block">Public Playlist</span>
-            <h1 className="text-5xl md:text-8xl font-black mb-4 md:mb-6 tracking-tighter">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black mb-4 md:mb-6 tracking-tighter">
               {content.brideName} & {content.groomName}
             </h1>
             <p className="text-gray-300 text-sm md:text-base font-medium mb-2">
               A celebration of love, life, and forever. Join us on our special day.
             </p>
-            <div className="flex items-center justify-center md:justify-start text-sm text-gray-300 font-medium">
+            <div className="flex flex-wrap gap-y-2 items-center justify-center md:justify-start text-sm text-gray-300 font-medium">
               <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
-                <img src={coverImage} alt="Profile" className="w-full h-full object-cover" />
+                {coverImage ? <MediaImage src={coverImage} alt="Profile" className="w-full h-full object-cover" /> : null}
               </div>
               <span className="font-bold text-white hover:underline cursor-pointer">The Happy Couple</span>
               <span className="mx-1">•</span>
@@ -96,7 +102,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
 
       {/* Tracklist (Details) */}
       <div className="px-6 md:px-8 mt-6">
-        <div className="grid grid-cols-[16px_1fr_100px] md:grid-cols-[16px_2fr_1fr_100px] gap-4 text-gray-400 border-b border-gray-800 pb-2 mb-4 text-sm font-medium px-4">
+        <div className="grid grid-cols-[16px_minmax(0,1fr)_72px] md:grid-cols-[16px_minmax(0,2fr)_minmax(0,1fr)_100px] gap-2 sm:gap-4 text-gray-400 border-b border-gray-800 pb-2 mb-4 text-sm font-medium px-4">
           <div className="text-center">#</div>
           <div>TITLE</div>
           <div className="hidden md:block">LOCATION</div>
@@ -105,7 +111,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
 
         <div className="space-y-2">
           {/* Track 1 */}
-          <div className="grid grid-cols-[16px_1fr_100px] md:grid-cols-[16px_2fr_1fr_100px] gap-4 items-center hover:bg-white/10 rounded-md p-2 px-4 transition group">
+          <div className="grid grid-cols-[16px_minmax(0,1fr)_72px] md:grid-cols-[16px_minmax(0,2fr)_minmax(0,1fr)_100px] gap-2 sm:gap-4 items-center hover:bg-white/10 rounded-md p-2 px-4 transition group">
             <div className="text-gray-400 group-hover:hidden text-center">1</div>
             <div className="hidden group-hover:flex items-center justify-center text-white"><Play className="w-4 h-4 fill-white" /></div>
             
@@ -123,7 +129,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
           </div>
 
           {/* Track 2 */}
-          <div className="grid grid-cols-[16px_1fr_100px] md:grid-cols-[16px_2fr_1fr_100px] gap-4 items-center hover:bg-white/10 rounded-md p-2 px-4 transition group">
+          <div className="grid grid-cols-[16px_minmax(0,1fr)_72px] md:grid-cols-[16px_minmax(0,2fr)_minmax(0,1fr)_100px] gap-2 sm:gap-4 items-center hover:bg-white/10 rounded-md p-2 px-4 transition group">
             <div className="text-gray-400 group-hover:hidden text-center">2</div>
             <div className="hidden group-hover:flex items-center justify-center text-white"><Play className="w-4 h-4 fill-white" /></div>
             
@@ -143,13 +149,14 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
       </div>
 
       {/* Gallery (Fans Also Like) */}
+      {galleryImages.length > 0 ? (
       <div className="px-6 md:px-8 mt-12">
         <h2 className="text-2xl font-bold mb-6 hover:underline cursor-pointer">Fans Also Like</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {galleryImages.slice(0, 5).map((img, idx) => (
             <div key={idx} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition group cursor-pointer">
               <div className="relative aspect-square mb-4 shadow-lg overflow-hidden rounded-md">
-                <img src={img.url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                <MediaImage src={img.url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
                 <button className="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 hover:bg-[#1ed760]">
                   <Play className="w-6 h-6 text-black fill-black ml-1" />
                 </button>
@@ -160,6 +167,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
           ))}
         </div>
       </div>
+      ) : null}
 
       {/* RSVP Section */}
       <div className="px-6 md:px-8 mt-12 grid md:grid-cols-2 gap-8">
@@ -200,7 +208,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
                 <h3 className="text-xl font-bold mb-2">Saved to Library!</h3>
                 <p className="text-gray-400 text-sm mb-6">Show this code at the venue.</p>
                 <div className="bg-white p-3 rounded-lg inline-block">
-                  <img src={qrCodeData} alt="RSVP QR Code" className="w-40 h-40" />
+                  <MediaImage src={qrCodeData} alt="RSVP QR Code" className="w-40 h-40" />
                 </div>
               </div>
             )}
@@ -218,7 +226,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
                     {wish.guestName.charAt(0)}
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex flex-wrap items-baseline gap-2">
                       <span className="font-bold text-white hover:underline cursor-pointer">{wish.guestName}</span>
                       <span className="text-xs text-gray-400">just now</span>
                     </div>
@@ -241,7 +249,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName 
                   value={wishText}
                   onChange={(e) => setWishText(e.target.value)}
                   placeholder="Dedicate a wish..."
-                  className="flex-1 bg-[#2a2a2a] rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:bg-[#333] border border-transparent focus:border-white/20 transition"
+                  className="min-w-0 flex-1 bg-[#2a2a2a] rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:bg-[#333] border border-transparent focus:border-white/20 transition"
                   required
                 />
                 <button 

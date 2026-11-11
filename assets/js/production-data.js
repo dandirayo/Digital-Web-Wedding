@@ -1,10 +1,12 @@
-import { siteConfig } from "./config.js";
+import { buildManagementUrl, isPublicUrlConfigured, siteConfig } from "./config.js";
 
 export function setupProductionData() {
   renderPackages();
   renderTestimonials();
+  renderFaq();
   renderFooterData();
   renderDemoLinks();
+  renderManagementLinks();
   syncRuntimeMetadata();
 }
 
@@ -18,7 +20,7 @@ function renderPackages() {
         <article class="card price-card ${item.featured ? "is-featured" : ""}">
           <span class="badge">${item.name}</span>
           <small>${item.availability}</small>
-          <div class="price">${item.price}</div>
+          <div class="price">${siteConfig.showPublicPrices ? item.price : item.orderable ? "Harga pilot belum final" : "Belum dirilis"}</div>
           <p>${item.description}</p>
           <ul class="feature-list">
             ${item.features.map((feature) => `<li>${feature}</li>`).join("")}
@@ -40,17 +42,46 @@ function renderPackages() {
   if (disclaimer) disclaimer.textContent = siteConfig.priceDisclaimer;
 }
 
+function renderFaq() {
+  const list = document.querySelector("[data-faq-list]");
+  if (!list) return;
+  list.innerHTML = siteConfig.faqs
+    .map(
+      (item, index) => `
+        <article class="card faq-item">
+          <button class="faq-question" type="button" data-faq-question aria-expanded="false" aria-controls="faq${index + 1}">${escapeHtml(item.question)}<span>+</span></button>
+          <div class="faq-answer" id="faq${index + 1}" hidden>${escapeHtml(item.answer)}</div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function renderTestimonials() {
   const grid = document.querySelector("[data-testimonial-grid]");
   if (!grid) return;
+
+  if (!siteConfig.testimonials.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <h3>Belum ada testimoni yang dipublikasikan.</h3>
+        <p>Testimoni akan tampil setelah pilot selesai dan klien memberikan izin.</p>
+      </div>
+    `;
+    return;
+  }
 
   grid.innerHTML = siteConfig.testimonials
     .map(
       (item) => `
         <article class="card testimonial-card">
-          <p>"${item.quote}"</p>
-          <strong>${item.name}</strong>
-          <small>${item.status}</small>
+          <p>"${escapeHtml(item.quote)}"</p>
+          <strong>${escapeHtml(item.name)}</strong>
+          <small>${escapeHtml(item.status)}</small>
         </article>
       `,
     )
@@ -77,10 +108,26 @@ function renderDemoLinks() {
   });
 }
 
+function renderManagementLinks() {
+  document.querySelectorAll("[data-management-link]").forEach((element) => {
+    element.setAttribute("href", buildManagementUrl());
+  });
+}
+
 function syncRuntimeMetadata() {
   const canonical = document.querySelector("link[rel='canonical']");
-  if (canonical) canonical.setAttribute("href", new URL(window.location.pathname.replace(/^\//, ""), siteConfig.baseUrl).href);
+  const canonicalUrl = isPublicUrlConfigured()
+    ? new URL(window.location.pathname.replace(/^\//, ""), siteConfig.baseUrl).href
+    : window.location.href.split("#")[0];
+  if (canonical) canonical.setAttribute("href", canonicalUrl);
 
   const ogUrl = document.querySelector("meta[property='og:url']");
-  if (ogUrl) ogUrl.setAttribute("content", window.location.href);
+  if (ogUrl) ogUrl.setAttribute("content", canonicalUrl);
+
+  const schema = document.querySelector("script[data-site-schema]");
+  if (schema) {
+    const data = JSON.parse(schema.textContent);
+    data.url = canonicalUrl;
+    schema.textContent = JSON.stringify(data);
+  }
 }

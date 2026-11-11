@@ -18,6 +18,8 @@ export type Template = {
   previewUrl: string;
   minPackage: PackageTier;
   isActive: boolean;
+  galleryCategory?: "modern" | "classic" | "luxury" | "minimal";
+  badge?: string;
   configJson: TemplateConfig;
   createdAt: string;
 };
@@ -49,6 +51,8 @@ export type Package = {
   includesQrCheckin: boolean;
   sortOrder: number;
   isActive: boolean;
+  availability?: string;
+  featured?: boolean;
 };
 
 // Event (expanded from existing WeddingEvent)
@@ -171,5 +175,5 @@ export type DemoSession = {
   fullName: string;
   role: AppRole;
   loggedInAt: string;
-  source: 'demo' | 'supabase';
+  source: 'local';
 };

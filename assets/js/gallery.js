@@ -1,4 +1,4 @@
-import { buildWhatsappUrl, siteConfig } from "./config.js";
+import { siteConfig } from "./config.js";
 import { openModal, showToast } from "./modal.js";
 import { categories, formatRupiah, templates } from "./data/templates.js";
 
@@ -21,12 +21,17 @@ export function setupTemplateBlocks() {
       if (template) openTemplatePreview(template, previewButton);
     }
 
-    const chooseButton = event.target.closest("[data-choose-template]");
-    if (chooseButton) {
-      const template = templates.find((item) => item.id === chooseButton.dataset.chooseTemplate);
-      if (template) window.open(buildWhatsappUrl(template.whatsappMessage), "_blank", "noopener");
-    }
   });
+}
+
+// Dipanggil setelah data template dari server dimuat.
+export function refreshTemplateViews() {
+  document.querySelectorAll("[data-template-grid]").forEach((grid) => {
+    const limit = Number(grid.dataset.limit || templates.length);
+    renderTemplates(grid, templates.slice(0, limit));
+  });
+  const gallery = document.querySelector("[data-gallery-grid]");
+  if (gallery) renderGallery(gallery);
 }
 
 export function setupGalleryPage() {
@@ -83,6 +88,10 @@ function renderTemplates(grid, items) {
 }
 
 function templateCard(template) {
+  const orderable = template.packageLevel === "Basic";
+  const priceLabel = siteConfig.showPublicPrices
+    ? `Mulai ${formatRupiah(template.priceFrom)}`
+    : orderable ? "Harga pilot belum final" : "Paket belum dirilis";
   const colors = template.colors
     .map((color) => `<span class="color-swatch" aria-hidden="true" style="--swatch-color:${color}"></span>`)
     .join("");
@@ -99,10 +108,14 @@ function templateCard(template) {
         </div>
         <h3 class="template-card__title">${template.name}</h3>
         <p>${template.description}</p>
-        <p><strong>Mulai ${formatRupiah(template.priceFrom)}</strong></p>
+        <p><strong>${priceLabel}</strong></p>
         <div class="template-card__actions">
           <button class="btn btn-primary" type="button" data-preview-template="${template.id}">Preview Detail</button>
-          <button class="btn btn-secondary" type="button" data-choose-template="${template.id}">Konsultasi</button>
+          <button
+            class="btn btn-secondary"
+            type="button"
+            ${orderable ? `data-open-consultation data-template="${template.id}"` : "disabled"}
+          >${orderable ? "Konsultasi" : "Belum tersedia"}</button>
         </div>
       </div>
     </article>
@@ -111,6 +124,10 @@ function templateCard(template) {
 
 function openTemplatePreview(template, trigger) {
   let current = 0;
+  const orderable = template.packageLevel === "Basic";
+  const priceLabel = siteConfig.showPublicPrices
+    ? `Harga mulai ${formatRupiah(template.priceFrom)}`
+    : orderable ? "Harga pilot belum final" : "Paket belum dirilis";
   const wrapper = document.createElement("div");
   wrapper.className = "preview-grid";
 
@@ -134,12 +151,14 @@ function openTemplatePreview(template, trigger) {
         <span class="badge">${template.category}</span>
         <h3 class="section-title modal-preview-title">${template.name}</h3>
         <p>${template.description}</p>
-        <p><strong>Harga mulai ${formatRupiah(template.priceFrom)}</strong></p>
+        <p><strong>${priceLabel}</strong></p>
         <ul class="feature-list">
           ${template.features.map((feature) => `<li>${feature}</li>`).join("")}
         </ul>
         <div class="modal-actions">
-          <a class="btn btn-primary" href="${buildWhatsappUrl(template.whatsappMessage)}" target="_blank" rel="noopener">Pilih Template</a>
+          ${orderable
+            ? `<button class="btn btn-primary" type="button" data-open-consultation data-template="${template.id}">Konsultasi Template</button>`
+            : '<button class="btn btn-primary" type="button" disabled>Belum tersedia</button>'}
           <a class="btn btn-secondary" href="${template.demoUrl || siteConfig.demoWeddingUrl}" target="_blank" rel="noopener">Demo Penuh</a>
         </div>
       </div>

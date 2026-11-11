@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { WorkspaceDialog } from "./workspace-dialog";
 import type { Guest, WeddingEvent } from "@/lib/types";
 
 type BulkShareProps = {
@@ -17,7 +18,7 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
   const [progress, setProgress] = useState(0);
 
   const getGuestLink = (guest: Guest) => {
-    return `${window.location.origin}/wedding/${event.slug}?to=${encodeURIComponent(guest.name)}`;
+    return `${window.location.origin}/wedding/${event.slug}?g=${guest.qrCode}`;
   };
 
   const getWhatsappLink = (guest: Guest) => {
@@ -113,32 +114,16 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
     setProgress(0);
   };
 
-  if (!isOpen) {
-    return (
+  return (
+    <>
       <button
         onClick={() => setIsOpen(true)}
         className="inline-flex h-10 items-center justify-center rounded-md border border-[#e0d4c7] bg-white px-4 text-sm font-semibold text-[#241f1a] transition hover:bg-[#fffaf4]"
       >
         📋 Bagikan Banyak
       </button>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#241f1a]/50 p-4">
-      <div className="w-full max-w-2xl rounded-md bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-[#241f1a]">Bulk Share Links</h2>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-[#6b6056] hover:text-[#241f1a]"
-            disabled={isProcessing}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="mt-4 flex gap-2">
+    <WorkspaceDialog open={isOpen} onClose={() => setIsOpen(false)} closeDisabled={isProcessing} title="Bagikan link undangan">
+        <div className="grid gap-2 sm:grid-cols-3">
           <button
             onClick={handleCopyAll}
             disabled={selectedIds.size === 0 || isProcessing}
@@ -171,13 +156,14 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
           </div>
         )}
 
-        <div className="mt-4 max-h-96 overflow-y-auto rounded-md border border-[#e0d4c7]">
-          <table className="w-full text-left text-sm">
+        <div className="mt-4 max-h-96 overflow-auto rounded-md border border-[#e0d4c7]">
+          <table className="w-full min-w-[420px] text-left text-sm">
             <thead className="sticky top-0 bg-[#f7f3ed]">
               <tr>
                 <th className="px-4 py-3">
                   <input
                     type="checkbox"
+                    aria-label="Pilih semua tamu"
                     checked={guests.length > 0 && selectedIds.size === guests.length}
                     onChange={toggleAll}
                     disabled={isProcessing}
@@ -193,6 +179,7 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
+                      aria-label={`Pilih ${guest.name}`}
                       checked={selectedIds.has(guest.id)}
                       onChange={() => toggleGuest(guest.id)}
                       disabled={isProcessing}
@@ -205,7 +192,7 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+    </WorkspaceDialog>
+    </>
   );
 }

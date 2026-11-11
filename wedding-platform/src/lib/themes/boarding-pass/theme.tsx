@@ -3,32 +3,37 @@
 import React, { useState } from 'react';
 import { ThemeProps } from '../types';
 import { Plane, MapPin, Clock, CheckCircle, Ticket, Camera, MessageSquare } from 'lucide-react';
-import { addGuest, addWish } from '@/lib/store';
+import { addWish, submitRsvp as sendRsvp } from '@/lib/store';
 import QRCode from 'qrcode';
+import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
+import { MediaImage } from '@/components/wedding/media-image';
+import { MusicPlayer } from '@/components/wedding/music-player';
 
-export default function BoardingPassTheme({ event, content, wishes, media, guestName }: ThemeProps) {
+export default function BoardingPassTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
   const [name, setName] = useState(guestName || '');
   const [wishText, setWishText] = useState('');
   
-  const defaultBg = '/templates/sheila-yoga/assets/hero-bg.jpg';
-  const galleryImages = media.length > 1 ? media.slice(1) : Array(4).fill({ url: defaultBg });
+  const m = resolveMedia(content, media);
+  const galleryImages = [pickHero(m), ...galleryUrls(m)].filter((url, index, all) => url && all.indexOf(url) === index).map((url) => ({ url }));
   const ticketCode = event.slug.replace(/[^a-z0-9]/gi, '').slice(0, 12).toUpperCase();
   const polaroidRotations = [-2, 1.5, -1, 2.5];
 
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && !isCheckedIn) {
-      try {
-        const qr = await QRCode.toDataURL(name);
-        setQrCodeData(qr);
-        setIsCheckedIn(true);
-        addGuest(event.id, { name, phone: '', paxLimit: 1, rsvpStatus: 'attending', paxConfirmed: 1 });
-      } catch (err) {
-        console.error(err);
-      }
+    if (isCheckedIn) return;
+    if (!guestToken) {
+      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      return;
+    }
+    try {
+      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: 1 });
+      setQrCodeData(await QRCode.toDataURL(guestToken));
+      setIsCheckedIn(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
     }
   };
 
@@ -42,6 +47,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] text-[#1a202c] font-sans">
+      {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       
       {/* Navbar/Header */}
       <div className="bg-[#0055a4] text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
@@ -55,26 +61,26 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-12">
         
         {/* Giant Boarding Pass Hero */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row relative">
           {/* Cutouts */}
-          <div className="hidden md:block absolute top-0 bottom-0 left-[70%] w-[2px] border-l-2 border-dashed border-gray-300 z-10"></div>
-          <div className="hidden md:block absolute -top-4 left-[70%] -translate-x-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
-          <div className="hidden md:block absolute -bottom-4 left-[70%] -translate-x-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
+          <div className="hidden lg:block absolute top-0 bottom-0 left-[70%] w-[2px] border-l-2 border-dashed border-gray-300 z-10"></div>
+          <div className="hidden lg:block absolute -top-4 left-[70%] -translate-x-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
+          <div className="hidden lg:block absolute -bottom-4 left-[70%] -translate-x-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
           
-          <div className="md:hidden absolute left-0 right-0 top-[60%] h-[2px] border-t-2 border-dashed border-gray-300 z-10"></div>
-          <div className="md:hidden absolute top-[60%] -left-4 -translate-y-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
-          <div className="md:hidden absolute top-[60%] -right-4 -translate-y-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
+          <div className="lg:hidden absolute left-0 right-0 top-[60%] h-[2px] border-t-2 border-dashed border-gray-300 z-10"></div>
+          <div className="lg:hidden absolute top-[60%] -left-4 -translate-y-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
+          <div className="lg:hidden absolute top-[60%] -right-4 -translate-y-1/2 w-8 h-8 bg-[#f0f4f8] rounded-full z-10"></div>
 
           {/* Main Ticket */}
           <div className="flex-1 p-6 md:p-8 flex flex-col">
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-start gap-3 mb-6">
               <div>
                 <p className="text-[#0055a4] font-bold text-sm uppercase tracking-widest mb-1">First Class Ticket</p>
-                <h1 className="text-4xl md:text-5xl font-black text-gray-800 uppercase tracking-tighter">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-800 uppercase tracking-tighter">
                   {content.brideName} <span className="text-[#0055a4] font-light">&</span> {content.groomName}
                 </h1>
               </div>
-              <Plane className="w-12 h-12 text-[#0055a4] opacity-20 transform rotate-45" />
+              <Plane className="hidden sm:block w-12 h-12 shrink-0 text-[#0055a4] opacity-20 transform rotate-45" />
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8 flex-1">
@@ -94,7 +100,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Departing (Akad)</p>
                 <div className="flex items-center text-gray-700">
@@ -109,7 +115,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
                   <span className="font-mono font-bold">Following Akad</span>
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Gate / Venue</p>
                 <div className="flex items-start text-gray-700">
                   <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-[#0055a4]" />
@@ -120,14 +126,14 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
           </div>
 
           {/* Ticket Stub */}
-          <div className="w-full md:w-[30%] bg-[#0055a4] text-white p-6 md:p-8 flex flex-col justify-center items-center text-center">
+          <div className="w-full lg:w-[30%] bg-[#0055a4] text-white p-6 md:p-8 flex flex-col justify-center items-center text-center">
             <Ticket className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-sm uppercase tracking-widest mb-2 font-bold">Boarding Pass</p>
             <p className="text-2xl font-black mb-6">{new Date(event.eventDate).getFullYear()}</p>
             
-            <div className="bg-white p-2 rounded-lg mb-4 w-full aspect-square flex items-center justify-center">
+            <div className="bg-white p-2 rounded-lg mb-4 w-full max-w-48 aspect-square flex items-center justify-center">
               {qrCodeData ? (
-                <img src={qrCodeData} alt="QR Code" className="w-full h-full object-contain" />
+                <MediaImage src={qrCodeData} alt="QR Code" className="w-full h-full object-contain" />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center text-gray-400">
                   <p className="text-xs text-center px-2">Check-in to generate barcode</p>
@@ -142,6 +148,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
         </div>
 
         {/* Gallery (Travel Polaroids) */}
+        {galleryImages.length > 0 ? (
         <div>
           <div className="flex items-center mb-6 text-[#0055a4]">
             <Camera className="w-6 h-6 mr-2" />
@@ -152,16 +159,17 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
             {galleryImages.map((img, idx) => (
               <div key={idx} className="bg-white p-3 pb-8 md:pb-12 shadow-lg transform hover:-translate-y-2 transition duration-300" style={{ transform: `rotate(${polaroidRotations[idx % polaroidRotations.length]}deg)` }}>
                 <div className="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                  <img src={img.url} alt={`Memory ${idx}`} className="w-full h-full object-cover filter contrast-110 sepia-[.2]" />
+                  <MediaImage src={img.url} alt={`Memory ${idx}`} className="w-full h-full object-cover filter contrast-110 sepia-[.2]" />
                 </div>
                 <p className="font-handwriting text-center text-gray-600 font-medium">Destination {idx + 1}</p>
               </div>
             ))}
           </div>
         </div>
+        ) : null}
 
         {/* Check-in (RSVP) & Messages */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* RSVP */}
           <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-[#0055a4]">
             <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wider mb-2">Web Check-In</h2>
@@ -227,7 +235,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
               {wishes.map((wish) => (
                 <div key={wish.id} className="bg-gray-50 p-4 rounded-lg relative">
                   <div className="absolute top-0 left-0 w-1 h-full bg-[#0055a4] rounded-l-lg"></div>
-                  <div className="flex justify-between items-baseline mb-1">
+                  <div className="flex flex-wrap justify-between items-baseline gap-2 mb-1">
                     <span className="font-bold text-gray-800 text-sm">{wish.guestName}</span>
                     <span className="text-xs text-gray-400 font-mono">CONFIRMED</span>
                   </div>

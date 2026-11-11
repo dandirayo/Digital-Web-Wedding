@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import { ThemeProps } from '../types';
 import { Play, Info, Plus, Check, ThumbsUp, MapPin } from 'lucide-react';
-import { addGuest, addWish } from '@/lib/store';
+import { addWish, submitRsvp as sendRsvp } from '@/lib/store';
 import QRCode from 'qrcode';
+import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
+import { MediaImage } from '@/components/wedding/media-image';
+import { MusicPlayer } from '@/components/wedding/music-player';
 
-export default function NetflixTheme({ event, content, wishes, media, guestName }: ThemeProps) {
+export default function NetflixTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [, setRsvpStatus] = useState<'pending' | 'attending' | 'declined'>('pending');
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
@@ -14,20 +17,21 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
   const [name, setName] = useState(guestName || '');
   const [wishText, setWishText] = useState('');
   
-  const defaultBg = '/templates/sheila-yoga/assets/hero-bg.jpg';
-  const heroImage = media.length > 0 ? media[0].url : defaultBg;
-  const galleryImages = media.length > 1 ? media.slice(1) : Array(4).fill({ url: defaultBg });
+  const m = resolveMedia(content, media);
+  const heroImage = pickHero(m);
+  const galleryImages = galleryUrls(m).map((url) => ({ url }));
 
   const handleRSVP = async (status: 'attending' | 'declined') => {
-    setRsvpStatus(status);
-    if (status === 'attending' && name) {
-      try {
-        const qr = await QRCode.toDataURL(name);
-        setQrCodeData(qr);
-        addGuest(event.id, { name, phone: '', paxLimit: 1, rsvpStatus: 'attending', paxConfirmed: 1 });
-      } catch (err) {
-        console.error(err);
-      }
+    if (!guestToken) {
+      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      return;
+    }
+    try {
+      await sendRsvp(event.id, guestToken, { rsvpStatus: status, paxConfirmed: 1 });
+      setRsvpStatus(status);
+      setQrCodeData(status === 'attending' ? await QRCode.toDataURL(guestToken) : null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
     }
   };
 
@@ -41,15 +45,16 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
 
   return (
     <div className="min-h-screen bg-[#141414] text-white font-sans selection:bg-[#e50914] selection:text-white">
+      {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       {/* Hero Section */}
-      <div className="relative h-[85vh] w-full">
+      <div className="relative min-h-[44rem] sm:min-h-[40rem] h-[85svh] w-full">
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Hero" className="w-full h-full object-cover" />
+          {heroImage ? <MediaImage src={heroImage} alt="Hero" className="w-full h-full object-cover" /> : null}
           <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/40 to-transparent" />
         </div>
         
-        <div className="absolute bottom-[10%] left-[4%] md:left-[8%] max-w-2xl z-10">
+        <div className="absolute bottom-[8%] left-[4%] right-[4%] md:left-[8%] md:right-[8%] max-w-2xl z-10">
           <div className="flex items-center space-x-2 text-[#e50914] font-bold text-sm md:text-base tracking-widest mb-4">
             <span className="text-xl">N</span>
             <span>SERIES</span>
@@ -60,7 +65,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
             <span className="text-3xl md:text-5xl text-[#e50914]">&</span> {content.groomName}
           </h1>
           
-          <div className="flex items-center space-x-4 text-sm md:text-base text-gray-300 mb-6 font-semibold">
+          <div className="flex flex-wrap items-center gap-3 text-sm md:text-base text-gray-300 mb-6 font-semibold">
             <span className="text-green-500 font-bold">98% Match</span>
             <span>{new Date(event.eventDate).getFullYear()}</span>
             <span className="border border-gray-600 px-1 text-xs">13+</span>
@@ -72,7 +77,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
             Two lives intertwine in this romantic feature. Watch as they say &quot;I do&quot; and begin their forever journey together.
           </p>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-3">
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
               className="flex items-center justify-center bg-white text-black px-6 py-2 md:px-8 md:py-3 rounded hover:bg-gray-200 transition font-bold text-lg"
@@ -103,7 +108,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
           <div className="flex flex-col md:flex-row bg-[#2b2b2b]/50 rounded-lg p-6 hover:bg-[#2b2b2b] transition border-b-2 border-transparent hover:border-[#e50914]">
             <div className="flex items-center text-4xl text-gray-500 font-bold mr-6 mb-4 md:mb-0">1</div>
             <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                 <h3 className="text-xl font-bold text-white">The Vows (Akad)</h3>
                 <span className="text-gray-400">1h 30m</span>
               </div>
@@ -118,7 +123,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
           <div className="flex flex-col md:flex-row bg-[#2b2b2b]/50 rounded-lg p-6 hover:bg-[#2b2b2b] transition border-b-2 border-transparent hover:border-[#e50914]">
             <div className="flex items-center text-4xl text-gray-500 font-bold mr-6 mb-4 md:mb-0">2</div>
             <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                 <h3 className="text-xl font-bold text-white">The Celebration (Resepsi)</h3>
                 <span className="text-gray-400">3h 00m</span>
               </div>
@@ -133,12 +138,13 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
       </div>
 
       {/* Gallery */}
+      {galleryImages.length > 0 ? (
       <div className="px-[4%] md:px-[8%] py-12">
         <h2 className="text-2xl font-bold text-white mb-6">More Like This</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {galleryImages.map((img, idx) => (
             <div key={idx} className="relative aspect-video bg-gray-800 rounded overflow-hidden group cursor-pointer hover:scale-105 transition duration-300 ease-in-out">
-              <img src={img.url} alt={`Gallery ${idx}`} className="object-cover w-full h-full" />
+              <MediaImage src={img.url} alt={`Gallery ${idx}`} className="object-cover w-full h-full" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                 <Play className="w-12 h-12 text-white/80" />
               </div>
@@ -146,12 +152,13 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
           ))}
         </div>
       </div>
+      ) : null}
 
       {/* RSVP & Wishes Section */}
       <div className="px-[4%] md:px-[8%] py-12 bg-gradient-to-b from-[#141414] to-black">
         <div className="max-w-3xl mx-auto space-y-12">
           {/* RSVP Form */}
-          <div className="bg-[#181818] rounded-xl p-8 border border-gray-800">
+          <div className="bg-[#181818] rounded-xl p-4 sm:p-8 border border-gray-800">
             <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
               <Plus className="w-6 h-6 mr-2 text-[#e50914]" /> My List (RSVP)
             </h2>
@@ -191,14 +198,14 @@ export default function NetflixTheme({ event, content, wishes, media, guestName 
                 <h3 className="text-2xl font-bold mb-2">Added to Your List!</h3>
                 <p className="text-gray-400 mb-6">Present this code at the premiere.</p>
                 <div className="bg-white p-4 inline-block rounded-lg">
-                  <img src={qrCodeData} alt="RSVP QR Code" className="w-48 h-48" />
+                  <MediaImage src={qrCodeData} alt="RSVP QR Code" className="w-48 h-48" />
                 </div>
               </div>
             )}
           </div>
 
           {/* Wishes */}
-          <div className="bg-[#181818] rounded-xl p-8 border border-gray-800">
+          <div className="bg-[#181818] rounded-xl p-4 sm:p-8 border border-gray-800">
             <h2 className="text-2xl font-bold text-white mb-6">Reviews & Comments</h2>
             
             <form onSubmit={handleAddWish} className="mb-8">

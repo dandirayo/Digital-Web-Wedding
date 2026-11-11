@@ -1,4 +1,4 @@
-import { buildWhatsappUrl, sanitizeText, siteConfig } from "./config.js";
+import { buildManagementUrl, buildWhatsappUrl, isWhatsappConfigured, sanitizeText, siteConfig } from "./config.js";
 import { closeModal, openModal, showToast } from "./modal.js";
 import { templates } from "./data/templates.js";
 
@@ -16,6 +16,7 @@ export function setupForms() {
 
 export function openConsultationForm(templateId = "", trigger = null) {
   const selectedTemplate = templates.find((template) => template.id === templateId);
+  const orderableTemplates = templates.filter((template) => template.packageLevel === "Basic");
   const draft = loadDraft();
   let submitted = false;
 
@@ -26,16 +27,17 @@ export function openConsultationForm(templateId = "", trigger = null) {
       ${field("whatsapp", "Nomor WhatsApp", "tel", "62812xxxx", draft.whatsapp)}
       ${field("eventDate", "Tanggal acara", "date", "", draft.eventDate)}
       ${selectField("eventType", "Jenis acara", ["Pernikahan", "Engagement", "Akad", "Resepsi", "Lainnya"], draft.eventType)}
-      ${selectField("template", "Template pilihan", templates.map((item) => item.name), selectedTemplate?.name || draft.template || "")}
-      ${selectField("package", "Paket", ["Basic", "Premium", "Signature"], draft.package)}
+      ${selectField("template", "Template pilihan", orderableTemplates.map((item) => item.name), selectedTemplate?.name || draft.template || "")}
+      ${selectField("package", "Paket", siteConfig.packages.filter((item) => item.orderable).map((item) => item.name), draft.package)}
       ${selectField("budget", "Kisaran budget", siteConfig.budgetOptions, draft.budget)}
+      <div aria-hidden="true" style="position:absolute;left:-9999px"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
       <div class="field field-wide" data-field="notes">
         <label for="notes">Catatan</label>
         <textarea id="notes" name="notes" placeholder="Ceritakan kebutuhan event kamu">${escapeAttr(draft.notes || "")}</textarea>
         <div class="error" id="notesError"></div>
       </div>
       <div class="field-wide form-actions">
-        <button class="btn btn-primary" type="submit">Kirim ke WhatsApp</button>
+        <button class="btn btn-primary" type="submit">${isWhatsappConfigured() ? "Kirim & Buka WhatsApp" : "Kirim Brief"}</button>
         <button class="btn btn-secondary" type="button" data-clear-draft>Hapus Draft</button>
       </div>
       <p class="form-status field-wide" aria-live="polite"></p>
@@ -72,31 +74,34 @@ export function openConsultationForm(templateId = "", trigger = null) {
     const submit = form.querySelector("button[type='submit']");
     submit.disabled = true;
     submit.classList.add("is-loading");
-    status.textContent = "Membuka WhatsApp...";
+    status.className = "form-status field-wide";
+    status.textContent = "Mengirim brief ke Occasio...";
 
     const data = getFormData(form);
-    const message = buildConsultationMessage(data);
-    const managementUrl = buildManagementIntakeUrl(data);
-    const managementTab = window.open("", "_blank");
-    localStorage.removeItem(siteConfig.consultationDraftKey);
-    dirty = false;
-    submitted = true;
+    const whatsappUrl = buildWhatsappUrl(buildConsultationMessage(data));
+    const whatsappTab = whatsappUrl ? window.open("", "_blank") : null;
 
-    setTimeout(() => {
-      if (managementTab) {
-        managementTab.location.href = managementUrl;
-        window.location.href = buildWhatsappUrl(message);
-      } else {
-        window.location.href = managementUrl;
-      }
-      showToast("Brief konsultasi dikirim ke management dan WhatsApp.");
-      closeModal({ force: true });
-    }, 450);
+    sendLead(data)
+      .then(() => {
+        localStorage.removeItem(siteConfig.consultationDraftKey);
+        dirty = false;
+        submitted = true;
+        if (whatsappTab) whatsappTab.location.href = whatsappUrl;
+        showToast(whatsappUrl ? "Brief terkirim. Lanjutkan di WhatsApp." : "Brief terkirim. Tim Occasio akan menghubungi Anda.");
+        closeModal({ force: true });
+      })
+      .catch((error) => {
+        if (whatsappTab) whatsappTab.close();
+        submit.disabled = false;
+        submit.classList.remove("is-loading");
+        status.className = "form-status error field-wide";
+        status.textContent = error.message || "Brief belum terkirim. Draft Anda tetap tersimpan, coba lagi.";
+      });
   });
 
   openModal({
     title: "Form Konsultasi",
-    description: "Isi kebutuhan event. Brief akan masuk ke management Occasio dan WhatsApp.",
+    description: "Isi kebutuhan event. Brief masuk ke inbox tim Occasio.",
     content: formWrap,
     trigger,
     closeGuard: () => {
@@ -181,13 +186,20 @@ function buildConsultationMessage(data) {
   ].join("\n");
 }
 
-function buildManagementIntakeUrl(data) {
-  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
-    ...data,
-    source: "Website Occasio",
-    submittedAt: new Date().toISOString(),
-  }))));
-  return `http://localhost:3001/consultation#intake=${encodeURIComponent(payload)}`;
+async function sendLead(data) {
+  let response;
+  try {
+    response = await fetch(buildManagementUrl("api/leads"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    throw new Error("Server Occasio belum dapat dijangkau. Draft Anda tetap tersimpan, coba lagi.");
+  }
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Brief belum terkirim. Coba lagi.");
+  return result.data;
 }
 
 function openPackageDetail(name, trigger) {

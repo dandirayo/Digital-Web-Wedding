@@ -16,75 +16,66 @@ import {
   deleteGuest,
   addGuest,
   updateWish,
-  deleteEvent
+  deleteEvent,
+  updateGuest,
+  deleteWish,
+  getTemplates,
+  getPackages,
+  getProfiles
 } from "@/lib/store";
-import { WeddingEvent, EventContent, Guest, Wish, EventMedia } from "@/lib/types";
+import { ExportGuestsButton } from "@/components/export-guests-button";
+import { WeddingEvent, EventContent, Guest, Wish, EventMedia, Template, Package, UserProfile } from "@/lib/types";
+import { MediaManager } from "@/components/media-manager";
+import { BillingPanel } from "@/components/billing-panel";
+import { ApprovalPanel } from "@/components/approval-panel";
+import { AuditLog } from "@/components/audit-log";
+import { GroupForm, ListEditor, isoToDateTimeInput, isoToDateInput, dateTimeInputToIso, dateInputToIso } from "@/components/event-editors";
 
-function EditableField({
-  label,
-  value,
-  onSave
-}: {
-  label: string;
-  value: string;
-  onSave: (val: string) => Promise<void>;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
+function GuestEditRow({ guest, onCancel, onSaved }: { guest: Guest; onCancel: () => void; onSaved: (guest: Guest) => void }) {
+  const [name, setName] = useState(guest.name);
+  const [phone, setPhone] = useState(guest.phone);
+  const [pax, setPax] = useState(String(guest.paxLimit));
+  const [rsvp, setRsvp] = useState(guest.rsvpStatus);
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const field = "h-10 w-full rounded-md border border-[#cdbba8] bg-white px-2 text-base outline-none focus:border-[#9a6a3a] sm:text-sm";
 
-  async function handleSave() {
+  async function save() {
     setSaving(true);
-    await onSave(tempValue);
-    setSaving(false);
-    setIsEditing(false);
-  }
-
-  if (isEditing) {
-    return (
-      <div className="flex flex-col gap-2 rounded-md border border-[#eadfd2] bg-white p-3">
-        <label className="text-xs font-semibold uppercase tracking-wider text-[#9a6a3a]">{label}</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            className="h-9 flex-1 rounded-md border border-[#cdbba8] px-3 text-sm outline-none focus:border-[#9a6a3a]"
-            value={tempValue}
-            onChange={(e) => setTempValue(e.target.value)}
-          />
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="h-9 rounded-md bg-[#241f1a] px-3 text-sm font-semibold text-white transition hover:bg-[#3a332a] disabled:opacity-50"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => {
-              setIsEditing(false);
-              setTempValue(value);
-            }}
-            className="h-9 rounded-md border border-[#cdbba8] px-3 text-sm font-semibold text-[#5a4028] transition hover:bg-[#f7f3ed]"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
+    setError("");
+    try {
+      const paxLimit = Number(pax);
+      const patch: Partial<Guest> = { name: name.trim(), phone: phone.trim(), paxLimit, rsvpStatus: rsvp };
+      if (rsvp === "pending") patch.paxConfirmed = 0;
+      else if (guest.paxConfirmed > paxLimit) patch.paxConfirmed = paxLimit;
+      onSaved(await updateGuest(guest.id, patch));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Tamu gagal disimpan.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-transparent p-3 hover:border-[#eadfd2] hover:bg-[#fffaf4] group transition">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold uppercase tracking-wider text-[#9a6a3a]">{label}</label>
-        <button
-          onClick={() => setIsEditing(true)}
-          className="text-xs font-semibold text-[#6b6056] opacity-0 group-hover:opacity-100 transition hover:text-[#241f1a]"
-        >
-          ✎ Edit
-        </button>
-      </div>
-      <div className="text-sm font-medium text-[#241f1a]">{value || <span className="text-[#6b6056] italic">Kosong</span>}</div>
-    </div>
+    <tr className="bg-[#fffaf4]">
+      <td className="p-3">
+        <input aria-label="Nama tamu" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} className={field} />
+        <input aria-label="Nomor telepon" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} placeholder="Nomor telepon" className={`${field} mt-2`} />
+      </td>
+      <td className="p-3">
+        <select aria-label="Status RSVP" value={rsvp} onChange={(e) => setRsvp(e.target.value as Guest["rsvpStatus"])} className={field}>
+          <option value="pending">pending</option>
+          <option value="attending">attending</option>
+          <option value="declined">declined</option>
+        </select>
+      </td>
+      <td className="p-3"><input aria-label="Batas pax" type="number" min={1} max={100} value={pax} onChange={(e) => setPax(e.target.value)} className={field} /></td>
+      <td className="p-3 text-xs text-rose-700" role={error ? "alert" : undefined}>{error}</td>
+      <td className="p-3 text-right whitespace-nowrap">
+        <button onClick={save} disabled={saving || !name.trim()} className="mr-2 h-9 rounded-md bg-[#241f1a] px-3 text-xs font-semibold text-white disabled:opacity-50">{saving ? "..." : "Simpan"}</button>
+        <button onClick={onCancel} className="h-9 rounded-md border border-[#cdbba8] px-3 text-xs font-semibold text-[#5a4028]">Batal</button>
+      </td>
+    </tr>
   );
 }
 
@@ -97,8 +88,13 @@ export default function OwnerEventDetailPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [media, setMedia] = useState<EventMedia[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [clients, setClients] = useState<UserProfile[]>([]);
+  const [editingGuest, setEditingGuest] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'detail' | 'tamu' | 'ucapan' | 'pengaturan'>('detail');
+  const [activeTab, setActiveTab] = useState<'detail' | 'tamu' | 'ucapan' | 'persetujuan' | 'tagihan' | 'riwayat' | 'pengaturan'>('detail');
 
   // New guest form state
   const [newGuestName, setNewGuestName] = useState("");
@@ -117,6 +113,9 @@ export default function OwnerEventDetailPage() {
         setGuests(await getGuests(id));
         setWishes(await getWishes(id));
         setMedia(await getMedia(id));
+        setTemplates(await getTemplates());
+        setPackages(await getPackages());
+        setClients((await getProfiles()).filter((p) => p.role === "client"));
       }
       setIsLoading(false);
     }
@@ -150,13 +149,19 @@ export default function OwnerEventDetailPage() {
   const handleAddGuest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGuestName.trim()) return;
-    const newGuest = await addGuest(event.id, {
-      name: newGuestName,
-      phone: newGuestPhone,
-      paxLimit: 1,
-      rsvpStatus: "pending",
-      paxConfirmed: 0,
-    });
+    let newGuest: Guest;
+    try {
+      newGuest = await addGuest(event.id, {
+        name: newGuestName,
+        phone: newGuestPhone,
+        paxLimit: 1,
+        rsvpStatus: "pending",
+        paxConfirmed: 0,
+      });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Tamu gagal ditambahkan.");
+      return;
+    }
     setGuests([...guests, newGuest]);
     setEvent({ ...event, guestCount: event.guestCount + 1 });
     setNewGuestName("");
@@ -174,6 +179,17 @@ export default function OwnerEventDetailPage() {
   const handleToggleWishVisibility = async (wish: Wish) => {
     const updated = await updateWish(wish.id, { isVisible: !wish.isVisible });
     setWishes(wishes.map(w => w.id === wish.id ? updated : w));
+  };
+
+  const handleDeleteWish = async (wishId: string) => {
+    if (!confirm("Hapus ucapan ini secara permanen?")) return;
+    try {
+      await deleteWish(wishId);
+      setWishes(wishes.filter(w => w.id !== wishId));
+      setEvent({ ...event, wishCount: Math.max(0, event.wishCount - 1) });
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Ucapan gagal dihapus.");
+    }
   };
 
   const handleDeleteEvent = async () => {
@@ -211,7 +227,9 @@ export default function OwnerEventDetailPage() {
         </Link>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-6">
+      {actionError ? <p role="alert" className="mb-4 text-sm font-medium text-rose-700">{actionError}</p> : null}
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
         {[
           { label: "Total Tamu", value: event.guestCount },
           { label: "RSVP Hadir", value: event.rsvpYes },
@@ -227,8 +245,8 @@ export default function OwnerEventDetailPage() {
         ))}
       </div>
 
-      <div className="mb-6 flex gap-2 border-b border-[#eadfd2] overflow-x-auto">
-        {(['detail', 'tamu', 'ucapan', 'pengaturan'] as const).map(tab => (
+      <div className="mb-6 flex gap-2 border-b border-[#eadfd2] overflow-x-auto" role="tablist">
+        {(['detail', 'tamu', 'ucapan', 'persetujuan', 'tagihan', 'riwayat', 'pengaturan'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -245,85 +263,61 @@ export default function OwnerEventDetailPage() {
 
       <div className="rounded-md border border-[#e0d4c7] bg-white p-6 min-h-[400px]">
         {activeTab === 'detail' && content && (
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="space-y-4">
+            <p className="text-sm text-[#6b6056]">Semua isi undangan dapat diubah di sini dan langsung dipakai semua tema. Foto dan musik dapat diunggah di bagian Media di bawah; kolom alamat berikut untuk tautan https:// atau file yang sudah ada di server.</p>
+            <GroupForm
+              title="Mempelai & salam"
+              fields={[
+                { key: "brideName", label: "Nama mempelai wanita", maxLength: 120 },
+                { key: "brideParent", label: "Orang tua mempelai wanita", maxLength: 200 },
+                { key: "bridePhotoUrl", label: "Foto mempelai wanita", hint: "Contoh: /templates/sheila-yoga/assets/images/bride.jpg" },
+                { key: "groomName", label: "Nama mempelai pria", maxLength: 120 },
+                { key: "groomParent", label: "Orang tua mempelai pria", maxLength: 200 },
+                { key: "groomPhotoUrl", label: "Foto mempelai pria" },
+                { key: "greeting", label: "Salam pembuka", type: "textarea", maxLength: 2000 },
+              ]}
+              values={{ brideName: content.brideName, brideParent: content.brideParent, bridePhotoUrl: content.bridePhotoUrl, groomName: content.groomName, groomParent: content.groomParent, groomPhotoUrl: content.groomPhotoUrl, greeting: content.greeting }}
+              onSave={async (patch) => setContent(await updateEventContent(event.id, patch))}
+            />
+            <GroupForm
+              title="Waktu & tempat acara"
+              fields={[
+                { key: "akadTime", label: "Waktu akad", placeholder: "08.00 - 10.00 WIB" },
+                { key: "akadVenue", label: "Tempat akad" },
+                { key: "resepsiTime", label: "Waktu resepsi", placeholder: "11.00 - 14.00 WIB" },
+                { key: "resepsiVenue", label: "Tempat resepsi" },
+              ]}
+              values={{ akadTime: content.akadTime, akadVenue: content.akadVenue, resepsiTime: content.resepsiTime, resepsiVenue: content.resepsiVenue }}
+              onSave={async (patch) => setContent(await updateEventContent(event.id, patch))}
+            />
+            <ListEditor
+              title="Love story"
+              items={(content.loveStory || []).map((i) => ({ title: i.title, description: i.description }))}
+              fields={[{ key: "title", label: "Judul", maxLength: 200 }, { key: "description", label: "Cerita", type: "textarea", maxLength: 2000 }]}
+              empty={{ title: "", description: "" }}
+              addLabel="+ Tambah cerita"
+              onSave={async (items) => setContent(await updateEventContent(event.id, { loveStory: items }))}
+            />
+            <ListEditor
+              title="Rekening hadiah digital"
+              items={(content.bankAccounts || []).map((i) => ({ bank: i.bank, accountNumber: i.accountNumber, accountName: i.accountName }))}
+              fields={[{ key: "bank", label: "Bank / e-wallet", maxLength: 100 }, { key: "accountNumber", label: "Nomor rekening", maxLength: 100 }, { key: "accountName", label: "Atas nama", maxLength: 100 }]}
+              empty={{ bank: "", accountNumber: "", accountName: "" }}
+              addLabel="+ Tambah rekening"
+              onSave={async (items) => setContent(await updateEventContent(event.id, { bankAccounts: items }))}
+            />
+            <GroupForm
+              title="Musik & tampilan"
+              fields={[
+                { key: "musicUrl", label: "Musik latar", hint: "Kosongkan untuk memakai musik bawaan tema." },
+                { key: "customCss", label: "CSS khusus (lanjutan)", type: "textarea", maxLength: 20000 },
+              ]}
+              values={{ musicUrl: content.musicUrl, customCss: content.customCss }}
+              onSave={async (patch) => setContent(await updateEventContent(event.id, patch))}
+            />
             <div>
-              <h3 className="mb-4 text-lg font-semibold border-b border-[#eadfd2] pb-2">Informasi Mempelai</h3>
-              <div className="space-y-2">
-                <EditableField
-                  label="Nama Mempelai Pria"
-                  value={content.groomName}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { groomName: val });
-                    setContent(c);
-                  }}
-                />
-                <EditableField
-                  label="Nama Mempelai Wanita"
-                  value={content.brideName}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { brideName: val });
-                    setContent(c);
-                  }}
-                />
-                <EditableField
-                  label="Greeting (Salam)"
-                  value={content.greeting}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { greeting: val });
-                    setContent(c);
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-4 text-lg font-semibold border-b border-[#eadfd2] pb-2">Waktu & Tempat</h3>
-              <div className="space-y-2">
-                <EditableField
-                  label="Waktu Akad"
-                  value={content.akadTime}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { akadTime: val });
-                    setContent(c);
-                  }}
-                />
-                <EditableField
-                  label="Tempat Akad"
-                  value={content.akadVenue}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { akadVenue: val });
-                    setContent(c);
-                  }}
-                />
-                <EditableField
-                  label="Waktu Resepsi"
-                  value={content.resepsiTime}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { resepsiTime: val });
-                    setContent(c);
-                  }}
-                />
-                <EditableField
-                  label="Tempat Resepsi"
-                  value={content.resepsiVenue}
-                  onSave={async (val) => {
-                    const c = await updateEventContent(event.id, { resepsiVenue: val });
-                    setContent(c);
-                  }}
-                />
-              </div>
-            </div>
-            <div className="md:col-span-2">
-              <h3 className="mb-4 text-lg font-semibold border-b border-[#eadfd2] pb-2">Media Gallery</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4">
-                {media.length > 0 ? media.map(m => (
-                  <div key={m.id} className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-[#eadfd2] bg-[#f7f3ed]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.url} alt={m.altText} className="h-full w-full object-cover" />
-                  </div>
-                )) : (
-                  <p className="text-sm text-[#6b6056] italic">Belum ada media diunggah.</p>
-                )}
-              </div>
+              <h3 className="mb-3 text-base font-semibold">Media</h3>
+              <MediaManager eventId={event.id} media={media} content={content} onMedia={setMedia} onContent={setContent} />
             </div>
           </div>
         )}
@@ -338,6 +332,7 @@ export default function OwnerEventDetailPage() {
                 onChange={(e) => setSearchGuest(e.target.value)}
                 className="h-10 w-full sm:w-64 rounded-md border border-[#cdbba8] px-3 text-sm outline-none focus:border-[#9a6a3a]"
               />
+              <ExportGuestsButton eventId={event.id} slug={event.slug} />
               <form onSubmit={handleAddGuest} className="flex gap-2">
                 <input
                   type="text"
@@ -365,7 +360,9 @@ export default function OwnerEventDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eadfd2]">
-                  {filteredGuests.length > 0 ? filteredGuests.map(g => (
+                  {filteredGuests.length > 0 ? filteredGuests.map(g => editingGuest === g.id ? (
+                    <GuestEditRow key={g.id} guest={g} onCancel={() => setEditingGuest(null)} onSaved={(saved) => { setGuests(guests.map(x => x.id === saved.id ? saved : x)); setEditingGuest(null); }} />
+                  ) : (
                     <tr key={g.id} className="hover:bg-[#f7f3ed]/50">
                       <td className="p-3">{g.name}</td>
                       <td className="p-3">
@@ -380,11 +377,17 @@ export default function OwnerEventDetailPage() {
                       <td className="p-3">{g.checkedInAt ? new Date(g.checkedInAt).toLocaleString() : '-'}</td>
                       <td className="p-3 text-right">
                         <button
-                          onClick={() => handleCopyLink(`?to=${encodeURIComponent(g.name)}`)}
+                          onClick={() => handleCopyLink(`?g=${g.qrCode}`)}
                           className="mr-3 text-xs font-semibold text-[#6b6056] hover:text-[#241f1a]"
                           title="Copy Link Undangan Spesifik Tamu"
                         >
                           Copy Link
+                        </button>
+                        <button
+                          onClick={() => setEditingGuest(g.id)}
+                          className="mr-3 text-xs font-semibold text-[#5a4028] hover:text-[#241f1a]"
+                        >
+                          Edit
                         </button>
                         <button
                           onClick={() => handleDeleteGuest(g.id)}
@@ -421,6 +424,12 @@ export default function OwnerEventDetailPage() {
                     {w.isVisible ? "✓ Tampil di Web" : "✗ Disembunyikan"}
                   </span>
                   <button
+                    onClick={() => handleDeleteWish(w.id)}
+                    className="text-xs font-semibold text-red-600 hover:underline"
+                  >
+                    Hapus
+                  </button>
+                  <button
                     onClick={() => handleToggleWishVisibility(w)}
                     className="text-xs font-semibold text-[#241f1a] hover:underline"
                   >
@@ -436,66 +445,45 @@ export default function OwnerEventDetailPage() {
           </div>
         )}
 
+        {activeTab === 'persetujuan' && (
+          <ApprovalPanel
+            eventId={event.id}
+            slug={event.slug}
+            role="owner"
+            onChanged={async () => { const fresh = await getEventById(event.id); if (fresh) setEvent(fresh); }}
+          />
+        )}
+
+        {activeTab === 'tagihan' && <BillingPanel eventId={event.id} role="owner" />}
+
+        {activeTab === 'riwayat' && <AuditLog eventId={event.id} />}
+
         {activeTab === 'pengaturan' && (
-          <div className="max-w-2xl">
-            <h3 className="mb-4 text-lg font-semibold border-b border-[#eadfd2] pb-2">Pengaturan Event</h3>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-[#241f1a]">Slug URL</label>
-                <div className="flex">
-                  <span className="inline-flex items-center rounded-l-md border border-r-0 border-[#cdbba8] bg-[#f7f3ed] px-3 text-sm text-[#6b6056]">
-                    /wedding/
-                  </span>
-                  <input
-                    type="text"
-                    value={event.slug}
-                    onChange={async (e) => {
-                      const val = e.target.value;
-                      setEvent({ ...event, slug: val });
-                      await updateEvent(event.id, { slug: val });
-                    }}
-                    className="h-10 flex-1 rounded-r-md border border-[#cdbba8] px-3 text-sm outline-none focus:border-[#9a6a3a]"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-[#6b6056]">Mengubah slug akan membuat link lama menjadi tidak valid.</p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-[#241f1a]">Status Event</label>
-                <select
-                  value={event.status}
-                  onChange={async (e) => {
-                    const val = e.target.value as WeddingEvent['status'];
-                    setEvent({ ...event, status: val });
-                    await updateEvent(event.id, { status: val });
-                  }}
-                  className="h-10 w-full rounded-md border border-[#cdbba8] bg-white px-3 text-sm outline-none focus:border-[#9a6a3a]"
-                >
-                  <option value="draft">Draft (Belum disebar)</option>
-                  <option value="active">Active (Sedang berjalan)</option>
-                  <option value="completed">Completed (Selesai)</option>
-                  <option value="archived">Archived (Diarsipkan)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-[#241f1a]">Paket</label>
-                <select
-                  value={event.packageTier}
-                  onChange={async (e) => {
-                    const val = e.target.value as WeddingEvent['packageTier'];
-                    setEvent({ ...event, packageTier: val });
-                    await updateEvent(event.id, { packageTier: val });
-                  }}
-                  className="h-10 w-full rounded-md border border-[#cdbba8] bg-white px-3 text-sm outline-none focus:border-[#9a6a3a]"
-                >
-                  <option value="silver">Basic</option>
-                  <option value="gold">Premium</option>
-                  <option value="platinum">Signature</option>
-                </select>
-              </div>
-            </div>
+          <div className="max-w-3xl space-y-4">
+            <h3 className="text-lg font-semibold border-b border-[#eadfd2] pb-2">Pengaturan Event</h3>
+            <GroupForm
+              title="Data event"
+              fields={[
+                { key: "coupleName", label: "Nama pasangan", maxLength: 200 },
+                { key: "venue", label: "Venue utama", maxLength: 300 },
+                { key: "eventDate", label: "Tanggal & jam acara (WIB)", type: "datetime" },
+                { key: "expiresAt", label: "Berlaku sampai", type: "date", hint: "Kosongkan agar tidak kedaluwarsa. Setelah lewat, undangan tidak terbuka untuk tamu." },
+                { key: "slug", label: "Slug URL", hint: "Huruf kecil, angka, dan tanda hubung. Mengubah slug membuat link lama tidak valid." },
+                { key: "status", label: "Status", type: "select", options: [{ value: "draft", label: "Draft (belum disebar)" }, { value: "active", label: "Active (berjalan)" }, { value: "completed", label: "Completed (selesai)" }, { value: "archived", label: "Archived (diarsipkan)" }] },
+                { key: "templateId", label: "Template", type: "select", options: templates.filter((t) => t.isActive || t.id === event.templateId).map((t) => ({ value: t.id, label: t.name })) },
+                { key: "packageId", label: "Paket", type: "select", options: packages.filter((p) => p.isActive || p.id === event.packageId).map((p) => ({ value: p.id, label: p.name })) },
+                { key: "clientId", label: "Klien pemilik", type: "select", options: [{ value: "", label: "(Belum ada klien)" }, ...clients.map((c) => ({ value: c.id, label: `${c.fullName} — ${c.email}` }))] },
+              ]}
+              values={{ coupleName: event.coupleName, venue: event.venue, eventDate: isoToDateTimeInput(event.eventDate), expiresAt: isoToDateInput(event.expiresAt), slug: event.slug, status: event.status, templateId: event.templateId, packageId: event.packageId, clientId: event.clientId || "" }}
+              onSave={async (patch) => {
+                const data: Record<string, unknown> = { ...patch };
+                if ("eventDate" in patch) data.eventDate = dateTimeInputToIso(patch.eventDate);
+                if ("expiresAt" in patch) data.expiresAt = dateInputToIso(patch.expiresAt);
+                if ("clientId" in patch) data.clientId = patch.clientId || null;
+                const updated = await updateEvent(event.id, data as Partial<WeddingEvent>);
+                setEvent({ ...event, ...updated });
+              }}
+            />
 
             <div className="mt-10 border-t border-[#eadfd2] pt-6">
               <h3 className="mb-4 text-lg font-semibold text-red-600">Danger Zone</h3>

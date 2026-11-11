@@ -13,9 +13,11 @@ export function setupNavigation() {
 
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
+      const wasOpen = menu.classList.contains("is-open");
       menu.classList.remove("is-open");
       toggle.setAttribute("aria-expanded", "false");
       toggle.setAttribute("aria-label", "Buka menu navigasi");
+      if (wasOpen) toggle.focus();
     });
   }
 

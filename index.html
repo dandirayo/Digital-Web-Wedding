@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
-  <script type="application/ld+json">
+  <script type="application/ld+json" data-site-schema>
     {
       "@context": "https://schema.org",
       "@type": "ProfessionalService",
@@ -33,7 +33,7 @@
   <div class="announcement">
     <div class="container announcement__inner">
       <strong>Occasio</strong>
-      <span>Website, dashboard tamu, dan dukungan hari acara dalam satu layanan.</span>
+      <span>Undangan digital, workspace klien, dan dukungan produksi dalam satu layanan.</span>
     </div>
   </div>
 
@@ -56,7 +56,7 @@
         <a class="nav-link" href="gallery.html">Gallery</a>
       </div>
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="http://localhost:3001" target="_blank" rel="noopener">Dashboard</a>
+        <a class="btn btn-secondary" href="http://localhost:3001" target="_blank" rel="noopener" data-management-link>Dashboard</a>
         <button class="btn btn-primary" type="button" data-open-consultation>Konsultasi</button>
       </div>
     </nav>
@@ -78,7 +78,7 @@
             <a href="gallery.html"><strong>1</strong><span>Pilih template</span></a>
             <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link><strong>2</strong><span>Cek demo wedding</span></a>
             <button type="button" data-open-consultation><strong>3</strong><span>Kirim brief</span></button>
-            <a href="http://localhost:3001" target="_blank" rel="noopener"><strong>4</strong><span>Kelola dashboard</span></a>
+            <a href="http://localhost:3001" target="_blank" rel="noopener" data-management-link><strong>4</strong><span>Kelola dashboard</span></a>
           </div>
           <div class="trust-row" aria-label="Ringkasan layanan">
             <div class="trust-item"><strong>Mobile-first</strong><span>Nyaman dari 320px sampai desktop.</span></div>
@@ -109,7 +109,7 @@
           <article class="card feature-card">
             <div class="feature-card__header">
               <div class="icon-box">01</div>
-              <h3>Template Premium</h3>
+              <h3>Template Terkurasi</h3>
             </div>
             <p>Layout editorial, warna elegan, dan komponen yang konsisten.</p>
           </article>
@@ -123,16 +123,16 @@
           <article class="card feature-card">
             <div class="feature-card__header">
               <div class="icon-box">03</div>
-              <h3>RSVP & QR</h3>
+              <h3>RSVP & Ucapan</h3>
             </div>
-            <p>Konfirmasi kehadiran dan validasi tamu untuk paket Premium dan Signature.</p>
+            <p>Konfirmasi kehadiran dan ucapan tamu termasuk dalam alur Basic.</p>
           </article>
           <article class="card feature-card">
             <div class="feature-card__header">
               <div class="icon-box">04</div>
               <h3>Brief Konsultasi</h3>
             </div>
-            <p>Kebutuhan calon klien masuk ke inbox management dan diteruskan lewat WhatsApp.</p>
+            <p>Kebutuhan calon klien masuk ke management; WhatsApp dibuka setelah kontak bisnis dikonfigurasi.</p>
           </article>
         </div>
       </div>
@@ -161,13 +161,13 @@
           <article class="card step-card">
             <div class="step-card__number">1</div>
             <h3>Pengunjung pilih template</h3>
-            <p>Gallery menjadi tempat utama untuk membandingkan style, harga awal, dan fitur.</p>
+            <p>Gallery menjadi tempat utama untuk membandingkan style, status ketersediaan, dan fitur.</p>
             <a href="gallery.html">Buka Template</a>
           </article>
           <article class="card step-card">
             <div class="step-card__number">2</div>
             <h3>Preview wedding demo</h3>
-            <p>Client melihat contoh undangan lengkap dengan gallery, RSVP, ucapan, QR, maps, dan gift.</p>
+            <p>Client melihat contoh desain undangan, galeri, RSVP, ucapan, maps, dan gift.</p>
             <a href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>Buka Preview</a>
           </article>
           <article class="card step-card">
@@ -194,8 +194,9 @@
             <tbody>
               <tr><td>Landing undangan responsive</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
               <tr><td>RSVP & ucapan</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
-              <tr><td>Dashboard klien</td><td>-</td><td>Ya</td><td>Ya</td></tr>
-              <tr><td>QR check-in</td><td>-</td><td>Ya</td><td>Ya + support hari H</td></tr>
+              <tr><td>Workspace klien</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
+              <tr><td>Status rilis</td><td>Pilot pertama</td><td>Belum dirilis</td><td>Belum dirilis</td></tr>
+              <tr><td>QR check-in</td><td>-</td><td>Setelah lolos uji</td><td>Setelah lolos uji venue</td></tr>
               <tr><td>Masa aktif</td><td>3 bulan</td><td>6 bulan</td><td>12 bulan</td></tr>
             </tbody>
           </table>
@@ -209,12 +210,12 @@
           <img src="assets/images/prewed-1.jpg" alt="Ilustrasi tampilan undangan mobile" loading="lazy">
         </div>
         <div>
-          <span class="eyebrow">Demo flow</span>
-          <h2 class="section-title">RSVP dan QR check-in mengikuti alur tamu yang nyata.</h2>
+          <span class="eyebrow">Roadmap tamu</span>
+          <h2 class="section-title">RSVP masuk Basic; QR check-in disiapkan setelahnya.</h2>
           <div class="demo-list">
             <div class="demo-item"><div class="icon-box">A</div><p>Tamu membuka undangan dan memilih status RSVP.</p></div>
-            <div class="demo-item"><div class="icon-box">B</div><p>Setiap tamu mendapatkan link personal dan kode QR yang dapat divalidasi.</p></div>
-            <div class="demo-item"><div class="icon-box">C</div><p>Tim penerima tamu memantau kedatangan melalui halaman check-in.</p></div>
+            <div class="demo-item"><div class="icon-box">B</div><p>Basic akan memakai link personal bertoken untuk membedakan setiap penerima.</p></div>
+            <div class="demo-item"><div class="icon-box">C</div><p>QR check-in baru dibuka untuk Premium setelah uji keamanan dan multi-perangkat.</p></div>
           </div>
           <p>
             <a class="btn btn-gold" href="http://localhost:3001/wedding/sheila-yoga" target="_blank" rel="noopener" data-demo-wedding-link>
@@ -242,18 +243,7 @@
           <span class="eyebrow">FAQ</span>
           <h2 class="section-title">Pertanyaan umum.</h2>
         </div>
-        <article class="card faq-item">
-          <button class="faq-question" type="button" data-faq-question aria-expanded="false" aria-controls="faq1">Paket mana yang memiliki QR check-in?<span>+</span></button>
-          <div class="faq-answer" id="faq1" hidden>QR tamu dan check-in tersedia mulai paket Premium. Paket Signature menambahkan dukungan operasional hari acara.</div>
-        </article>
-        <article class="card faq-item">
-          <button class="faq-question" type="button" data-faq-question aria-expanded="false" aria-controls="faq2">Apa yang terjadi setelah konsultasi?<span>+</span></button>
-          <div class="faq-answer" id="faq2" hidden>Brief masuk ke inbox Occasio, tim mengonfirmasi kebutuhan dan pembayaran, lalu workspace klien dibuat untuk proses konten.</div>
-        </article>
-        <article class="card faq-item">
-          <button class="faq-question" type="button" data-faq-question aria-expanded="false" aria-controls="faq3">Apakah desain bisa disesuaikan?<span>+</span></button>
-          <div class="faq-answer" id="faq3" hidden>Bisa. Penyesuaian warna dan konten mengikuti paket, sedangkan arah visual khusus tersedia sebagai bagian paket Signature.</div>
-        </article>
+        <div data-faq-list></div>
       </div>
     </section>
 
@@ -264,7 +254,7 @@
         <div class="cta-actions">
           <button class="btn btn-primary" type="button" data-open-consultation>Mulai Konsultasi</button>
           <a class="btn btn-secondary" href="gallery.html">Lihat Template</a>
-          <a class="btn btn-gold" href="http://localhost:3001" target="_blank" rel="noopener">Masuk Dashboard</a>
+          <a class="btn btn-gold" href="http://localhost:3001" target="_blank" rel="noopener" data-management-link>Masuk Dashboard</a>
         </div>
       </div>
     </section>
@@ -278,7 +268,7 @@
         <div><div class="footer-title">Kontak</div><ul class="footer-list"><li><button class="btn btn-gold" type="button" data-open-consultation>Konsultasi</button></li><li data-contact-label>WhatsApp belum diset</li></ul></div>
         <div><div class="footer-title">Legal</div><ul class="footer-list"><li><a href="privacy.html">Kebijakan Privasi</a></li><li><a href="terms.html">Ketentuan Layanan</a></li></ul></div>
       </div>
-      <div class="footer-bottom"><span>&copy; <span data-publish-year>2026</span> Occasio.</span><span>Productized wedding service dari konsultasi sampai hari acara.</span></div>
+      <div class="footer-bottom"><span>&copy; <span data-publish-year>2026</span> Occasio.</span><span>Productized wedding service dari konsultasi sampai undangan dipublikasikan.</span></div>
     </div>
   </footer>
 

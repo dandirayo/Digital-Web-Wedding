@@ -3,6 +3,11 @@
 :root {
   --background: #f7f3ed;
   --foreground: #241f1a;
+  --workspace-gutter: clamp(1rem, 2.5vw, 2rem);
+  --workspace-gap: clamp(1rem, 2vw, 1.5rem);
+  --surface: #ffffff;
+  --border: #e0d4c7;
+  --radius-card: 0.75rem;
 }
 
 @theme inline {
@@ -35,4 +40,124 @@ select {
 :focus-visible {
   outline: 3px solid rgba(154, 106, 58, 0.28);
   outline-offset: 2px;
+}
+
+/* Shared workspace rhythm; invitation themes retain their own visual identity. */
+.workspace {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-header,
+.workspace-content {
+  padding-inline: var(--workspace-gutter);
+}
+
+.invitation {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.invitation :where(.grid > *, .flex > *) {
+  min-width: 0;
+}
+
+.invitation :where(input, select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.invitation :where(button, input:not([type="checkbox"]), select) {
+  min-height: 2.75rem;
+}
+
+.workspace-content {
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-block: var(--workspace-gap);
+}
+
+.workspace :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+}
+
+.workspace :where(button, a.inline-flex) {
+  min-height: 2.75rem;
+}
+
+.workspace :where(section[id], div[id]) {
+  scroll-margin-top: 2rem;
+}
+
+.workspace :where(.grid > *, .flex > *) {
+  min-width: 0;
+}
+
+.workspace-dialog {
+  width: min(42rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: var(--workspace-gutter);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.workspace-dialog::backdrop {
+  background: rgb(36 31 26 / 58%);
+  backdrop-filter: blur(4px);
+}
+
+body:has(.workspace-dialog[open]) {
+  overflow: hidden;
+}
+
+.inline-edit-trigger:focus-visible {
+  opacity: 1;
+}
+
+@media (min-width: 1024px) {
+  .workspace :where(section[id], div[id]) {
+    scroll-margin-top: 8rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .workspace :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+  .mobile-form :where(input, select, textarea) {
+    font-size: 1rem;
+  }
+
+  .invitation :where(input, select, textarea) {
+    font-size: 1rem;
+  }
+
+  .workspace-content > :where(section, div).mt-6 {
+    margin-top: var(--workspace-gap);
+  }
+
+  .workspace-content :where(section, div).p-5,
+  .workspace-content :where(section, div).p-6 {
+    padding: 1rem;
+  }
+}
+
+@media (hover: none) {
+  .inline-edit-trigger {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

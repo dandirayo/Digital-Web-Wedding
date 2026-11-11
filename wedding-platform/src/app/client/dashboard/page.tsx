@@ -8,10 +8,12 @@ import { StatCard } from "@/components/stat-card";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { BulkShare } from "@/components/bulk-share";
-import { getClientWorkspace, updateClientContent, addClientGuest, importClientGuests } from "@/lib/supabase/client-workspace";
+import { ExportGuestsButton } from "@/components/export-guests-button";
+import { getClientWorkspace, updateClientContent, addClientGuest, importClientGuests } from "@/lib/workspace";
 import type { WeddingEvent, Guest, Wish } from "@/lib/types";
 import { getPackageLabel } from "@/lib/demo-data";
-import { ContentReview } from "@/components/content-review";
+import { ApprovalPanel } from "@/components/approval-panel";
+import { BillingPanel } from "@/components/billing-panel";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 const MESSAGE_TEMPLATE = `Kepada Yth. \${guest.name},
@@ -115,7 +117,7 @@ export default function ClientDashboardPage() {
         <DashboardShell role="client" title="Workspace Klien" description="Kelola undangan, daftar tamu, RSVP, QR, dan ucapan.">
           <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
             <AlertTriangle className="h-8 w-8 text-rose-600" />
-            <h2 className="mt-4 text-xl font-semibold text-rose-950">Supabase lokal belum tersambung</h2>
+            <h2 className="mt-4 text-xl font-semibold text-rose-950">Backend lokal belum tersambung</h2>
             <p className="mt-2 max-w-lg text-sm leading-6 text-rose-800">{loadError}</p>
             <button type="button" onClick={() => window.location.reload()} className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-rose-900 px-4 text-sm font-semibold text-white">
               <RefreshCw className="h-4 w-4" /> Coba lagi
@@ -154,14 +156,22 @@ export default function ClientDashboardPage() {
 
   async function handleAddGuest(guestData: Omit<Guest, "id" | "createdAt" | "qrCode" | "checkedInAt" | "eventId">) {
     if (!event) return;
-    const newGuest = await addClientGuest(event.id, guestData);
-    setGuests((current) => [newGuest, ...current]);
+    try {
+      const newGuest = await addClientGuest(event.id, guestData);
+      setGuests((current) => [newGuest, ...current]);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Tamu gagal ditambahkan.");
+    }
   }
 
   async function handleImportGuests(importedGuests: ImportedGuest[]) {
     if (!event) return;
-    const newGuests = await importClientGuests(event.id, importedGuests);
-    setGuests((current) => [...newGuests, ...current]);
+    try {
+      const newGuests = await importClientGuests(event.id, importedGuests);
+      setGuests((current) => [...newGuests, ...current]);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Impor tamu gagal.");
+    }
   }
 
   async function handleSaveContent(e: FormEvent<HTMLFormElement>) {
@@ -228,7 +238,7 @@ export default function ClientDashboardPage() {
         description="Kelola brief, konten, tamu, RSVP, dan kesiapan publish undangan Anda."
       >
         <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          Data workspace ini dimuat dan disimpan ke Supabase lokal sesuai akses akun Anda.
+          Data workspace ini dimuat dan disimpan ke Backend lokal sesuai akses akun Anda.
         </div>
         <section id="brief" className="mb-6 rounded-md border border-[#e0d4c7] bg-white p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -237,7 +247,7 @@ export default function ClientDashboardPage() {
               <h2 className="mt-2 text-2xl font-semibold">{content.couple}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6056]">Brief yang sudah dikonfirmasi owner menjadi acuan pengerjaan konten dan publish.</p>
             </div>
-            <span className="inline-flex rounded-full bg-[#efe5d8] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7b552f]">Produksi berjalan</span>
+            <span className="inline-flex rounded-full bg-[#efe5d8] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7b552f]">{event.isPublished ? "Undangan aktif" : "Dalam persiapan"}</span>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <BriefItem label="Paket" value={content.packageName} />
@@ -276,7 +286,7 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatCard label="Total Tamu" value={String(guests.length)} helper="Tersimpan di workspace" />
           <StatCard label="Hadir" value={String(event.rsvpYes)} helper="RSVP sudah konfirmasi" />
           <StatCard label="Belum Jawab" value={String(pending)} helper="Perlu follow-up" />
@@ -304,7 +314,7 @@ export default function ClientDashboardPage() {
           <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#eadfd2]">
             <div className="h-full rounded-full bg-[#9a6a3a]" style={{ width: `${setupScore}%` }} />
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
             {setupItems.map((item) => (
               <div key={item.label} className="rounded-md border border-[#eadfd2] bg-[#fffaf4] p-3">
                 <div
@@ -320,9 +330,17 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
-        <div className="mt-6">
-          <ContentReview eventId={event.id} role="client" />
-        </div>
+        <section id="approval" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">Persetujuan</div>
+          <h2 className="mb-4 mt-2 text-xl font-semibold">Periksa dan setujui undangan</h2>
+          <ApprovalPanel eventId={event.id} slug={event.slug} role="client" />
+        </section>
+
+        <section id="billing" className="mt-6 rounded-md border border-[#e0d4c7] bg-white p-5">
+          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9a6a3a]">Tagihan</div>
+          <h2 className="mb-4 mt-2 text-xl font-semibold">Pembayaran</h2>
+          <BillingPanel eventId={event.id} role="client" />
+        </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <GuestExcelUpload onImport={handleImportGuests} />
@@ -415,6 +433,7 @@ export default function ClientDashboardPage() {
                 messageTemplate={MESSAGE_TEMPLATE}
                 onShared={markAsShared}
               />
+              <ExportGuestsButton eventId={event.id} slug={event.slug} />
               <AddGuestAction onAdd={handleAddGuest} />
             </div>
           </div>

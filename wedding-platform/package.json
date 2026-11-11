@@ -3,18 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack --hostname 127.0.0.1 --port 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --hostname 127.0.0.1 --port 3001",
     "lint": "eslint",
-    "backend:check": "node --env-file=.env.local scripts/check-backend.mjs",
-    "seed:local": "node scripts/seed-local-demo.mjs",
-    "seed:users": "node --env-file=.env.local scripts/seed-demo-users.mjs",
-    "seed:demo": "node --env-file=.env.local scripts/seed-demo-data.mjs"
+    "test:backend": "node --test tests/backend.test.mjs",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.12.0",
-    "@supabase/supabase-js": "^2.110.0",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.38.0",
     "next": "16.2.10",
@@ -33,5 +30,8 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=24.17.0 <25"
   }
 }

@@ -173,7 +173,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center text-white">
+      <div className="mobile-form min-h-screen break-words bg-[#1a1a2e] flex items-center justify-center text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#16c784]"></div>
       </div>
     );
@@ -201,7 +201,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
   return (
     <div className="min-h-screen bg-[#1a1a2e] text-white flex flex-col overflow-hidden font-sans selection:bg-[#16c784] selection:text-white">
       {/* Top Bar */}
-      <header className="bg-[#111122] border-b border-white/10 p-4 flex items-center justify-between">
+      <header className="bg-[#111122] border-b border-white/10 p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition">
             <ChevronLeft className="w-6 h-6" />
@@ -219,7 +219,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
               {checkedInGuests} <span className="text-gray-500 text-lg">/ {totalGuests}</span>
             </div>
           </div>
-          <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div className="w-16 sm:w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
             <div 
               className="h-full bg-[#16c784] transition-all duration-1000 ease-out"
               style={{ width: `${percentage}%` }}
@@ -230,37 +230,37 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex flex-1 flex-col lg:flex-row">
         
         {/* Left Side: Scanner / Search & Guest Info */}
-        <div className="w-[60%] flex flex-col border-r border-white/10 relative">
+        <div className="w-full min-w-0 lg:w-[60%] flex flex-col border-r border-white/10 relative">
           
           {/* Tabs */}
           <div className="flex bg-[#111122] border-b border-white/10">
             <button
               onClick={() => setActiveTab('qr')}
-              className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${activeTab === 'qr' ? 'text-[#16c784] border-b-2 border-[#16c784] bg-white/5' : 'text-gray-400 hover:text-white'}`}
+              className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-sm sm:text-lg transition-colors ${activeTab === 'qr' ? 'text-[#16c784] border-b-2 border-[#16c784] bg-white/5' : 'text-gray-400 hover:text-white'}`}
             >
               <QrCode className="w-5 h-5" />
               Scan QR
             </button>
             <button
               onClick={() => setActiveTab('search')}
-              className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${activeTab === 'search' ? 'text-[#4a90d9] border-b-2 border-[#4a90d9] bg-white/5' : 'text-gray-400 hover:text-white'}`}
+              className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-sm sm:text-lg transition-colors ${activeTab === 'search' ? 'text-[#4a90d9] border-b-2 border-[#4a90d9] bg-white/5' : 'text-gray-400 hover:text-white'}`}
             >
               <Search className="w-5 h-5" />
               Pencarian Manual
             </button>
           </div>
 
-          <div className="flex-1 p-8 flex flex-col">
+          <div className="flex-1 p-4 sm:p-8 flex flex-col">
             
             {!selectedGuest ? (
               <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
                 
                 {activeTab === 'qr' ? (
                   <div className="text-center space-y-8">
-                    <div className="w-64 h-64 mx-auto border-4 border-dashed border-[#16c784]/50 rounded-3xl flex items-center justify-center bg-[#16c784]/5 relative overflow-hidden">
+                    <div className="w-48 h-48 sm:w-64 sm:h-64 mx-auto border-4 border-dashed border-[#16c784]/50 rounded-3xl flex items-center justify-center bg-[#16c784]/5 relative overflow-hidden">
                       <div className="absolute inset-0 border-4 border-[#16c784] rounded-3xl opacity-20 animate-pulse"></div>
                       <QrCode className="w-24 h-24 text-[#16c784]/50" />
                     </div>
@@ -272,8 +272,9 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
                           type="text"
                           value={qrInput}
                           onChange={(e) => setQrInput(e.target.value)}
-                          placeholder="Masukkan kode QR (contoh: QR-xxx)"
-                          className="w-full bg-[#111122] border border-white/20 rounded-xl px-6 py-4 text-xl focus:outline-none focus:border-[#16c784] text-center"
+                          placeholder="Kode QR tamu"
+                          aria-label="Kode QR tamu"
+                          className="w-full bg-[#111122] border border-white/20 rounded-xl pl-3 pr-20 py-4 text-base sm:text-xl focus:outline-none focus:border-[#16c784] text-center"
                           autoFocus
                         />
                         <button type="submit" className="absolute right-3 top-3 bottom-3 px-4 bg-[#16c784] text-[#111122] rounded-lg font-bold">
@@ -402,8 +403,8 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
         </div>
         
         {/* Right Side: Recent Check-ins */}
-        <div className="w-[40%] bg-[#111122]/50 flex flex-col">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#111122]">
+        <div className="w-full min-w-0 lg:w-[40%] bg-[#111122]/50 flex flex-col">
+          <div className="p-4 sm:p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 bg-[#111122]">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Clock className="w-5 h-5 text-[#4a90d9]" />
               Riwayat Check-in

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UserProfile } from "@/lib/types";
-import { getStorageItem, setStorageItem } from "@/lib/store";
+import { createClient } from "@/lib/store";
 
 export function CreateClientForm({
   onSuccess,
@@ -15,29 +15,19 @@ export function CreateClientForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setMessage("");
 
     try {
-      // Simulate API call and saving to local storage
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const newClient: UserProfile = {
-        id: `client_${Math.random().toString(36).substring(2, 9)}`,
-        fullName,
-        email,
-        role: "client",
-        createdAt: new Date().toISOString(),
-      };
-
-      const profiles = getStorageItem<UserProfile[]>("occasio_profiles", []);
-      setStorageItem("occasio_profiles", [...profiles, newClient]);
+      const newClient = await createClient({ fullName, email, password });
 
       onSuccess(newClient);
     } catch (error) {
-      console.error(error);
+      setMessage(error instanceof Error ? error.message : "Akun klien gagal dibuat.");
     } finally {
       setIsLoading(false);
     }
@@ -73,12 +63,14 @@ export function CreateClientForm({
           <label className="block text-sm font-medium text-[#241f1a]">Password (for client login)</label>
           <input
             type="password"
+            minLength={12}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="mt-1 block w-full p-2 border border-[#e0d4c7] rounded-md focus:ring-[#9a6a3a] focus:border-[#9a6a3a]"
           />
         </div>
+        {message ? <p role="alert" className="text-sm text-red-700">{message}</p> : null}
         <div className="flex justify-end space-x-3 pt-2">
           <button
             type="button"

@@ -4,7 +4,7 @@ import { ConsultationForm } from "@/components/consultation-form";
 export default async function ConsultationPage({ searchParams }: { searchParams?: Promise<{ template?: string }> }) {
   const params = await searchParams;
   return (
-    <main className="min-h-screen bg-[#f7f3ed] text-[#241f1a]">
+    <main className="mobile-form min-h-screen bg-[#f7f3ed] text-[#241f1a]">
       <header className="border-b border-[#e4d8ca] bg-[#fffaf4]">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 lg:px-8">
           <Link href="/" className="flex items-center gap-3">

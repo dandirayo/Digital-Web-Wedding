@@ -2,14 +2,15 @@ export const siteConfig = {
   brandName: "Occasio",
   legalName: "Occasio",
   baseUrl: "https://domain-anda.com/",
+  managementBaseUrl: "http://localhost:3001/",
   whatsappNumber: "6280000000000",
-  whatsappFallbackUrl: "https://wa.me/6280000000000",
   contactLabel: "WhatsApp belum diset",
   demoWeddingUrl: "http://localhost:3001/wedding/sheila-yoga",
   publishYear: "2026",
+  showPublicPrices: false,
   consultationDraftKey: "occasio_consultation_draft_v1",
   priceDisclaimer:
-    "Harga final mengikuti kebutuhan konten, domain, revisi, dan fitur tambahan yang dipilih.",
+    "Harga yang terlihat di data development masih baseline internal. Harga pilot akan dipublikasikan setelah validasi biaya.",
   packages: [
     {
       id: "basic",
@@ -43,27 +44,16 @@ export const siteConfig = {
     },
   ],
   budgetOptions: [
-    "< Rp1 juta",
+    "Di bawah Rp1 juta",
     "Rp1 juta - Rp2 juta",
     "Rp2 juta - Rp5 juta",
-    "> Rp5 juta",
+    "Di atas Rp5 juta",
   ],
-  testimonials: [
-    {
-      quote: "Testimoni asli client dapat ditampilkan di sini setelah tersedia.",
-      name: "Client Occasio",
-      status: "Menunggu testimoni asli",
-    },
-    {
-      quote: "Gunakan kutipan yang sudah disetujui agar tetap etis dan kredibel.",
-      name: "Client Occasio",
-      status: "Menunggu izin publikasi",
-    },
-    {
-      quote: "Area ini mendukung social proof tanpa membuat klaim yang belum valid.",
-      name: "Client Occasio",
-      status: "Placeholder produksi",
-    },
+  testimonials: [],
+  faqs: [
+    { question: "Paket mana yang memiliki QR check-in?", answer: "QR tamu dan check-in tersedia mulai paket Premium. Paket Signature menambahkan dukungan operasional hari acara." },
+    { question: "Apa yang terjadi setelah konsultasi?", answer: "Brief masuk ke inbox Occasio, tim mengonfirmasi kebutuhan dan pembayaran, lalu workspace klien dibuat untuk proses konten." },
+    { question: "Apakah desain bisa disesuaikan?", answer: "Bisa. Penyesuaian warna dan konten mengikuti paket, sedangkan arah visual khusus tersedia sebagai bagian paket Signature." },
   ],
 };
 
@@ -81,8 +71,30 @@ export function sanitizeText(value) {
 export function buildWhatsappUrl(message) {
   const number = siteConfig.whatsappNumber || "";
   const encodedMessage = encodeURIComponent(message);
-  if (/^62\d{8,15}$/.test(number)) {
+  if (isWhatsappConfigured()) {
     return `https://wa.me/${number}?text=${encodedMessage}`;
   }
-  return `${siteConfig.whatsappFallbackUrl}?text=${encodedMessage}`;
+  return "";
+}
+
+export function isWhatsappConfigured() {
+  const number = siteConfig.whatsappNumber || "";
+  return /^62\d{8,15}$/.test(number) && number !== "6280000000000";
+}
+
+export function isPublicUrlConfigured() {
+  try {
+    const url = new URL(siteConfig.baseUrl);
+    return url.protocol === "https:" && url.hostname !== "domain-anda.com";
+  } catch {
+    return false;
+  }
+}
+
+export function buildManagementUrl(path = "") {
+  return new URL(path.replace(/^\//, ""), ensureTrailingSlash(siteConfig.managementBaseUrl)).href;
+}
+
+function ensureTrailingSlash(value) {
+  return value.endsWith("/") ? value : `${value}/`;
 }

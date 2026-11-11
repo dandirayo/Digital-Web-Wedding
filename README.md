@@ -1,36 +1,21 @@
 # Occasio Digital Wedding Platform
 
-## Alamat Development Lokal
+Occasio adalah layanan undangan digital per acara. Baca [Knowledge Core/core.md](Knowledge%20Core/core.md) pada awal setiap sesi, lalu dokumentasi terkait sebelum mengubah kode. Folder `Knowledge Core` dapat dibuka sebagai Obsidian vault.
 
-- Website static lama: `http://localhost:4174`
-- Aplikasi Next.js utama: `http://localhost:3001`
-- Gallery template Next.js: `http://localhost:3001/gallery`
-- Demo undangan: `http://localhost:3001/wedding/sheila-yoga`
+## Aplikasi lokal
 
-Port `3000` tidak digunakan. Seluruh flow owner, client, dan wedding production
-dikembangkan di aplikasi Next.js pada port `3001`.
+| Bagian | Alamat | Keterangan |
+| --- | --- | --- |
+| Website publik | http://127.0.0.1:4174 | HTML statis; server terpisah |
+| Login/admin | http://127.0.0.1:3001/login | Next.js + backend SQLite |
+| Undangan contoh | http://127.0.0.1:3001/wedding/sheila-yoga | Data yang sama dengan dashboard |
 
-Occasio adalah layanan pembuatan undangan pernikahan digital interaktif dan elegan. Platform ini menyediakan solusi lengkap bagi pasangan yang ingin membagikan momen spesial mereka dengan cara yang modern, praktis, dan ramah lingkungan.
+Jalankan aplikasi dari `wedding-platform` menggunakan `pnpm.cmd dev`.
+Panduan instalasi, akun demo, penyimpanan, dan persiapan VPS/mini server ada di [Knowledge Core/BACKEND.md](Knowledge%20Core/BACKEND.md).
+Alamat localhost hanya dapat dibuka pada komputer yang menjalankan server.
 
-## Fitur Utama
+## Status
 
-- **Galeri Tema Premium**: Pilihan desain undangan yang elegan, bervariasi, dan dapat disesuaikan dengan tema pernikahan Anda.
-- **Undangan Digital Interaktif**: Dilengkapi dengan peta lokasi, hitung mundur (countdown), galeri foto/video, dan kisah cinta (love story).
-- **RSVP & Buku Tamu Digital**: Memudahkan para tamu undangan untuk memberikan konfirmasi kehadiran serta menuliskan ucapan selamat secara langsung.
-- **QR Code Check-in**: Manajemen kehadiran tamu yang cepat, praktis, dan profesional pada saat hari-H acara.
-- **Dashboard Manajemen**: Panel kontrol khusus untuk memantau progres undangan, mengelola daftar tamu, dan melihat konfirmasi RSVP secara *real-time*.
-
-## Layanan Kami
-
-Platform Occasio dirancang untuk memberikan pengalaman terbaik bagi klien. Melalui sistem kami, Anda dapat:
-
-1. **Eksplorasi Tema**: Melihat berbagai katalog demo undangan digital yang interaktif.
-2. **Konsultasi Langsung**: Terhubung dengan tim kami untuk mendiskusikan penyesuaian desain dan kebutuhan acara Anda.
-3. **Pantau Kesiapan Acara**: Melalui akses khusus, klien dapat memantau kesiapan undangan digital mereka dengan mudah.
-
-## Informasi & Kontak
-
-Untuk pertanyaan lebih lanjut, melihat demo, atau mulai melakukan pemesanan undangan digital, silakan kunjungi website resmi kami atau hubungi tim layanan pelanggan kami.
-
----
-*Occasio - Mengabadikan momen spesial Anda dengan elegan.*
+Mode development lokal. Login owner/client dan penyimpanan inti memakai backend sendiri.
+Chat, review, task, billing, media upload, dan gerbang publish bisnis masih perlu diselesaikan sebelum melayani klien nyata.
+Rilis awal tetap Basic; Premium dan Signature belum dijual. Harga belum final.

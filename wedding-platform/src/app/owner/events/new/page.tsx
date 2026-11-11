@@ -9,8 +9,10 @@ import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { 
   getPackages, 
-  getStorageItem, 
+  getProfiles,
+  getCurrentSession,
   createEvent, 
+  uploadMedia,
   updateEventContent, 
   addMedia 
 } from "@/lib/store";
@@ -66,7 +68,7 @@ export default function CreateEventPage() {
       const pkgs = await getPackages();
       setPackages(pkgs.filter((pkg) => pkg.isActive));
 
-      const allProfiles = getStorageItem<UserProfile[]>("occasio_profiles", []);
+      const allProfiles = await getProfiles();
       setClients(allProfiles.filter((p) => p.role === "client"));
     }
     loadData();
@@ -93,7 +95,8 @@ export default function CreateEventPage() {
       const coupleName = `${brideName} & ${groomName}`;
       
       // Get current session or default to demo owner
-      const session = getStorageItem<{ userId: string }>("occasio_session", { userId: "owner_1" });
+      const session = await getCurrentSession();
+      if (!session) throw new Error("Silakan login kembali.");
 
       // Create Event
       const newEvent = await createEvent({
@@ -126,14 +129,23 @@ export default function CreateEventPage() {
       });
 
       // Add Media
+      const failed: string[] = [];
       for (const [index, m] of media.entries()) {
-        await addMedia(newEvent.id, {
-          type: m.type,
-          url: m.url, // In a real app, this would be an uploaded URL
-          altText: `${m.category} media ${index + 1}`,
-          category: m.category,
-          sortOrder: index,
-        });
+        try {
+          const uploaded = await uploadMedia(newEvent.id, m.file);
+          await addMedia(newEvent.id, {
+            type: uploaded.type,
+            url: uploaded.url,
+            altText: "",
+            category: m.category,
+            sortOrder: media.slice(0, index).filter((x) => x.category === m.category).length,
+          });
+        } catch (e) {
+          failed.push(`${m.file.name}: ${e instanceof Error ? e.message : "gagal"}`);
+        }
+      }
+      if (failed.length) {
+        alert(`Event dibuat, tetapi ${failed.length} file gagal diunggah. Tambahkan lagi dari detail event.\n\n${failed.join("\n")}`);
       }
 
       // Redirect
@@ -150,39 +162,17 @@ export default function CreateEventPage() {
       <DashboardShell role="owner" title="Buat event baru" description="Siapkan paket, data pasangan, acara, media, dan akses client dalam satu alur.">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-          Wizard ini masih memakai penyimpanan demo lokal. Integrasi penuh ke tabel Supabase masuk tahap G2 berikutnya.
+          Data event dan konten disimpan ke database lokal. File media diunggah ke server setelah event dibuat.
         </div>
 
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex-1 flex items-center">
-              <div
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${
-                  step >= i ? "bg-[#9a6a3a] text-white" : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {i}
-              </div>
-              {i < 5 && (
-                <div
-                  className={`flex-1 h-1 mx-2 ${
-                    step > i ? "bg-[#9a6a3a]" : "bg-gray-200"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-2 text-xs font-medium text-gray-500 px-1">
-          <span className="w-8 text-center">Template</span>
-          <span className="w-8 text-center ml-12">Couple</span>
-          <span className="w-8 text-center ml-12">Event</span>
-          <span className="w-8 text-center ml-12">Media</span>
-          <span className="w-8 text-center">Publish</span>
-        </div>
-      </div>
+      <ol className="mb-6 grid grid-cols-5 gap-1 sm:gap-3" aria-label="Tahapan membuat event">
+        {["Template", "Pasangan", "Acara", "Media", "Review"].map((label, index) => (
+          <li key={label} aria-current={step === index + 1 ? "step" : undefined} className="flex min-w-0 flex-col items-center gap-2 text-center">
+            <span className={`grid h-9 w-9 place-items-center rounded-full text-sm font-semibold ${step >= index + 1 ? "bg-[#9a6a3a] text-white" : "bg-[#e0d4c7] text-[#5d5146]"}`}>{index + 1}</span>
+            <span className="text-[10px] font-medium text-[#6b6056] sm:text-xs">{label}</span>
+          </li>
+        ))}
+      </ol>
 
       <div className="bg-[#f7f3ed] p-6 rounded-xl border border-[#e0d4c7] shadow-sm mb-6 min-h-[400px]">
         {/* Step 1: Template & Package */}

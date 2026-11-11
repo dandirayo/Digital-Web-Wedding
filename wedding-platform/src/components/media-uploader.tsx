@@ -78,7 +78,7 @@ export function MediaUploader({
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          Select a category first, then choose files to upload. Files are kept locally for this demo.
+          Pilih kategori dahulu, lalu pilih file. File diunggah ke server saat event dibuat (foto maks. 8 MB, video 60 MB).
         </p>
       </div>
 
