@@ -4,15 +4,21 @@ import { useEffect, useRef, useState } from "react";
 
 export function MusicPlayer({ musicUrl, autoPlay = true }: { musicUrl: string; autoPlay?: boolean }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [failed, setFailed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!musicUrl) return;
-    
+
     // Create audio instance if it doesn't exist
     if (!audioRef.current) {
       audioRef.current = new Audio(musicUrl);
       audioRef.current.loop = true;
+      // File musik tidak bisa dimuat (URL salah/diblokir): sembunyikan tombol agar tidak tampak rusak.
+      audioRef.current.addEventListener("error", () => {
+        setFailed(true);
+        setIsPlaying(false);
+      });
     }
 
     if (autoPlay) {
@@ -57,11 +63,11 @@ export function MusicPlayer({ musicUrl, autoPlay = true }: { musicUrl: string; a
     } else {
       audioRef.current.play().then(() => {
         setIsPlaying(true);
-      }).catch(console.error);
+      }).catch(() => setFailed(true));
     }
   };
 
-  if (!musicUrl) return null;
+  if (!musicUrl || failed) return null;
 
   return (
     <button

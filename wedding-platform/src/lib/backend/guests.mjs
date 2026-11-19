@@ -73,6 +73,8 @@ export function assertGuestQuota(db, eventId, adding) {
 }
 
 export function newGuest(eventId, g, text, now) {
+    if (!g || typeof g !== "object" || Array.isArray(g))
+        throw new ApiError("Data tamu tidak valid.");
     const name = text(g.name, 200), paxLimit = g.paxLimit ?? 1, paxConfirmed = g.paxConfirmed ?? 0;
     if (!name || !Number.isInteger(paxLimit) || paxLimit < 1 || paxLimit > 100 || !Number.isInteger(paxConfirmed) || paxConfirmed < 0 || paxConfirmed > paxLimit)
         throw new ApiError("Data tamu tidak valid.");

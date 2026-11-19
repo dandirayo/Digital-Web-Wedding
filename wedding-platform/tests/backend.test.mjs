@@ -379,3 +379,10 @@ test("repeated bad guest tokens are rate limited per event", async () => {
     assert.throws(() => g.guestByToken(db, "event-b", randomUUID(), null), /Terlalu banyak/);
     void b;
 });
+
+test("malformed guest input is rejected as invalid data, not a crash", async () => {
+    const g = await import("../src/lib/backend/guests.mjs");
+    const text = (v) => String(v ?? "").trim();
+    for (const bad of [null, undefined, "teks", 42, []])
+        assert.throws(() => g.newGuest("event-a", bad, text, new Date().toISOString()), /Data tamu tidak valid/);
+});

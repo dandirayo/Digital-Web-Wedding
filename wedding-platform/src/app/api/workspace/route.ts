@@ -16,7 +16,17 @@ export async function POST(request: NextRequest) {
         const raw = await request.text();
         if (Buffer.byteLength(raw) > 512000)
             throw new ApiError("Data terlalu besar.", 413);
-        const { action, args = [] } = JSON.parse(raw);
+        const parsed = (() => {
+            try {
+                return JSON.parse(raw);
+            }
+            catch {
+                return null;
+            }
+        })();
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+            throw new ApiError("Permintaan tidak valid.");
+        const { action, args = [] } = parsed;
         if (typeof action !== "string" || !Array.isArray(args))
             throw new ApiError("Permintaan tidak valid.");
         const db = database(), user = sessionUser(db, request.cookies.get(COOKIE)?.value);

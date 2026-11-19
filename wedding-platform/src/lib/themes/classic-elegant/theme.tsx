@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { FormEvent, useState, useMemo } from "react";
+import { FormEvent, useState, useMemo, useEffect } from "react";
 import { addWish, submitRsvp } from "@/lib/store";
 import type { ThemeProps } from "../types";
 import { Wish, Guest } from "@/lib/types";
@@ -30,7 +30,16 @@ export default function ClassicElegantTheme({
   guestToken,
 }: ThemeProps) {
   const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
-  
+
+  useEffect(() => {
+    if (!selectedImage) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedImage(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedImage]);
+
   // Local state for interactive UI
   const [wishes, setWishes] = useState<Wish[]>(initialWishes);
   
@@ -494,7 +503,7 @@ export default function ClassicElegantTheme({
       </section>
 
       {selectedImage ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#1d1712]/82 px-4 py-6 backdrop-blur-sm">
+        <div role="dialog" aria-modal="true" aria-label="Preview gambar" className="fixed inset-0 z-50 grid place-items-center bg-[#1d1712]/82 px-4 py-6 backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0"
