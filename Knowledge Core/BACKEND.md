@@ -84,4 +84,14 @@ Jalankan `pnpm.cmd build` lalu `pnpm.cmd start`. Cookie production membutuhkan H
 Backup database dengan SQLite online backup atau hentikan aplikasi secara terencana sebelum menyalin file; pada WAL mode jangan menyalin file utama saja saat aplikasi menulis. Simpan backup di lokasi berbeda dan uji restore.
 Upload media tersimpan di `data/uploads/<eventId>/` (atau folder `OCCASIO_UPLOAD_DIR`) dan harus dibackup bersama database; database hanya menyimpan alamat `/api/media/...`. Batas: foto 8 MB, video 60 MB, audio 15 MB, kuota 500 MB per event; jenis file ditentukan dari isi file (JPG, PNG, WebP, MP4, M4A, MP3). Menghapus media atau event ikut menghapus filenya.
 
+Langkah setup server, update, rollback, jadwal cadangan, dan checklist pilot ada di [DEPLOY.md](DEPLOY.md).
+
+Daftar environment ada di `wedding-platform/.env.example` (salin ke `.env.local` atau isi di server; file asli tidak di-commit).
+
+Pemantauan: `GET /api/health` mengembalikan 200 `{ ok: true }` bila database terbaca dan folder unggahan bisa ditulis, atau 503 bila tidak. Endpoint ini tidak membuka data apa pun dan cocok untuk pemantau uptime atau health check reverse proxy.
+
+Header keamanan (`X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) dipasang di `next.config.ts`. HSTS sengaja ditambahkan di reverse proxy setelah HTTPS dan domain terbukti benar, karena HSTS yang salah mengunci browser selama masa berlakunya. Content-Security-Policy belum dipasang karena tema undangan memuat foto/musik dari URL yang diisi owner; pasang dalam mode report-only dulu bila diperlukan.
+
+Halaman undangan, login, owner, client, chat, dan check-in memakai `noindex`. Slug yang tidak ada menjawab 404.
+
 Deployment dan pemakaian klien nyata menunggu penyelesaian approval/pembayaran/publish serta uji operasional.

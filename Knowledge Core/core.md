@@ -150,7 +150,7 @@ White-label/SaaS vendor ditunda sampai layanan per acara terbukti.
 3. Implementasikan versi konten, approval klien, dan gerbang publish server.
 4. (Selesai) Token tamu, RSVP idempotent, kuota, ekspor; expiry ditegakkan server.
 5. Uji dua klien, dua browser, kondisi gagal, backup/restore, lalu pilot demo.
-6. Pilih hosting, siapkan HTTPS dan rollback, minta izin sebelum deployment.
+6. Pilih hosting, siapkan HTTPS dan rollback, minta izin sebelum deployment. Panduan server, update, rollback, dan pemulihan sudah ditulis sebagai template di [DEPLOY.md](DEPLOY.md); belum diuji di server nyata.
 
 ## Definition of done sebelum data nyata
 
@@ -169,6 +169,7 @@ White-label/SaaS vendor ditunda sampai layanan per acara terbukti.
 - [[roadmap-production|Roadmap produk; bagian backend lama sudah digantikan]]
 - [[audit-aplikasi-g1|Audit UX historis]]
 - [Runbook backend aktif](BACKEND.md)
+- [Panduan server, update, rollback](DEPLOY.md)
 
 Catatan fondasi G2 lama telah dihapus karena setup providernya tidak digunakan. Riwayatnya tetap tersedia di Git.
 
