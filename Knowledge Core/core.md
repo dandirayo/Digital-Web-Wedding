@@ -170,6 +170,7 @@ White-label/SaaS vendor ditunda sampai layanan per acara terbukti.
 - [[audit-aplikasi-g1|Audit UX historis]]
 - [Runbook backend aktif](BACKEND.md)
 - [Panduan server, update, rollback](DEPLOY.md)
+- [Template prompt sesi kerja (debug, audit, QA)](PROMPT-TEMPLATE.md)
 
 Catatan fondasi G2 lama telah dihapus karena setup providernya tidak digunakan. Riwayatnya tetap tersedia di Git.
 
