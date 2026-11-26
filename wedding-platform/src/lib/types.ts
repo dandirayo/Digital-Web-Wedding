@@ -166,6 +166,8 @@ export type UserProfile = {
   email: string;
   role: AppRole;
   createdAt: string;
+  /** Akun klien yang dinonaktifkan owner tidak bisa login. */
+  disabled?: boolean;
 };
 
 // Session

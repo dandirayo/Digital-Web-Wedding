@@ -12,7 +12,9 @@ export const getEvents = (filter?: {
     clientId?: string;
     status?: EventStatus;
 }) => api<WeddingEvent[]>("events", [filter]);
-export const getEventBySlug = (slug: string) => api<WeddingEvent | null>("event", [slug]);
+/** Event yang sudah berakhir hanya mengembalikan sinyal minimal (tanpa data privat) agar tamu melihat "Undangan Berakhir". */
+export type ExpiredEvent = { id: string; slug: string; coupleName: string; expired: true };
+export const getEventBySlug = (slug: string) => api<WeddingEvent | ExpiredEvent | null>("event", [slug]);
 export const getEventById = (id: string) => api<WeddingEvent | null>("event", [id]);
 export const createEvent = (data: Omit<WeddingEvent, "id" | "createdAt" | "guestCount" | "rsvpYes" | "rsvpNo" | "wishCount" | "checkInCount" | "lastActivity">) => api<WeddingEvent>("createEvent", [data]);
 export const updateEvent = (id: string, data: Partial<WeddingEvent>) => api<WeddingEvent>("updateEvent", [id, data]);
@@ -65,6 +67,8 @@ export const updatePackage = (id: string, data: Partial<Package>) => api<Package
 export const updateTemplate = (id: string, data: Partial<Template>) => api<Template>("updateTemplate", [id, data]);
 export const updateProfile = (id: string, data: { fullName?: string; email?: string }) => api<UserProfile>("updateProfile", [id, data]);
 export const resetClientPassword = (id: string) => api<{ temporaryPassword: string }>("resetPassword", [id]);
+export const setClientDisabled = (id: string, disabled: boolean) => api<UserProfile>("setClientDisabled", [id, disabled]);
+export const deleteClient = (id: string) => api<{ id: string; email: string }>("deleteClient", [id]);
 export const changeOwnPassword = (current: string, next: string) => api<void>("changePassword", [current, next]);
 export const deleteWish = (id: string) => api<void>("deleteWish", [id]);
 export type SiteSettings = {

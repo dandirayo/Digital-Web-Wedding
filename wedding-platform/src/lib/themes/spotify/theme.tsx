@@ -8,10 +8,18 @@ import QRCode from 'qrcode';
 import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
 import { MediaImage } from '@/components/wedding/media-image';
 import { MusicPlayer } from '@/components/wedding/music-player';
+import { InlineNotice, PaxSelect, type Notice } from '@/components/wedding/rsvp-controls';
+import { useReveal } from '@/components/wedding/reveal';
 
-export default function SpotifyTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
+export default function SpotifyTheme({ event, content, wishes, media, guestName, guestData, guestToken }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [pax, setPax] = useState(1);
+  const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [wishNotice, setWishNotice] = useState<Notice>(null);
+  const revealRef = useReveal<HTMLDivElement>();
+  const maxPax = guestData?.paxLimit ?? 1;
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
   const [name, setName] = useState(guestName || '');
@@ -22,30 +30,38 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
   const galleryImages = galleryUrls(m).map((url) => ({ url }));
 
   const submitRsvp = async () => {
-    if (isSaved) return;
+    if (isSaved || sending) return;
     if (!guestToken) {
-      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      setNotice({ text: 'RSVP hanya bisa dikirim lewat link undangan pribadi Anda.', tone: 'error' });
       return;
     }
+    setSending(true);
+    setNotice(null);
     try {
-      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: 1 });
+      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: Math.min(pax, maxPax) });
       setQrCodeData(await QRCode.toDataURL(guestToken));
       setIsSaved(true);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
+      setNotice({ text: err instanceof Error ? err.message : 'RSVP gagal dikirim.', tone: 'error' });
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleAddWish = (e: React.FormEvent) => {
+  const handleAddWish = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && wishText) {
-      addWish(event.id, { guestName: name, message: wishText });
+    if (!name || !wishText) return;
+    try {
+      await addWish(event.id, { guestName: name, message: wishText });
       setWishText('');
+      setWishNotice({ text: 'Ucapan terkirim. Terima kasih!', tone: 'success' });
+    } catch (err) {
+      setWishNotice({ text: err instanceof Error ? err.message : 'Ucapan gagal dikirim.', tone: 'error' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white font-sans selection:bg-[#1db954] selection:text-white pb-24">
+    <div ref={revealRef} className="min-h-screen bg-[#121212] text-white font-sans selection:bg-[#1db954] selection:text-white pb-24">
       {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       {/* Header/Hero Area */}
       <div className="bg-gradient-to-b from-[#4a5568] to-[#121212] px-6 pt-12 pb-6 md:p-8 md:pt-20">
@@ -101,7 +117,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
       </div>
 
       {/* Tracklist (Details) */}
-      <div className="px-6 md:px-8 mt-6">
+      <div data-reveal="0" className="px-6 md:px-8 mt-6">
         <div className="grid grid-cols-[16px_minmax(0,1fr)_72px] md:grid-cols-[16px_minmax(0,2fr)_minmax(0,1fr)_100px] gap-2 sm:gap-4 text-gray-400 border-b border-gray-800 pb-2 mb-4 text-sm font-medium px-4">
           <div className="text-center">#</div>
           <div>TITLE</div>
@@ -150,7 +166,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
 
       {/* Gallery (Fans Also Like) */}
       {galleryImages.length > 0 ? (
-      <div className="px-6 md:px-8 mt-12">
+      <div data-reveal="0" className="px-6 md:px-8 mt-12">
         <h2 className="text-2xl font-bold mb-6 hover:underline cursor-pointer">Fans Also Like</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {galleryImages.slice(0, 5).map((img, idx) => (
@@ -170,7 +186,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
       ) : null}
 
       {/* RSVP Section */}
-      <div className="px-6 md:px-8 mt-12 grid md:grid-cols-2 gap-8">
+      <div data-reveal="0" className="px-6 md:px-8 mt-12 grid md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-2xl font-bold mb-6">Save to Library</h2>
           <div className="bg-[#181818] p-6 rounded-xl border border-white/5">
@@ -194,13 +210,15 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
                     required
                   />
                 </div>
+                <PaxSelect max={maxPax} value={pax} onChange={setPax} className="w-full bg-[#2a2a2a] border border-transparent rounded-[4px] p-3 text-white focus:border-white focus:bg-[#333] transition outline-none" />
                 <button 
                   type="submit" 
-                  disabled={!name}
+                  disabled={!name || sending}
                   className="w-full bg-[#1db954] text-black font-bold py-3 rounded-full hover:scale-105 hover:bg-[#1ed760] transition disabled:opacity-50 disabled:hover:scale-100 mt-4"
                 >
                   Follow Event
                 </button>
+                <InlineNotice notice={notice} />
               </form>
             ) : (
               <div className="text-center flex flex-col items-center justify-center py-6">
@@ -260,6 +278,7 @@ export default function SpotifyTheme({ event, content, wishes, media, guestName,
                   Post
                 </button>
               </div>
+              <InlineNotice notice={wishNotice} />
             </form>
           </div>
         </div>

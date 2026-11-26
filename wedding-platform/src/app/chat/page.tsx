@@ -75,7 +75,7 @@ export default function ChatPage() {
   }, [selected, refreshMessages]);
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
+    bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [messages.length]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -127,7 +127,7 @@ export default function ChatPage() {
             {messages.map((message) => {
               const mine = message.senderRole === role;
               return (
-                <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div key={message.id} className={`anim-pop flex ${mine ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] rounded-md px-4 py-3 text-sm leading-6 ${mine ? "bg-[#241f1a] text-white" : "border border-[#e0d4c7] bg-white text-[#5d5146]"}`}>
                     <div className={`mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${mine ? "text-[#d6c7a1]" : "text-[#9a6a3a]"}`}>{message.senderName}</div>
                     <div className="whitespace-pre-wrap break-words">{message.text}</div>

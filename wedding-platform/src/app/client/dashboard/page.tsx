@@ -15,6 +15,8 @@ import { getPackageLabel } from "@/lib/demo-data";
 import { ApprovalPanel } from "@/components/approval-panel";
 import { BillingPanel } from "@/components/billing-panel";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { PageSkeleton } from "@/components/skeleton";
+import { useToast } from "@/components/toast";
 
 const MESSAGE_TEMPLATE = `Kepada Yth. \${guest.name},
 
@@ -54,6 +56,8 @@ export default function ClientDashboardPage() {
   });
   
   const [contentSaved, setContentSaved] = useState(false);
+  const [savingContent, setSavingContent] = useState(false);
+  const notify = useToast();
   const [sharedGuestIds, setSharedGuestIds] = useState<string[]>([]);
   const [previewGuestId, setPreviewGuestId] = useState<string>("");
 
@@ -103,9 +107,7 @@ export default function ClientDashboardPage() {
           title="Loading..."
           description="Ruang kerja klien Occasio untuk mengelola undangan, daftar tamu, RSVP, QR, dan ucapan."
         >
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-[#9a6a3a]">Memuat data...</div>
-          </div>
+          <PageSkeleton label="Memuat data klien" />
         </DashboardShell>
       </AuthGate>
     );
@@ -160,7 +162,7 @@ export default function ClientDashboardPage() {
       const newGuest = await addClientGuest(event.id, guestData);
       setGuests((current) => [newGuest, ...current]);
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "Tamu gagal ditambahkan.");
+      notify(e instanceof Error ? e.message : "Tamu gagal ditambahkan.", "error");
     }
   }
 
@@ -170,7 +172,7 @@ export default function ClientDashboardPage() {
       const newGuests = await importClientGuests(event.id, importedGuests);
       setGuests((current) => [...newGuests, ...current]);
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "Impor tamu gagal.");
+      notify(e instanceof Error ? e.message : "Impor tamu gagal.", "error");
     }
   }
 
@@ -178,15 +180,22 @@ export default function ClientDashboardPage() {
     e.preventDefault();
     if (!event) return;
 
-    await updateClientContent(event.id, content.greeting);
-    
-    setContentSaved(true);
-    setTimeout(() => setContentSaved(false), 3000);
+    if (savingContent) return;
+    setSavingContent(true);
+    try {
+      await updateClientContent(event.id, content.greeting);
+      setContentSaved(true);
+      setTimeout(() => setContentSaved(false), 3000);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Konten gagal disimpan.", "error");
+    } finally {
+      setSavingContent(false);
+    }
   }
 
   const getGuestLink = (guest: Guest) => {
     if (!event) return "";
-    return `${window.location.origin}/wedding/${event.slug}?to=${encodeURIComponent(guest.name)}`;
+    return `${window.location.origin}/wedding/${event.slug}?g=${guest.qrCode}`;
   };
 
   const getWhatsappLink = (guest: Guest) => {
@@ -211,10 +220,9 @@ export default function ClientDashboardPage() {
   const copyLink = async (guest: Guest) => {
     try {
       await navigator.clipboard.writeText(getGuestLink(guest));
-      // Optional: add a toast library here for success notification
-      alert(`Link untuk ${guest.name} tersalin!`);
-    } catch (err) {
-      console.error("Failed to copy link:", err);
+      notify(`Link untuk ${guest.name} tersalin.`, "success");
+    } catch {
+      notify("Link tidak bisa disalin otomatis. Salin manual dari tombol WhatsApp atau izinkan akses clipboard.", "error");
     }
   };
 
@@ -413,8 +421,8 @@ export default function ClientDashboardPage() {
                 onChange={(e) => setContent((current) => ({ ...current, greeting: e.target.value }))}
               />
             </label>
-            <button className="h-11 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white md:col-span-2">
-              Simpan Konten
+            <button disabled={savingContent} className="h-11 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white disabled:opacity-60 md:col-span-2">
+              {savingContent ? "Menyimpan..." : "Simpan Konten"}
             </button>
           </form>
         </section>

@@ -4,13 +4,18 @@ import { useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { GroupForm, ListEditor } from "@/components/event-editors";
+import { PageSkeleton, Spinner } from "@/components/skeleton";
+import { useConfirm } from "@/components/confirm-dialog";
+import { useToast } from "@/components/toast";
 import {
   changeOwnPassword,
+  deleteClient,
   getPackages,
   getProfiles,
   getSiteSettings,
   getTemplates,
   resetClientPassword,
+  setClientDisabled,
   updatePackage,
   updateProfile,
   updateSiteSettings,
@@ -53,8 +58,9 @@ export default function OwnerManagePage() {
           ))}
         </div>
         {error ? <p role="alert" className="mb-4 text-sm font-medium text-rose-700">{error}</p> : null}
-        {loading ? <p className="text-sm text-[#6b6056]">Memuat...</p> : null}
+        {loading ? <PageSkeleton label="Memuat katalog dan akun" /> : null}
 
+        <div key={tab} className="anim-fade-up">
         {tab === "paket" && (
           <div className="space-y-4">
             <p className="text-sm text-[#6b6056]">Harga dan kuota masih baseline internal. Paket nonaktif tidak bisa dipilih untuk event baru.</p>
@@ -174,39 +180,79 @@ export default function OwnerManagePage() {
           <div className="space-y-4">
             <OwnPassword />
             {profiles.map((profile) => (
-              <ProfileEditor key={profile.id} profile={profile} onSaved={(saved) => setProfiles((list) => list.map((p) => (p.id === saved.id ? saved : p)))} />
+              <ProfileEditor
+                key={profile.id}
+                profile={profile}
+                onSaved={(saved) => setProfiles((list) => list.map((p) => (p.id === saved.id ? { ...p, ...saved } : p)))}
+                onDeleted={(id) => setProfiles((list) => list.filter((p) => p.id !== id))}
+              />
             ))}
           </div>
         )}
+        </div>
       </DashboardShell>
     </AuthGate>
   );
 }
 
-function ProfileEditor({ profile, onSaved }: { profile: UserProfile; onSaved: (profile: UserProfile) => void }) {
+function ProfileEditor({ profile, onSaved, onDeleted }: { profile: UserProfile; onSaved: (profile: UserProfile) => void; onDeleted: (id: string) => void }) {
   const [temporary, setTemporary] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState<"" | "reset" | "disable" | "delete">("");
+  const confirm = useConfirm();
+  const notify = useToast();
+  const isClient = profile.role === "client";
 
-  async function reset() {
-    if (!window.confirm(`Reset password ${profile.email}? Semua sesi login akun ini akan berakhir.`)) return;
+  async function run(kind: "reset" | "disable" | "delete", task: () => Promise<void>) {
+    if (busy) return;
+    setBusy(kind);
     setError("");
     try {
-      setTemporary((await resetClientPassword(profile.id)).temporaryPassword);
+      await task();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Reset gagal.");
+      setError(e instanceof Error ? e.message : "Tindakan gagal.");
+    } finally {
+      setBusy("");
     }
   }
 
+  async function reset() {
+    if (!(await confirm({ title: "Reset password?", description: `Password baru dibuat untuk ${profile.email}. Semua sesi login akun ini akan berakhir.`, confirmLabel: "Reset password" }))) return;
+    await run("reset", async () => setTemporary((await resetClientPassword(profile.id)).temporaryPassword));
+  }
+
+  async function toggleDisabled() {
+    const next = !profile.disabled;
+    if (next && !(await confirm({ title: "Nonaktifkan akun?", description: `${profile.email} tidak bisa login dan sesinya berakhir. Data event tidak dihapus; akun bisa diaktifkan lagi.`, confirmLabel: "Nonaktifkan", tone: "danger" }))) return;
+    await run("disable", async () => {
+      onSaved(await setClientDisabled(profile.id, next));
+      notify(next ? "Akun dinonaktifkan." : "Akun diaktifkan kembali.", "success");
+    });
+  }
+
+  async function remove() {
+    if (!(await confirm({ title: "Hapus akun klien?", description: `Akun ${profile.email} dihapus permanen dan tidak bisa dibatalkan. Akun yang masih punya event tidak bisa dihapus.`, confirmLabel: "Hapus akun", tone: "danger" }))) return;
+    await run("delete", async () => {
+      await deleteClient(profile.id);
+      onDeleted(profile.id);
+      notify("Akun klien dihapus.", "success");
+    });
+  }
+
+  const button = "inline-flex h-11 items-center gap-2 rounded-md border px-4 text-sm font-semibold disabled:opacity-50";
+
   return (
-    <div>
+    <div className="anim-fade-up">
       <GroupForm
-        title={`${profile.role === "owner" ? "Owner" : "Klien"} — ${profile.fullName}`}
+        title={`${profile.role === "owner" ? "Owner" : "Klien"} — ${profile.fullName}${profile.disabled ? " (nonaktif)" : ""}`}
         fields={[{ key: "fullName", label: "Nama lengkap", maxLength: 120 }, { key: "email", label: "Email" }]}
         values={{ fullName: profile.fullName, email: profile.email }}
         onSave={async (patch) => onSaved(await updateProfile(profile.id, patch))}
       />
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={reset} className="h-11 rounded-md border border-[#cdbba8] px-4 text-sm font-semibold text-[#5a4028]">Reset password</button>
+        <button type="button" onClick={reset} disabled={Boolean(busy)} className={`${button} border-[#cdbba8] text-[#5a4028]`}>{busy === "reset" ? <Spinner /> : null}Reset password</button>
+        {isClient ? <button type="button" onClick={toggleDisabled} disabled={Boolean(busy)} className={`${button} border-[#cdbba8] text-[#5a4028]`}>{busy === "disable" ? <Spinner /> : null}{profile.disabled ? "Aktifkan akun" : "Nonaktifkan akun"}</button> : null}
+        {isClient ? <button type="button" onClick={remove} disabled={Boolean(busy)} className={`${button} border-rose-200 text-rose-700`}>{busy === "delete" ? <Spinner /> : null}Hapus akun</button> : null}
         {temporary ? <span className="text-sm">Password sementara (catat sekarang, tidak ditampilkan lagi): <code className="select-all rounded bg-[#f7f3ed] px-2 py-1 font-mono font-semibold">{temporary}</code></span> : null}
         {error ? <span role="alert" className="text-sm font-medium text-rose-700">{error}</span> : null}
       </div>

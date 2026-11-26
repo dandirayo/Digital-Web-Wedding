@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTemplates } from "@/lib/store";
 import { Template } from "@/lib/types";
+import { Skeleton } from "@/components/skeleton";
 import Image from "next/image";
 
 export function TemplateSelector({
@@ -31,7 +32,12 @@ export function TemplateSelector({
   );
 
   if (isLoading) {
-    return <div className="animate-pulse flex space-x-4">Loading templates...</div>;
+    return (
+      <div role="status" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <span className="sr-only">Memuat template...</span>
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-40" />)}
+      </div>
+    );
   }
 
   return (

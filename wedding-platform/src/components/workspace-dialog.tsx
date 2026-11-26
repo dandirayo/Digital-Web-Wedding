@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 type WorkspaceDialogProps = {
   open: boolean;
@@ -11,15 +11,43 @@ type WorkspaceDialogProps = {
   children: ReactNode;
 };
 
+const CLOSE_MS = 170;
+
 export function WorkspaceDialog({ open, onClose, title, description, closeDisabled = false, children }: WorkspaceDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  // Isi tetap tampil selama animasi tutup berjalan.
+  const [closing, setClosing] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  // Pola React untuk menurunkan state dari prop: saat open berubah true -> false, isi ditahan dulu.
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    setClosing(!open);
+  }
 
   useEffect(() => {
     const element = dialog.current;
-    if (open && !element?.open) element?.showModal();
-    if (!open && element?.open) element.close();
+    if (!element) return;
+    if (open) {
+      element.removeAttribute("data-closing");
+      if (!element.open) element.showModal();
+      return;
+    }
+    if (!element.open) return;
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      element.close();
+      const done = setTimeout(() => setClosing(false), 0);
+      return () => clearTimeout(done);
+    }
+    element.setAttribute("data-closing", "");
+    const timer = setTimeout(() => {
+      element.removeAttribute("data-closing");
+      if (element.open) element.close();
+      setClosing(false);
+    }, CLOSE_MS);
+    return () => clearTimeout(timer);
   }, [open]);
 
   return (
@@ -28,9 +56,14 @@ export function WorkspaceDialog({ open, onClose, title, description, closeDisabl
       className="workspace workspace-dialog shadow-xl"
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
-      onClose={onClose}
+      onClose={() => {
+        // Penutupan oleh browser (bukan lewat prop open) dilaporkan sekali ke induk.
+        if (open) onClose();
+      }}
       onCancel={(event) => {
-        if (closeDisabled) event.preventDefault();
+        // Escape: tutup lewat state agar animasi keluar berjalan.
+        event.preventDefault();
+        if (!closeDisabled) onClose();
       }}
       onClick={(event) => {
         if (closeDisabled || event.target !== event.currentTarget) return;
@@ -45,7 +78,7 @@ export function WorkspaceDialog({ open, onClose, title, description, closeDisabl
         </div>
         <button type="button" onClick={onClose} disabled={closeDisabled} className="grid h-11 w-11 shrink-0 place-items-center rounded-md border border-[#e0d4c7] text-xl" aria-label="Tutup dialog">×</button>
       </div>
-      {open ? <div className="mt-5 min-w-0">{children}</div> : null}
+      {open || closing ? <div className="mt-5 min-w-0">{children}</div> : null}
     </dialog>
   );
 }

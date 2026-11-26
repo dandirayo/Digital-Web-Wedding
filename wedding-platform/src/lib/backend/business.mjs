@@ -53,7 +53,8 @@ export function ensureOrder(db, event, user) {
     audit(db, user, "order_created", event.id, `${pkg?.name ?? "Paket"} ${formatRupiah(total)}`);
 }
 function newInvoice(db, eventId, type, amount, note) {
-    const seq = rows(db, "invoices").length + 1;
+    // Nomor berikutnya dari nomor terbesar yang ada, bukan jumlah baris: menghapus event tidak boleh membuat nomor bentrok.
+    const seq = rows(db, "invoices").reduce((max, i) => Math.max(max, Number(String(i.number).split("-").pop()) || 0), 0) + 1;
     return put(db, "invoices", {
         id: randomUUID(), number: `INV-${new Date().getFullYear()}-${String(seq).padStart(4, "0")}`, eventId, type,
         label: INVOICE_TYPES[type], amount, note, status: "unpaid", proofNote: "", method: "", reference: "", paidAt: null,

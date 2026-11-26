@@ -88,6 +88,12 @@ Langkah setup server, update, rollback, jadwal cadangan, dan checklist pilot ada
 
 Daftar environment ada di `wedding-platform/.env.example` (salin ke `.env.local` atau isi di server; file asli tidak di-commit).
 
+Akun klien: owner dapat menonaktifkan/mengaktifkan (`setClientDisabled`) dan menghapus (`deleteClient`) akun klien dari Kelola > Akun. Nonaktif mengakhiri semua sesi dan menolak login ("Akun ini dinonaktifkan"); hapus ditolak (409) selama klien masih punya event. Kolom `users.disabled` (default 0) ditambahkan otomatis saat database dibuka (`ALTER TABLE`, data lama tidak berubah). Aksi tercatat di audit (`client_disabled`, `client_enabled`, `client_deleted`).
+
+Undangan kedaluwarsa: untuk anonim, aksi `event` pada event terbit yang lewat masa aktif mengembalikan hanya `{ id, slug, coupleName, expired: true }` (tanpa data privat) agar tamu melihat "Undangan Berakhir"; konten, daftar tamu, dan token tetap tertutup (403).
+
+Konvensi UI: umpan balik memakai `useToast()` (`components/toast.tsx`) dan konfirmasi memakai `useConfirm()` (`components/confirm-dialog.tsx`), bukan `alert`/`confirm` bawaan browser. Animasi hanya CSS (`app/globals.css`: `.anim-*`, `.skeleton`, `.reveal-ready`) dan otomatis mati bila pengguna memilih "kurangi gerakan".
+
 Pemantauan: `GET /api/health` mengembalikan 200 `{ ok: true }` bila database terbaca dan folder unggahan bisa ditulis, atau 503 bila tidak. Endpoint ini tidak membuka data apa pun dan cocok untuk pemantau uptime atau health check reverse proxy.
 
 Header keamanan (`X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) dipasang di `next.config.ts`. HSTS sengaja ditambahkan di reverse proxy setelah HTTPS dan domain terbukti benar, karena HSTS yang salah mengunci browser selama masa berlakunya. Content-Security-Policy belum dipasang karena tema undangan memuat foto/musik dari URL yang diisi owner; pasang dalam mode report-only dulu bila diperlukan.

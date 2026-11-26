@@ -8,10 +8,18 @@ import QRCode from 'qrcode';
 import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
 import { MediaImage } from '@/components/wedding/media-image';
 import { MusicPlayer } from '@/components/wedding/music-player';
+import { InlineNotice, PaxSelect, type Notice } from '@/components/wedding/rsvp-controls';
+import { useReveal } from '@/components/wedding/reveal';
 
-export default function NetflixTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
+export default function NetflixTheme({ event, content, wishes, media, guestName, guestData, guestToken }: ThemeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [, setRsvpStatus] = useState<'pending' | 'attending' | 'declined'>('pending');
+  const [pax, setPax] = useState(1);
+  const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [wishNotice, setWishNotice] = useState<Notice>(null);
+  const revealRef = useReveal<HTMLDivElement>();
+  const maxPax = guestData?.paxLimit ?? 1;
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
   const [name, setName] = useState(guestName || '');
@@ -22,29 +30,39 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
   const galleryImages = galleryUrls(m).map((url) => ({ url }));
 
   const handleRSVP = async (status: 'attending' | 'declined') => {
+    if (sending) return;
     if (!guestToken) {
-      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      setNotice({ text: 'RSVP hanya bisa dikirim lewat link undangan pribadi Anda.', tone: 'error' });
       return;
     }
+    setSending(true);
+    setNotice(null);
     try {
-      await sendRsvp(event.id, guestToken, { rsvpStatus: status, paxConfirmed: 1 });
+      await sendRsvp(event.id, guestToken, { rsvpStatus: status, paxConfirmed: status === 'attending' ? Math.min(pax, maxPax) : 1 });
       setRsvpStatus(status);
       setQrCodeData(status === 'attending' ? await QRCode.toDataURL(guestToken) : null);
+      setNotice({ text: status === 'attending' ? 'Kehadiran Anda tercatat. Terima kasih!' : 'Konfirmasi tercatat. Terima kasih sudah memberi kabar.', tone: 'success' });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
+      setNotice({ text: err instanceof Error ? err.message : 'RSVP gagal dikirim.', tone: 'error' });
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleAddWish = (e: React.FormEvent) => {
+  const handleAddWish = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && wishText) {
-      addWish(event.id, { guestName: name, message: wishText });
+    if (!name || !wishText) return;
+    try {
+      await addWish(event.id, { guestName: name, message: wishText });
       setWishText('');
+      setWishNotice({ text: 'Ucapan terkirim. Terima kasih!', tone: 'success' });
+    } catch (err) {
+      setWishNotice({ text: err instanceof Error ? err.message : 'Ucapan gagal dikirim.', tone: 'error' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#141414] text-white font-sans selection:bg-[#e50914] selection:text-white">
+    <div ref={revealRef} className="min-h-screen bg-[#141414] text-white font-sans selection:bg-[#e50914] selection:text-white">
       {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       {/* Hero Section */}
       <div className="relative min-h-[44rem] sm:min-h-[40rem] h-[85svh] w-full">
@@ -94,14 +112,14 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
       </div>
 
       {/* Cast & Info */}
-      <div className="px-[4%] md:px-[8%] py-8 text-gray-400">
+      <div data-reveal="0" className="px-[4%] md:px-[8%] py-8 text-gray-400">
         <p className="mb-2"><span className="text-gray-500">Starring:</span> <span className="text-white">{content.brideName}, {content.groomName}</span></p>
         <p className="mb-2"><span className="text-gray-500">Creators:</span> <span className="text-white">Families of the Bride & Groom</span></p>
         <p><span className="text-gray-500">Genres:</span> <span className="text-white">Romance, Wedding, Drama, Documentary</span></p>
       </div>
 
       {/* Episodes (Details) */}
-      <div className="px-[4%] md:px-[8%] py-12 border-t border-gray-800">
+      <div data-reveal="0" className="px-[4%] md:px-[8%] py-12 border-t border-gray-800">
         <h2 className="text-2xl font-bold text-white mb-6">Episodes</h2>
         
         <div className="space-y-6">
@@ -139,7 +157,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
 
       {/* Gallery */}
       {galleryImages.length > 0 ? (
-      <div className="px-[4%] md:px-[8%] py-12">
+      <div data-reveal="0" className="px-[4%] md:px-[8%] py-12">
         <h2 className="text-2xl font-bold text-white mb-6">More Like This</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {galleryImages.map((img, idx) => (
@@ -155,7 +173,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
       ) : null}
 
       {/* RSVP & Wishes Section */}
-      <div className="px-[4%] md:px-[8%] py-12 bg-gradient-to-b from-[#141414] to-black">
+      <div data-reveal="0" className="px-[4%] md:px-[8%] py-12 bg-gradient-to-b from-[#141414] to-black">
         <div className="max-w-3xl mx-auto space-y-12">
           {/* RSVP Form */}
           <div className="bg-[#181818] rounded-xl p-4 sm:p-8 border border-gray-800">
@@ -175,17 +193,19 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-[#333] border-none rounded p-4 text-white focus:ring-2 focus:ring-[#e50914] outline-none"
                 />
+                <PaxSelect max={maxPax} value={pax} onChange={setPax} className="w-full bg-[#333] border-none rounded p-4 text-white focus:ring-2 focus:ring-[#e50914] outline-none" />
+                <InlineNotice notice={notice} />
                 <div className="flex gap-4">
                   <button 
                     onClick={() => handleRSVP('attending')}
-                    disabled={!name}
+                    disabled={!name || sending}
                     className="flex-1 bg-white text-black py-4 rounded font-bold hover:bg-gray-200 transition disabled:opacity-50 flex justify-center items-center"
                   >
                     <Plus className="w-5 h-5 mr-2" /> Add to List
                   </button>
                   <button 
                     onClick={() => handleRSVP('declined')}
-                    disabled={!name}
+                    disabled={!name || sending}
                     className="flex-1 bg-[#333] text-white py-4 rounded font-bold hover:bg-[#444] transition disabled:opacity-50"
                   >
                     Remove
@@ -222,6 +242,7 @@ export default function NetflixTheme({ event, content, wishes, media, guestName,
               >
                 Post Review
               </button>
+              <InlineNotice notice={wishNotice} />
             </form>
 
             <div className="space-y-6">

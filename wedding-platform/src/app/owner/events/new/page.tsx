@@ -6,6 +6,7 @@ import { TemplateSelector } from "@/components/template-selector";
 import { MediaUploader } from "@/components/media-uploader";
 import { CreateClientForm } from "@/components/create-client-form";
 import { AuthGate } from "@/components/auth-gate";
+import { useToast } from "@/components/toast";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { 
   getPackages, 
@@ -62,16 +63,23 @@ export default function CreateEventPage() {
   const [clientId, setClientId] = useState("");
   const [clients, setClients] = useState<UserProfile[]>([]);
   const [showCreateClient, setShowCreateClient] = useState(false);
+  const notify = useToast();
 
   useEffect(() => {
     async function loadData() {
-      const pkgs = await getPackages();
-      setPackages(pkgs.filter((pkg) => pkg.isActive));
+      try {
+        const pkgs = await getPackages();
+        setPackages(pkgs.filter((pkg) => pkg.isActive));
 
-      const allProfiles = await getProfiles();
-      setClients(allProfiles.filter((p) => p.role === "client"));
+        const allProfiles = await getProfiles();
+        setClients(allProfiles.filter((p) => p.role === "client" && !p.disabled));
+      } catch (e) {
+        notify(e instanceof Error ? e.message : "Daftar paket dan klien tidak dapat dimuat. Muat ulang halaman.", "error");
+      }
     }
-    loadData();
+    void loadData();
+  // notify stabil selama provider terpasang; efek ini hanya perlu jalan sekali.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generatedSlug = createEventSlug(brideName, groomName);
@@ -83,14 +91,15 @@ export default function CreateEventPage() {
     const eventSlug = slug || generatedSlug;
 
     if (!templateId || !packageId || !clientId || !eventSlug) {
-      alert("Please ensure template, package, client, and slug are selected.");
+      notify("Lengkapi template, paket, klien, dan slug undangan lebih dulu.", "error");
       return;
     }
 
     setIsSubmitting(true);
+    let createdId = "";
     try {
       const selectedPackage = packages.find((p) => p.id === packageId);
-      if (!selectedPackage) throw new Error("Package not found");
+      if (!selectedPackage) throw new Error("Paket tidak ditemukan. Pilih ulang paket.");
 
       const coupleName = `${brideName} & ${groomName}`;
       
@@ -114,6 +123,7 @@ export default function CreateEventPage() {
         publishedAt: null,
         expiresAt: null,
       });
+      createdId = newEvent.id;
 
       // Update Event Content
       await updateEventContent(newEvent.id, {
@@ -145,14 +155,22 @@ export default function CreateEventPage() {
         }
       }
       if (failed.length) {
-        alert(`Event dibuat, tetapi ${failed.length} file gagal diunggah. Tambahkan lagi dari detail event.\n\n${failed.join("\n")}`);
+        notify(`Event dibuat, tetapi ${failed.length} file gagal diunggah (${failed.join("; ")}). Tambahkan lagi dari detail event.`, "error");
+      } else {
+        notify("Event berhasil dibuat.", "success");
       }
 
       // Redirect
       router.push(`/owner/dashboard`);
     } catch (error) {
-      console.error("Error creating event:", error);
-      alert("Failed to create event. See console for details.");
+      const reason = error instanceof Error ? error.message : "Terjadi kesalahan.";
+      if (createdId) {
+        // Event sudah tersimpan sebagai draft; arahkan ke halaman edit agar tidak membuat duplikat dan kena "slug sudah dipakai".
+        notify(`Event dibuat, tetapi isinya belum lengkap: ${reason} Lanjutkan dari halaman detail event.`, "error");
+        router.push(`/owner/events/${createdId}`);
+        return;
+      }
+      notify(`Event gagal dibuat: ${reason}`, "error");
       setIsSubmitting(false);
     }
   };

@@ -29,6 +29,9 @@ import { MediaManager } from "@/components/media-manager";
 import { BillingPanel } from "@/components/billing-panel";
 import { ApprovalPanel } from "@/components/approval-panel";
 import { AuditLog } from "@/components/audit-log";
+import { PageSkeleton, Spinner } from "@/components/skeleton";
+import { useConfirm } from "@/components/confirm-dialog";
+import { useToast } from "@/components/toast";
 import { GroupForm, ListEditor, isoToDateTimeInput, isoToDateInput, dateTimeInputToIso, dateInputToIso } from "@/components/event-editors";
 
 function GuestEditRow({ guest, onCancel, onSaved }: { guest: Guest; onCancel: () => void; onSaved: (guest: Guest) => void }) {
@@ -82,6 +85,8 @@ function GuestEditRow({ guest, onCancel, onSaved }: { guest: Guest; onCancel: ()
 export default function OwnerEventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const notify = useToast();
+  const confirm = useConfirm();
 
   const [event, setEvent] = useState<WeddingEvent | null>(null);
   const [content, setContent] = useState<EventContent | null>(null);
@@ -92,7 +97,9 @@ export default function OwnerEventDetailPage() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [clients, setClients] = useState<UserProfile[]>([]);
   const [editingGuest, setEditingGuest] = useState<string | null>(null);
-  const [actionError, setActionError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [addingGuest, setAddingGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'detail' | 'tamu' | 'ucapan' | 'persetujuan' | 'tagihan' | 'riwayat' | 'pengaturan'>('detail');
 
@@ -105,27 +112,45 @@ export default function OwnerEventDetailPage() {
   useEffect(() => {
     async function loadData() {
       if (!id) return;
-      await initStore();
-      const loadedEvent = await getEventById(id);
-      if (loadedEvent) {
-        setEvent(loadedEvent);
-        setContent(await getEventContent(id));
-        setGuests(await getGuests(id));
-        setWishes(await getWishes(id));
-        setMedia(await getMedia(id));
-        setTemplates(await getTemplates());
-        setPackages(await getPackages());
-        setClients((await getProfiles()).filter((p) => p.role === "client"));
+      setIsLoading(true);
+      setLoadError("");
+      try {
+        await initStore();
+        const loadedEvent = await getEventById(id);
+        if (loadedEvent) {
+          setEvent(loadedEvent);
+          setContent(await getEventContent(id));
+          setGuests(await getGuests(id));
+          setWishes(await getWishes(id));
+          setMedia(await getMedia(id));
+          setTemplates(await getTemplates());
+          setPackages(await getPackages());
+          setClients((await getProfiles()).filter((p) => p.role === "client"));
+        }
+      } catch (e) {
+        setLoadError(e instanceof Error ? e.message : "Data event tidak dapat dimuat.");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
-    loadData();
-  }, [id]);
+    void loadData();
+  }, [id, reloadKey]);
 
   if (isLoading) {
     return (
       <DashboardShell role="owner" title="Memuat..." description="Mohon tunggu.">
-        <div className="p-10 text-center text-sm text-[#6b6056]">Memuat data event...</div>
+        <PageSkeleton label="Memuat data event" />
+      </DashboardShell>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardShell role="owner" title="Data event gagal dimuat" description="Periksa koneksi lalu coba lagi.">
+        <div role="alert" className="anim-fade-up rounded-md border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+          <p className="font-semibold">{loadError}</p>
+          <button type="button" onClick={() => setReloadKey((n) => n + 1)} className="mt-4 h-11 rounded-md bg-[#241f1a] px-5 text-sm font-semibold text-white">Coba lagi</button>
+        </div>
       </DashboardShell>
     );
   }
@@ -140,62 +165,81 @@ export default function OwnerEventDetailPage() {
     );
   }
 
-  const handleCopyLink = (path?: string) => {
+  const handleCopyLink = async (path?: string) => {
     const url = `${window.location.origin}/wedding/${event.slug}${path || ""}`;
-    navigator.clipboard.writeText(url);
-    alert("Link berhasil disalin!");
+    try {
+      await navigator.clipboard.writeText(url);
+      notify("Link berhasil disalin.", "success");
+    } catch {
+      notify("Link tidak bisa disalin otomatis. Izinkan akses clipboard di browser.", "error");
+    }
   };
 
   const handleAddGuest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGuestName.trim()) return;
-    let newGuest: Guest;
+    if (!newGuestName.trim() || addingGuest) return;
+    setAddingGuest(true);
     try {
-      newGuest = await addGuest(event.id, {
+      const newGuest = await addGuest(event.id, {
         name: newGuestName,
         phone: newGuestPhone,
         paxLimit: 1,
         rsvpStatus: "pending",
         paxConfirmed: 0,
       });
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Tamu gagal ditambahkan.");
-      return;
+      setGuests((current) => [...current, newGuest]);
+      setEvent((current) => (current ? { ...current, guestCount: current.guestCount + 1 } : current));
+      setNewGuestName("");
+      setNewGuestPhone("");
+      notify("Tamu berhasil ditambahkan.", "success");
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Tamu gagal ditambahkan.", "error");
+    } finally {
+      setAddingGuest(false);
     }
-    setGuests([...guests, newGuest]);
-    setEvent({ ...event, guestCount: event.guestCount + 1 });
-    setNewGuestName("");
-    setNewGuestPhone("");
-    alert("Tamu berhasil ditambahkan!");
   };
 
   const handleDeleteGuest = async (guestId: string) => {
-    if (confirm("Hapus tamu ini?")) {
+    const target = guests.find((g) => g.id === guestId);
+    if (!(await confirm({ title: "Hapus tamu?", description: target ? `${target.name} dihapus dari daftar dan link pribadinya tidak berlaku lagi.` : undefined, confirmLabel: "Hapus tamu", tone: "danger" }))) return;
+    try {
       await deleteGuest(guestId);
-      setGuests(guests.filter(g => g.id !== guestId));
+      setGuests((current) => current.filter((g) => g.id !== guestId));
+      setEvent((current) => (current ? { ...current, guestCount: Math.max(0, current.guestCount - 1) } : current));
+      notify("Tamu dihapus.", "success");
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Tamu gagal dihapus.", "error");
     }
   };
 
   const handleToggleWishVisibility = async (wish: Wish) => {
-    const updated = await updateWish(wish.id, { isVisible: !wish.isVisible });
-    setWishes(wishes.map(w => w.id === wish.id ? updated : w));
+    try {
+      const updated = await updateWish(wish.id, { isVisible: !wish.isVisible });
+      setWishes((current) => current.map((w) => (w.id === wish.id ? updated : w)));
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Ucapan gagal diubah.", "error");
+    }
   };
 
   const handleDeleteWish = async (wishId: string) => {
-    if (!confirm("Hapus ucapan ini secara permanen?")) return;
+    if (!(await confirm({ title: "Hapus ucapan?", description: "Ucapan dihapus permanen dan tidak bisa dibatalkan. Untuk sekadar menyembunyikan, pakai tombol Sembunyikan.", confirmLabel: "Hapus ucapan", tone: "danger" }))) return;
     try {
       await deleteWish(wishId);
-      setWishes(wishes.filter(w => w.id !== wishId));
-      setEvent({ ...event, wishCount: Math.max(0, event.wishCount - 1) });
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Ucapan gagal dihapus.");
+      setWishes((current) => current.filter((w) => w.id !== wishId));
+      setEvent((current) => (current ? { ...current, wishCount: Math.max(0, current.wishCount - 1) } : current));
+      notify("Ucapan dihapus.", "success");
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Ucapan gagal dihapus.", "error");
     }
   };
 
   const handleDeleteEvent = async () => {
-    if (confirm("PERINGATAN: Anda yakin ingin menghapus event ini secara permanen? Semua data (tamu, ucapan, media) akan hilang!")) {
+    if (!(await confirm({ title: "Hapus event ini?", description: `Event ${event.coupleName} dihapus permanen: semua tamu, ucapan, media, tagihan, dan chat ikut hilang. Tidak bisa dibatalkan.`, confirmLabel: "Hapus event", tone: "danger" }))) return;
+    try {
       await deleteEvent(event.id);
       router.push("/owner/dashboard");
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Event gagal dihapus.", "error");
     }
   };
 
@@ -227,8 +271,6 @@ export default function OwnerEventDetailPage() {
         </Link>
       </div>
 
-      {actionError ? <p role="alert" className="mb-4 text-sm font-medium text-rose-700">{actionError}</p> : null}
-
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
         {[
           { label: "Total Tamu", value: event.guestCount },
@@ -249,6 +291,8 @@ export default function OwnerEventDetailPage() {
         {(['detail', 'tamu', 'ucapan', 'persetujuan', 'tagihan', 'riwayat', 'pengaturan'] as const).map(tab => (
           <button
             key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition ${
               activeTab === tab
@@ -261,7 +305,7 @@ export default function OwnerEventDetailPage() {
         ))}
       </div>
 
-      <div className="rounded-md border border-[#e0d4c7] bg-white p-6 min-h-[400px]">
+      <div key={activeTab} className="anim-fade-up rounded-md border border-[#e0d4c7] bg-white p-6 min-h-[400px]">
         {activeTab === 'detail' && content && (
           <div className="space-y-4">
             <p className="text-sm text-[#6b6056]">Semua isi undangan dapat diubah di sini dan langsung dipakai semua tema. Foto dan musik dapat diunggah di bagian Media di bawah; kolom alamat berikut untuk tautan https:// atau file yang sudah ada di server.</p>
@@ -342,7 +386,7 @@ export default function OwnerEventDetailPage() {
                   onChange={(e) => setNewGuestName(e.target.value)}
                   className="h-10 flex-1 sm:w-48 rounded-md border border-[#cdbba8] px-3 text-sm outline-none focus:border-[#9a6a3a]"
                 />
-                <button type="submit" className="h-10 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white hover:bg-[#3a332a]">
+                <button type="submit" disabled={addingGuest} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#241f1a] px-4 text-sm font-semibold text-white hover:bg-[#3a332a] disabled:opacity-60">{addingGuest ? <Spinner /> : null}
                   + Tambah
                 </button>
               </form>
@@ -412,8 +456,8 @@ export default function OwnerEventDetailPage() {
 
         {activeTab === 'ucapan' && (
           <div className="grid gap-4 md:grid-cols-2">
-            {wishes.length > 0 ? wishes.map(w => (
-              <div key={w.id} className="rounded-md border border-[#eadfd2] p-4 bg-[#fffaf4]">
+            {wishes.length > 0 ? wishes.map((w, i) => (
+              <div key={w.id} style={{ "--i": i } as React.CSSProperties} className="anim-fade-up rounded-md border border-[#eadfd2] p-4 bg-[#fffaf4]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-[#241f1a]">{w.guestName}</span>
                   <span className="text-xs text-[#9a6a3a]">{new Date(w.createdAt).toLocaleDateString()}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useConfirm } from "@/components/confirm-dialog";
 import { addInvoice, formatRupiah, getBilling, updateInvoice, type BillingData, type Invoice } from "@/lib/business";
 
 const STATUS: Record<Invoice["status"], { label: string; style: string }> = {
@@ -16,6 +17,7 @@ const label = "text-xs font-semibold uppercase tracking-wider text-[#9a6a3a]";
 type Form = { id: string; op: "report" | "pay" | "edit" } | { id: "new"; op: "add" } | null;
 
 export function BillingPanel({ eventId, role }: { eventId: string; role: "owner" | "client" }) {
+  const confirm = useConfirm();
   const [data, setData] = useState<BillingData | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState<Form>(null);
@@ -58,8 +60,10 @@ export function BillingPanel({ eventId, role }: { eventId: string; role: "owner"
   }
 
   async function simple(invoice: Invoice, op: "void" | "reopen") {
-    const question = op === "void" ? `Batalkan tagihan ${invoice.number}?` : `Buka kembali tagihan ${invoice.number}? Status lunas akan dicabut.`;
-    if (!window.confirm(question)) return;
+    const ok = await confirm(op === "void"
+      ? { title: `Batalkan tagihan ${invoice.number}?`, description: "Tagihan yang dibatalkan tidak dihitung dalam pembayaran.", confirmLabel: "Batalkan tagihan", tone: "danger" }
+      : { title: `Buka kembali tagihan ${invoice.number}?`, description: "Status lunas akan dicabut dan tagihan kembali menunggu pembayaran.", confirmLabel: "Buka kembali" });
+    if (!ok) return;
     await run(() => updateInvoice(invoice.id, { op }));
   }
 

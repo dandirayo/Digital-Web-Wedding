@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useConfirm } from "@/components/confirm-dialog";
 import { useCallback, useEffect, useState } from "react";
 import { decideVersion, getApproval, publishEvent, submitVersion, unpublishEvent, type ApprovalState, type ContentVersion } from "@/lib/business";
 
@@ -18,6 +19,7 @@ export function ApprovalPanel({ eventId, slug, role, onChanged }: { eventId: str
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const confirm = useConfirm();
 
   const load = useCallback(async () => {
     try {
@@ -106,7 +108,7 @@ export function ApprovalPanel({ eventId, slug, role, onChanged }: { eventId: str
         <section className="rounded-md border border-[#eadfd2] bg-white p-4">
           <h3 className="text-base font-semibold">Publikasi</h3>
           {state.published ? (
-            <button disabled={busy} onClick={() => window.confirm("Batalkan publikasi? Link undangan tidak akan dapat dibuka tamu.") && run(() => unpublishEvent(eventId))} className="mt-3 h-11 rounded-md border border-rose-200 px-5 text-sm font-semibold text-rose-700 disabled:opacity-50">Batalkan publikasi</button>
+            <button disabled={busy} onClick={async () => { if (await confirm({ title: "Batalkan publikasi?", description: "Link undangan tidak akan bisa dibuka tamu sampai dipublikasikan lagi.", confirmLabel: "Batalkan publikasi", tone: "danger" })) await run(() => unpublishEvent(eventId)); }} className="mt-3 h-11 rounded-md border border-rose-200 px-5 text-sm font-semibold text-rose-700 disabled:opacity-50">Batalkan publikasi</button>
           ) : state.gate.ok ? (
             <button disabled={busy} onClick={() => run(() => publishEvent(eventId))} className="mt-3 h-11 rounded-md bg-emerald-700 px-5 text-sm font-semibold text-white disabled:opacity-50">Publikasikan undangan</button>
           ) : (

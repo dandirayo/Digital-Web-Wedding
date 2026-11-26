@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { ArrowRight, Eye, EyeOff, Server } from "lucide-react";
 import { signInWithPassword } from "@/lib/auth";
+import { Spinner } from "@/components/skeleton";
 
 type LoginStatus = "idle" | "loading" | "error";
 
@@ -109,7 +110,7 @@ export function LoginForm() {
         disabled={status === "loading"}
         className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#241f1a] px-4 text-sm font-semibold text-white transition hover:bg-[#3a3129] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === "loading" ? "Memproses..." : <>Masuk ke workspace <ArrowRight className="h-4 w-4" /></>}
+        {status === "loading" ? <><Spinner className="h-4 w-4" />Memproses...</> : <>Masuk ke workspace <ArrowRight className="h-4 w-4" /></>}
       </button>
     </form>
   );

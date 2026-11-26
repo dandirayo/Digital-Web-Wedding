@@ -386,3 +386,58 @@ test("malformed guest input is rejected as invalid data, not a crash", async () 
     for (const bad of [null, undefined, "teks", 42, []])
         assert.throws(() => g.newGuest("event-a", bad, text, new Date().toISOString()), /Data tamu tidak valid/);
 });
+
+test("owner can disable, re-enable and delete client accounts safely", async () => {
+    const d = await import("../src/lib/backend/database.mjs");
+    const { db, owner: ownerUser, a, b } = fixture();
+    // Klien tidak boleh menonaktifkan siapa pun; owner tidak boleh menonaktifkan owner.
+    assert.throws(() => d.setClientDisabled(db, b.id, true, a), /Akses owner/);
+    assert.throws(() => d.setClientDisabled(db, ownerUser.id, true, ownerUser), /Hanya akun klien/);
+    assert.throws(() => d.setClientDisabled(db, "tidak-ada", true, ownerUser), /tidak ditemukan/);
+    // Sesi aktif langsung berakhir saat dinonaktifkan dan login ditolak.
+    const { token } = authenticate(db, "a@test.local", "ClientPassword123!");
+    assert.equal(sessionUser(db, token)?.id, a.id);
+    assert.equal(d.setClientDisabled(db, a.id, true, ownerUser).disabled, true);
+    assert.equal(sessionUser(db, token), null);
+    assert.throws(() => authenticate(db, "a@test.local", "ClientPassword123!"), /dinonaktifkan/);
+    // Password salah pada akun nonaktif tetap "salah", tidak membocorkan status akun.
+    assert.throws(() => authenticate(db, "a@test.local", "SalahSalahSalah1!"), /Email atau password salah/);
+    // Event tidak bisa dipindahkan ke klien nonaktif.
+    assert.throws(() => mutate(db, "events", "event-b", { clientId: a.id }, ownerUser), /tidak ditemukan atau dinonaktifkan/);
+    d.setClientDisabled(db, a.id, false, ownerUser);
+    assert.equal(authenticate(db, "a@test.local", "ClientPassword123!").user.id, a.id);
+    // Hapus akun: ditolak selama klien punya event, berhasil setelah event hilang.
+    assert.throws(() => d.deleteClient(db, a.id, a), /Akses owner/);
+    assert.throws(() => d.deleteClient(db, a.id, ownerUser), /masih memiliki 1 event/);
+    assert.throws(() => d.deleteClient(db, ownerUser.id, ownerUser), /Hanya akun klien/);
+    d.remove(db, "events", "event-a");
+    assert.equal(d.deleteClient(db, a.id, ownerUser).email, "a@test.local");
+    assert.throws(() => authenticate(db, "a@test.local", "ClientPassword123!"), /Email atau password salah/);
+});
+
+test("existing databases gain the disabled column without losing users", () => {
+    const path = resolve("data", `test-${randomUUID()}.sqlite`);
+    let db = openDatabase(path);
+    try {
+        createUser(db, { email: "x@test.local", fullName: "X", password: "ClientPassword123!" });
+        db.exec("ALTER TABLE users DROP COLUMN disabled");
+        db.close();
+        db = openDatabase(path);
+        assert.equal(db.prepare("SELECT disabled FROM users WHERE email='x@test.local'").get().disabled, 0);
+    }
+    finally {
+        db.close();
+        unlinkSync(path);
+    }
+});
+
+test("invoice numbers never collide after an event's invoices are deleted", () => {
+    const { db, owner: ownerUser } = fixture();
+    const first = addInvoice(db, "event-a", { type: "dp", amount: 100000 }, ownerUser);
+    const second = addInvoice(db, "event-b", { type: "dp", amount: 200000 }, ownerUser);
+    removeEventBusinessData(db, "event-a");
+    const third = addInvoice(db, "event-b", { type: "pelunasan", amount: 300000 }, ownerUser);
+    const numbers = [first.number, second.number, third.number];
+    assert.equal(new Set(numbers).size, 3);
+    assert.ok(Number(third.number.split("-").pop()) > Number(second.number.split("-").pop()));
+});

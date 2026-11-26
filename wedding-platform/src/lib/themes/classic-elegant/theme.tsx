@@ -9,6 +9,7 @@ import type { ThemeProps } from "../types";
 import { Wish, Guest } from "@/lib/types";
 import { Countdown } from "@/components/wedding/countdown";
 import { MusicPlayer } from "@/components/wedding/music-player";
+import { useReveal } from "@/components/wedding/reveal";
 import { PersonalizedGreeting } from "@/components/wedding/personalized-greeting";
 import { resolveMedia } from "../media";
 
@@ -30,6 +31,7 @@ export default function ClassicElegantTheme({
   guestToken,
 }: ThemeProps) {
   const [selectedImage, setSelectedImage] = useState<GalleryPreview | null>(null);
+  const revealRef = useReveal<HTMLElement>();
 
   useEffect(() => {
     if (!selectedImage) return;
@@ -140,7 +142,7 @@ export default function ClassicElegantTheme({
   const hasGallery = Boolean(prewedImage || galleryImages.length || m.video);
 
   return (
-    <main className="min-h-screen bg-[#f3ebdf] text-[#2b241f]">
+    <main ref={revealRef} className="min-h-screen bg-[#f3ebdf] text-[#2b241f]">
       <section className="relative min-h-[100svh] overflow-hidden bg-[#776859] text-white">
         {m.cover ? (
           <div
@@ -186,7 +188,7 @@ export default function ClassicElegantTheme({
         </div>
       </section>
 
-      <section className="relative overflow-hidden px-5 py-14 text-center sm:py-20">
+      <section data-reveal="0" className="relative overflow-hidden px-5 py-14 text-center sm:py-20">
         <Image
           src={`${TEMPLATE_PATH}/images/flower-left.png`}
           alt=""
@@ -211,7 +213,7 @@ export default function ClassicElegantTheme({
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-5 px-5 pb-14 sm:pb-20 md:grid-cols-[1fr_0.75fr_1fr] md:items-center">
+      <section data-reveal="0" className="mx-auto grid max-w-6xl gap-5 px-5 pb-14 sm:pb-20 md:grid-cols-[1fr_0.75fr_1fr] md:items-center">
         <CoupleCard 
           image={m.bride} 
           name={firstName} 
@@ -227,7 +229,7 @@ export default function ClassicElegantTheme({
         />
       </section>
 
-      <section className="bg-[#2b241f] px-5 py-14 text-white sm:py-20">
+      <section data-reveal="0" className="bg-[#2b241f] px-5 py-14 text-white sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-end">
             <div>
@@ -258,7 +260,7 @@ export default function ClassicElegantTheme({
       </section>
 
       {hasGallery ? (
-      <section className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+      <section data-reveal="0" className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
         <div className="text-center">
           <SectionLabel>Our Gallery</SectionLabel>
           <h2 className="mt-4 text-3xl font-semibold md:text-5xl">Momen Bahagia</h2>
@@ -325,7 +327,7 @@ export default function ClassicElegantTheme({
       </section>
       ) : null}
 
-      <section className="bg-[#fffaf4] px-5 py-14 sm:py-20">
+      <section data-reveal="0" className="bg-[#fffaf4] px-5 py-14 sm:py-20">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
           <Panel title="RSVP" eyebrow={`${resolved.guestsCount} tamu`}>
             <p className="leading-7 text-[#6b6056]">
@@ -476,7 +478,7 @@ export default function ClassicElegantTheme({
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 py-14 text-center sm:py-20">
+      <section data-reveal="0" className="mx-auto max-w-5xl px-5 py-14 text-center sm:py-20">
         <SectionLabel>Love Story</SectionLabel>
         <h2 className="mt-4 text-3xl font-semibold sm:text-4xl">Cerita Kami</h2>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -503,7 +505,7 @@ export default function ClassicElegantTheme({
       </section>
 
       {selectedImage ? (
-        <div role="dialog" aria-modal="true" aria-label="Preview gambar" className="fixed inset-0 z-50 grid place-items-center bg-[#1d1712]/82 px-4 py-6 backdrop-blur-sm">
+        <div role="dialog" aria-modal="true" aria-label="Preview gambar" className="overlay-in fixed inset-0 z-50 grid place-items-center bg-[#1d1712]/82 px-4 py-6 backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0"

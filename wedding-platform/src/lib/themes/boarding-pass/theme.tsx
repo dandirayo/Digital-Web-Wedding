@@ -8,9 +8,17 @@ import QRCode from 'qrcode';
 import { resolveMedia, heroImage as pickHero, galleryUrls } from '../media';
 import { MediaImage } from '@/components/wedding/media-image';
 import { MusicPlayer } from '@/components/wedding/music-player';
+import { InlineNotice, PaxSelect, type Notice } from '@/components/wedding/rsvp-controls';
+import { useReveal } from '@/components/wedding/reveal';
 
-export default function BoardingPassTheme({ event, content, wishes, media, guestName, guestToken }: ThemeProps) {
+export default function BoardingPassTheme({ event, content, wishes, media, guestName, guestData, guestToken }: ThemeProps) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [pax, setPax] = useState(1);
+  const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [wishNotice, setWishNotice] = useState<Notice>(null);
+  const revealRef = useReveal<HTMLDivElement>();
+  const maxPax = guestData?.paxLimit ?? 1;
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   
   const [name, setName] = useState(guestName || '');
@@ -23,30 +31,38 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
 
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isCheckedIn) return;
+    if (isCheckedIn || sending) return;
     if (!guestToken) {
-      alert('RSVP hanya bisa dikirim lewat link undangan pribadi Anda.');
+      setNotice({ text: 'RSVP hanya bisa dikirim lewat link undangan pribadi Anda.', tone: 'error' });
       return;
     }
+    setSending(true);
+    setNotice(null);
     try {
-      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: 1 });
+      await sendRsvp(event.id, guestToken, { rsvpStatus: 'attending', paxConfirmed: Math.min(pax, maxPax) });
       setQrCodeData(await QRCode.toDataURL(guestToken));
       setIsCheckedIn(true);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'RSVP gagal dikirim.');
+      setNotice({ text: err instanceof Error ? err.message : 'RSVP gagal dikirim.', tone: 'error' });
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleAddWish = (e: React.FormEvent) => {
+  const handleAddWish = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && wishText) {
-      addWish(event.id, { guestName: name, message: wishText });
+    if (!name || !wishText) return;
+    try {
+      await addWish(event.id, { guestName: name, message: wishText });
       setWishText('');
+      setWishNotice({ text: 'Ucapan terkirim. Terima kasih!', tone: 'success' });
+    } catch (err) {
+      setWishNotice({ text: err instanceof Error ? err.message : 'Ucapan gagal dikirim.', tone: 'error' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] text-[#1a202c] font-sans">
+    <div ref={revealRef} className="min-h-screen bg-[#f0f4f8] text-[#1a202c] font-sans">
       {m.music ? <MusicPlayer musicUrl={m.music} /> : null}
       
       {/* Navbar/Header */}
@@ -171,7 +187,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
         {/* Check-in (RSVP) & Messages */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* RSVP */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-[#0055a4]">
+          <div data-reveal="1" className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-[#0055a4]">
             <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wider mb-2">Web Check-In</h2>
             <p className="text-gray-500 mb-6 text-sm">Confirm your flight to generate your boarding barcode.</p>
 
@@ -188,13 +204,15 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
                     required
                   />
                 </div>
+                <PaxSelect max={maxPax} value={pax} onChange={setPax} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-800 focus:border-[#0055a4] focus:ring-2 focus:ring-[#0055a4]/20 transition outline-none font-mono" />
                 <button 
                   type="submit" 
-                  disabled={!name}
+                  disabled={!name || sending}
                   className="w-full bg-[#0055a4] text-white font-bold py-3 rounded-lg hover:bg-[#004080] transition shadow-md disabled:opacity-50 flex justify-center items-center"
                 >
                   <CheckCircle className="w-5 h-5 mr-2" /> Confirm Flight
                 </button>
+                <InlineNotice notice={notice} />
               </form>
             ) : (
               <div className="text-center py-8">
@@ -208,7 +226,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
           </div>
 
           {/* Guestbook */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-[#0055a4] flex flex-col">
+          <div data-reveal="1" className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-[#0055a4] flex flex-col">
             <div className="flex items-center mb-6">
               <MessageSquare className="w-6 h-6 mr-2 text-[#0055a4]" />
               <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wider">Flight Log</h2>
@@ -229,6 +247,7 @@ export default function BoardingPassTheme({ event, content, wishes, media, guest
               >
                 Sign Logbook
               </button>
+              <InlineNotice notice={wishNotice} />
             </form>
 
             <div className="flex-1 overflow-y-auto max-h-[300px] space-y-4 pr-2">

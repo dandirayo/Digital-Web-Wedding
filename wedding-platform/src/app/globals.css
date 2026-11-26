@@ -8,6 +8,10 @@
   --surface: #ffffff;
   --border: #e0d4c7;
   --radius-card: 0.75rem;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur-base: 260ms;
+  --dur-slow: 700ms;
 }
 
 @theme inline {
@@ -152,6 +156,100 @@ body:has(.workspace-dialog[open]) {
   .inline-edit-trigger {
     opacity: 1;
   }
+}
+
+/* ---- Animasi halus (CSS saja). Semua dimatikan oleh blok prefers-reduced-motion di bawah. ---- */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dialog-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+/* Transisi halaman: hanya opacity agar elemen position:fixed (sidebar) tidak berpindah acuan. */
+.anim-page { animation: fade-in var(--dur-base) ease-out both; }
+.anim-fade-up { animation: fade-up var(--dur-base) var(--ease-out) both; animation-delay: calc(min(var(--i, 0), 12) * 40ms); }
+.anim-pop { animation: pop-in var(--dur-base) var(--ease-out) both; }
+.anim-slide-in { animation: slide-in-right var(--dur-base) var(--ease-out) both; }
+
+.skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, #ece4da 25%, #f6f1ea 50%, #ece4da 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.toast-item { animation: toast-in var(--dur-base) var(--ease-out) both; }
+.toast-item[data-leaving] { animation: toast-out 180ms ease-in both; }
+
+.workspace-dialog[open] { animation: dialog-in var(--dur-base) var(--ease-out) both; }
+.workspace-dialog[open]::backdrop { animation: fade-in var(--dur-base) ease-out both; }
+.workspace-dialog[data-closing] { animation: dialog-out 160ms ease-in both; }
+.workspace-dialog[data-closing]::backdrop { animation: toast-out 160ms ease-in both; }
+
+/* Overlay undangan buatan sendiri (lightbox, modal login): masuk halus. */
+.overlay-in { animation: fade-in var(--dur-base) ease-out both; }
+.overlay-in > :where(figure, div, section) { animation: pop-in var(--dur-base) var(--ease-out) both; }
+
+/* Scroll-reveal undangan. Kelas .reveal-ready hanya ditambahkan oleh JS setelah mount,
+   jadi tanpa JavaScript (atau sebelum hydrate) konten tetap terlihat penuh. */
+.reveal-ready {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition-delay: calc(min(var(--i, 0), 6) * 80ms);
+}
+
+.reveal-ready.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Umpan balik tekan untuk tombol. */
+.workspace :where(button, a.inline-flex):not(:disabled):active,
+.invitation :where(button):not(:disabled):active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

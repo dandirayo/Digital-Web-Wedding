@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { exportGuestsCsv } from "@/lib/store";
+import { useToast } from "@/components/toast";
+import { Spinner } from "@/components/skeleton";
 
 export function ExportGuestsButton({ eventId, slug }: { eventId: string; slug: string }) {
   const [busy, setBusy] = useState(false);
+  const notify = useToast();
 
   async function download() {
     setBusy(true);
@@ -17,7 +20,7 @@ export function ExportGuestsButton({ eventId, slug }: { eventId: string; slug: s
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "Ekspor gagal.");
+      notify(e instanceof Error ? e.message : "Ekspor gagal.", "error");
     } finally {
       setBusy(false);
     }
@@ -25,7 +28,7 @@ export function ExportGuestsButton({ eventId, slug }: { eventId: string; slug: s
 
   return (
     <button type="button" onClick={download} disabled={busy} className="inline-flex h-10 items-center rounded-md border border-[#e0d4c7] bg-white px-4 text-sm font-semibold text-[#241f1a] hover:bg-[#fffaf4] disabled:opacity-50">
-      {busy ? "Menyiapkan..." : "Ekspor CSV"}
+      {busy ? <><Spinner className="mr-2 h-4 w-4" />Menyiapkan...</> : "Ekspor CSV"}
     </button>
   );
 }

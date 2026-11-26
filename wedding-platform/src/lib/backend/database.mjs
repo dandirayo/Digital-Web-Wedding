@@ -16,6 +16,9 @@ export function openDatabase(path = resolve(process.cwd(), "data/occasio.sqlite"
     CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, userId TEXT NOT NULL, expires INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS records (kind TEXT NOT NULL, id TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(kind,id));
     CREATE TABLE IF NOT EXISTS attempts (email TEXT PRIMARY KEY, count INTEGER NOT NULL, until INTEGER NOT NULL);`);
+    // Migrasi aditif: akun bisa dinonaktifkan owner tanpa menghapus datanya.
+    if (!db.prepare("PRAGMA table_info(users)").all().some((c) => c.name === "disabled"))
+        db.exec("ALTER TABLE users ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0");
     return db;
 }
 export function rows(db, kind) {
@@ -36,7 +39,7 @@ export function createUser(db, { id = "", email, fullName, role = "client", pass
     const salt = randomBytes(16).toString("hex");
     const encoded = salt + ":" + scryptSync(password, salt, 64).toString("hex");
     const createdAt = new Date().toISOString();
-    db.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(id, email.toLowerCase().trim(), fullName.trim(), role, encoded, createdAt);
+    db.prepare("INSERT INTO users (id, email, fullName, role, password, createdAt) VALUES (?, ?, ?, ?, ?, ?)").run(id, email.toLowerCase().trim(), fullName.trim(), role, encoded, createdAt);
     return { id, email: email.toLowerCase().trim(), fullName: fullName.trim(), role, createdAt };
 }
 export function authenticate(db, email, password) {
@@ -55,6 +58,8 @@ export function authenticate(db, email, password) {
             .run(email, now + 900000, now, now + 900000);
         throw new ApiError("Email atau password salah.", 401);
     }
+    if (user.disabled)
+        throw new ApiError("Akun ini dinonaktifkan. Hubungi owner Occasio.", 403);
     db.prepare("DELETE FROM attempts WHERE email=?").run(email);
     db.prepare("DELETE FROM sessions WHERE expires < ?").run(now);
     const token = randomBytes(32).toString("hex");
@@ -67,7 +72,7 @@ function publicUser(user) {
 export function sessionUser(db, token) {
     if (!token)
         return null;
-    const user = db.prepare("SELECT u.* FROM sessions s JOIN users u ON s.userId=u.id WHERE s.token=? AND s.expires>?").get(hashToken(token), Date.now());
+    const user = db.prepare("SELECT u.* FROM sessions s JOIN users u ON s.userId=u.id WHERE s.token=? AND s.expires>? AND u.disabled=0").get(hashToken(token), Date.now());
     return user ? publicUser(user) : null;
 }
 export function logout(db, token) { if (token)
@@ -149,8 +154,8 @@ export function mutate(db, kind, id, data, user) {
             throw new ApiError("Tanggal kedaluwarsa tidak valid.");
         if ("status" in patch && !["draft", "active", "completed", "archived"].includes(patch.status))
             throw new ApiError("Status tidak valid.");
-        if (patch.clientId && !db.prepare("SELECT id FROM users WHERE id=? AND role='client'").get(patch.clientId))
-            throw new ApiError("Klien tidak ditemukan.");
+        if (patch.clientId && !db.prepare("SELECT id FROM users WHERE id=? AND role='client' AND disabled=0").get(patch.clientId))
+            throw new ApiError("Klien tidak ditemukan atau dinonaktifkan.");
     }
     if (kind === "content") {
         for (const field of ["bridePhotoUrl", "groomPhotoUrl", "musicUrl"])
@@ -407,6 +412,36 @@ export function resetPassword(db, id, user) {
     const temporaryPassword = randomBytes(12).toString("base64url");
     setPassword(db, id, temporaryPassword);
     return { temporaryPassword };
+}
+/** Owner menonaktifkan/mengaktifkan akun klien. Menonaktifkan langsung mengakhiri semua sesi akun itu. */
+export function setClientDisabled(db, id, disabled, user) {
+    owner(user);
+    const target = db.prepare("SELECT * FROM users WHERE id=?").get(id);
+    if (!target)
+        throw new ApiError("Akun tidak ditemukan.", 404);
+    if (target.role !== "client")
+        throw new ApiError("Hanya akun klien yang bisa dinonaktifkan.", 403);
+    if (typeof disabled !== "boolean")
+        throw new ApiError("Permintaan tidak valid.");
+    db.prepare("UPDATE users SET disabled=? WHERE id=?").run(disabled ? 1 : 0, id);
+    if (disabled)
+        db.prepare("DELETE FROM sessions WHERE userId=?").run(id);
+    return { ...publicUser(target), disabled };
+}
+/** Owner menghapus akun klien. Ditolak bila klien masih memiliki event: hapus atau pindahkan event dulu. */
+export function deleteClient(db, id, user) {
+    owner(user);
+    const target = db.prepare("SELECT * FROM users WHERE id=?").get(id);
+    if (!target)
+        throw new ApiError("Akun tidak ditemukan.", 404);
+    if (target.role !== "client")
+        throw new ApiError("Hanya akun klien yang bisa dihapus.", 403);
+    const owned = rows(db, "events").filter((e) => e.clientId === id).length;
+    if (owned)
+        throw new ApiError(`Klien ini masih memiliki ${owned} event. Hapus atau pindahkan event tersebut lebih dulu.`, 409);
+    db.prepare("DELETE FROM sessions WHERE userId=?").run(id);
+    db.prepare("DELETE FROM users WHERE id=?").run(id);
+    return { id, email: target.email };
 }
 function setPassword(db, id, password) {
     const salt = randomBytes(16).toString("hex");

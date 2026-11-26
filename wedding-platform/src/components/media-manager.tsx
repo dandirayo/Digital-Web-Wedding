@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { addMedia, deleteMedia, updateEventContent, updateMedia, uploadMedia } from "@/lib/store";
 import type { EventContent, EventMedia, MediaCategory } from "@/lib/types";
 import { MediaImage } from "@/components/wedding/media-image";
+import { useConfirm } from "@/components/confirm-dialog";
 
 const SECTIONS: Array<{ category: MediaCategory; title: string; hint: string; accept: string }> = [
   { category: "cover", title: "Sampul", hint: "Foto utama bagian atas undangan. Yang paling atas dipakai.", accept: "image/jpeg,image/png,image/webp" },
@@ -28,6 +29,7 @@ export function MediaManager({
   onMedia: (media: EventMedia[]) => void;
   onContent: (content: EventContent) => void;
 }) {
+  const confirm = useConfirm();
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -66,7 +68,7 @@ export function MediaManager({
   }
 
   async function remove(item: EventMedia) {
-    if (!window.confirm("Hapus file ini dari undangan? File juga dihapus dari server.")) return;
+    if (!(await confirm({ title: "Hapus file ini?", description: "File dihapus dari undangan dan juga dari server. Tidak bisa dibatalkan.", confirmLabel: "Hapus file", tone: "danger" }))) return;
     await run(item.id, async () => {
       await deleteMedia(item.id);
       onMedia(media.filter((m) => m.id !== item.id));

@@ -6,7 +6,7 @@ import { resolveDemoAssetUrl } from "@/lib/demo-assets.mjs";
 import { assertGuestQuota, assertWishAllowed, guestByToken, guestsCsv, newGuest, submitRsvp } from "@/lib/backend/guests.mjs";
 import { removeEventUploads, removeUpload } from "@/lib/backend/uploads.mjs";
 import { addInvoice, approvalState, audit, billing, chatThreads, decideVersion, ensureOrder, listAudit, listMessages, markRead, overview, publishEvent, removeEventBusinessData, sendMessage, submitVersion, unpublishEvent, updateInvoice } from "@/lib/backend/business.mjs";
-import { ApiError, COOKIE, sessionUser, rows, put, remove, owner, requireUser, eventAccess, listEvents, summarize, mutate, createUser, text, updateLead, convertLead, updateCatalog, updateProfile, resetPassword, changeOwnPassword, deleteWish, getSiteSettings, updateSiteSettings } from "@/lib/backend/database.mjs";
+import { ApiError, COOKIE, sessionUser, rows, put, remove, owner, requireUser, eventAccess, listEvents, summarize, mutate, createUser, text, updateLead, convertLead, updateCatalog, updateProfile, resetPassword, changeOwnPassword, deleteWish, getSiteSettings, updateSiteSettings, setClientDisabled, deleteClient } from "@/lib/backend/database.mjs";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
@@ -37,7 +37,15 @@ export async function POST(request: NextRequest) {
             case "init": break;
             case "profiles":
                 owner(user);
-                data = db.prepare("SELECT id,email,fullName,role,createdAt FROM users").all();
+                data = (db.prepare("SELECT id,email,fullName,role,createdAt,disabled FROM users").all() as Array<Record<string, unknown>>).map((u) => ({ ...u, disabled: Boolean(u.disabled) }));
+                break;
+            case "setClientDisabled":
+                data = setClientDisabled(db, id, input, user);
+                audit(db, user, input ? "client_disabled" : "client_enabled", "", (data as { email: string }).email);
+                break;
+            case "deleteClient":
+                data = deleteClient(db, id, user);
+                audit(db, user, "client_deleted", "", (data as { email: string }).email);
                 break;
             case "createClient":
                 owner(user);
@@ -140,8 +148,19 @@ export async function POST(request: NextRequest) {
             case "event": {
                 const found = rows(db, "events").find((e: Record<string, unknown>) => e.id === id || e.slug === id);
                 if (found) {
-                    eventAccess(db, found.id, user);
-                    data = summarize(db, found);
+                    try {
+                        eventAccess(db, found.id, user);
+                        data = summarize(db, found);
+                    }
+                    catch (e) {
+                        // Undangan terbit yang sudah lewat masa aktif: beri sinyal minimal (tanpa data privat)
+                        // agar tamu melihat "Undangan Berakhir", bukan "tidak ditemukan".
+                        const expired = found.isPublished && found.status === "active" && typeof found.expiresAt === "string" && Date.parse(found.expiresAt) <= Date.now();
+                        if (e instanceof ApiError && e.status === 403 && expired)
+                            data = { id: found.id, slug: found.slug, coupleName: found.coupleName, expired: true };
+                        else
+                            throw e;
+                    }
                 }
                 break;
             }
@@ -171,8 +190,8 @@ export async function POST(request: NextRequest) {
                 const pkg = rows(db, "packages").find((p: Record<string, unknown>) => p.id === id.packageId && p.isActive);
                 if (!pkg || !rows(db, "templates").some((t: Record<string, unknown>) => t.id === id.templateId && t.isActive))
                     throw new ApiError("Paket/template tidak tersedia.");
-                if (!db.prepare("SELECT id FROM users WHERE id=? AND role='client'").get(id.clientId))
-                    throw new ApiError("Klien tidak ditemukan.");
+                if (!db.prepare("SELECT id FROM users WHERE id=? AND role='client' AND disabled=0").get(id.clientId))
+                    throw new ApiError("Klien tidak ditemukan atau dinonaktifkan.");
                 data = put(db, "events", { ...id, id: randomUUID(), ownerId: user!.id, packageTier: pkg.slug, status: "draft", isPublished: false, publishedAt: null, createdAt: now, lastActivity: now });
                 ensureOrder(db, data as Record<string, string>, user);
                 audit(db, user, "event_created", (data as Record<string, string>).id, (data as Record<string, string>).coupleName);
@@ -278,6 +297,8 @@ export async function POST(request: NextRequest) {
                 break;
             case "addWish": {
                 eventAccess(db, id, user);
+                if (!input || typeof input !== "object")
+                    throw new ApiError("Nama dan ucapan wajib diisi.");
                 const name = text(input.guestName, 200), message = text(input.message, 2000);
                 if (!name || !message)
                     throw new ApiError("Nama dan ucapan wajib diisi.");

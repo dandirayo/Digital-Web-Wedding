@@ -6,6 +6,7 @@ import { WeddingEvent, Guest } from '@/lib/types';
 import { hasFeature } from '@/lib/feature-gate';
 import { QrCode, Search, CheckCircle, Clock, Users, ChevronLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/toast';
 
 export default function CheckinPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
@@ -21,6 +22,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
   
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
+  const notify = useToast();
   const [recentCheckins, setRecentCheckins] = useState<Guest[]>([]);
   
   const qrInputRef = useRef<HTMLInputElement>(null);
@@ -34,8 +36,8 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
       try {
         const currentEvent = await getEventBySlug(resolvedParams.slug);
 
-        if (!currentEvent) {
-          if (!cancelled) setError('Acara tidak ditemukan');
+        if (!currentEvent || 'expired' in currentEvent) {
+          if (!cancelled) setError(currentEvent ? 'Masa aktif undangan acara ini sudah berakhir' : 'Acara tidak ditemukan');
           return;
         }
 
@@ -122,7 +124,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
       setSelectedGuest(guest);
       setCheckinSuccess(false);
     } else {
-      alert('Kode QR tidak ditemukan');
+      notify('Kode QR tidak ditemukan', 'error');
     }
     
     setQrInput('');
@@ -167,7 +169,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
       
     } catch (err) {
       console.error(err);
-      alert('Gagal check-in, silakan coba lagi');
+      notify('Gagal check-in, silakan coba lagi', 'error');
     }
   };
 
@@ -256,7 +258,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
           <div className="flex-1 p-4 sm:p-8 flex flex-col">
             
             {!selectedGuest ? (
-              <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
+              <div key={activeTab} className="anim-fade-up flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
                 
                 {activeTab === 'qr' ? (
                   <div className="text-center space-y-8">
@@ -334,11 +336,11 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
               </div>
             ) : (
               // GUEST INFO CARD
-              <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full animate-in fade-in zoom-in duration-300">
+              <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full anim-pop">
                 <div className="bg-[#111122] border border-white/10 rounded-3xl p-10 w-full shadow-2xl relative overflow-hidden">
                   
                   {checkinSuccess && (
-                    <div className="absolute inset-0 bg-[#16c784]/10 flex flex-col items-center justify-center z-10 animate-in fade-in duration-300 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-[#16c784]/10 flex flex-col items-center justify-center z-10 anim-pop backdrop-blur-sm">
                       <div className="bg-[#16c784] text-[#111122] p-4 rounded-full mb-4 shadow-lg scale-150 animate-bounce">
                         <CheckCircle className="w-12 h-12" />
                       </div>
@@ -421,7 +423,7 @@ export default function CheckinPage({ params }: { params: Promise<{ slug: string
               recentCheckins.map((guest, idx) => (
                 <div 
                   key={guest.id}
-                  className="bg-[#1a1a2e] border border-white/5 rounded-xl p-4 flex justify-between items-center shadow-lg animate-in slide-in-from-right-4 fade-in duration-300"
+                  className="bg-[#1a1a2e] border border-white/5 rounded-xl p-4 flex justify-between items-center shadow-lg anim-slide-in"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <div className="flex items-center gap-4">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { WorkspaceDialog } from "./workspace-dialog";
+import { useToast } from "./toast";
 import type { Guest, WeddingEvent } from "@/lib/types";
 
 type BulkShareProps = {
@@ -12,6 +13,7 @@ type BulkShareProps = {
 };
 
 export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShareProps) {
+  const notify = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,8 +66,12 @@ export function BulkShare({ event, guests, messageTemplate, onShared }: BulkShar
     const text = selectedGuests
       .map((g) => `${g.name}: ${getGuestLink(g)}`)
       .join("\n");
-    await navigator.clipboard.writeText(text);
-    alert("Links copied to clipboard!");
+    try {
+      await navigator.clipboard.writeText(text);
+      notify(`${selectedGuests.length} link tamu disalin.`, "success");
+    } catch {
+      notify("Link tidak bisa disalin otomatis. Izinkan akses clipboard di browser.", "error");
+    }
   };
 
   const handleExportCSV = () => {

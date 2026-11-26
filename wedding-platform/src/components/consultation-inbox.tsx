@@ -12,8 +12,10 @@ import {
 } from "@/lib/consultation-leads";
 import Link from "next/link";
 import { WorkspaceDialog } from "@/components/workspace-dialog";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export function ConsultationInbox() {
+  const confirm = useConfirm();
   const [leads, setLeads] = useState<ConsultationLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,7 +68,7 @@ export function ConsultationInbox() {
   }
 
   async function remove(lead: ConsultationLead) {
-    if (!window.confirm(`Hapus brief dari ${lead.name}? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!(await confirm({ title: "Hapus brief?", description: `Brief dari ${lead.name} dihapus permanen dan tidak bisa dibatalkan.`, confirmLabel: "Hapus brief", tone: "danger" }))) return;
     try {
       await deleteConsultationLead(lead.id);
       setLeads((current) => current.filter((item) => item.id !== lead.id));

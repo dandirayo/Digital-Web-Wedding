@@ -5,6 +5,8 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { EventReadiness } from "@/components/event-readiness";
 import { ExportReportAction } from "@/components/owner-actions";
 import { StatCard } from "@/components/stat-card";
+import { PageSkeleton } from "@/components/skeleton";
+import { useToast } from "@/components/toast";
 import { getPackageLabel } from "@/lib/demo-data";
 import { formatRupiah, getOverview, STAGE_STYLE, type Overview } from "@/lib/business";
 import { getOwnerEvents, updateOwnerEventStatus } from "@/lib/workspace";
@@ -17,6 +19,7 @@ import { useEffect, useState } from "react";
 export default function OwnerDashboardPage() {
   const [events, setEvents] = useState<WeddingEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const notify = useToast();
   const [loadError, setLoadError] = useState("");
   const [overview, setOverview] = useState<Overview | null>(null);
 
@@ -45,8 +48,23 @@ export default function OwnerDashboardPage() {
   const stageById = new Map((overview?.events ?? []).map((item) => [item.id, item]));
 
   async function handleStatusChange(id: string, status: WeddingEvent["status"]) {
-    await updateOwnerEventStatus(id, status);
-    setEvents((current) => current.map((event) => (event.id === id ? { ...event, status } : event)));
+    try {
+      await updateOwnerEventStatus(id, status);
+      setEvents((current) => current.map((event) => (event.id === id ? { ...event, status } : event)));
+      notify("Status event diperbarui.", "success");
+    } catch (e) {
+      // Pilihan status kembali ke nilai tersimpan karena state tidak diubah.
+      notify(e instanceof Error ? e.message : "Status gagal diubah.", "error");
+    }
+  }
+
+  async function copyEventLink(slug: string) {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/wedding/${slug}`);
+      notify("Link undangan disalin.", "success");
+    } catch {
+      notify("Link tidak bisa disalin otomatis. Izinkan akses clipboard di browser.", "error");
+    }
   }
 
   return (
@@ -111,7 +129,7 @@ export default function OwnerDashboardPage() {
             </button>
           </div>
         ) : isLoading ? (
-          <div className="p-10 text-center text-sm text-[#6b6056]">Memuat event...</div>
+          <div className="p-4"><PageSkeleton label="Memuat event" /></div>
         ) : events.length === 0 ? (
           <div className="mt-5 rounded-xl border border-dashed border-[#cdbba8] bg-[#fffaf4] px-5 py-10 text-center text-sm text-[#6b6056]">Belum ada event. Buat event pertama untuk memulai workspace.</div>
         ) : (
@@ -156,9 +174,7 @@ export default function OwnerDashboardPage() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      const url = `${window.location.origin}/wedding/${event.slug}`;
-                      navigator.clipboard.writeText(url);
-                      alert("Link disalin!");
+                      void copyEventLink(event.slug);
                     }}
                     className="inline-flex h-10 items-center justify-center rounded-md border border-[#cdbba8] bg-white px-4 text-sm font-semibold text-[#5a4028] transition hover:bg-[#f7f3ed]"
                   >

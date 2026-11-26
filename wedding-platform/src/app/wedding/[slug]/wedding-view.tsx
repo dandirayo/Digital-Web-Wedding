@@ -26,6 +26,7 @@ export function WeddingView({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expiredCouple, setExpiredCouple] = useState<string | null>(null);
   const [ThemeComponent, setThemeComponent] = useState<React.ComponentType<ThemeProps> | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,11 @@ export function WeddingView({ slug }: { slug: string }) {
         const event = await getEventBySlug(slug);
         if (!event) {
           setError("Event not found");
+          setLoading(false);
+          return;
+        }
+        if ("expired" in event) {
+          setExpiredCouple(event.coupleName || "pasangan ini");
           setLoading(false);
           return;
         }
@@ -88,6 +94,15 @@ export function WeddingView({ slug }: { slug: string }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f3ed]">
         <div className="text-xl font-semibold text-[#9a6a3a]">Loading...</div>
+      </div>
+    );
+  }
+
+  if (expiredCouple) {
+    return (
+      <div className="anim-fade-up flex min-h-screen flex-col items-center justify-center bg-[#f7f3ed] p-5 text-center">
+        <h1 className="text-3xl font-bold text-[#241f1a]">Undangan Berakhir</h1>
+        <p className="mt-4 max-w-md text-lg text-[#6b6056]">Masa aktif undangan {expiredCouple} sudah selesai, jadi halaman ini tidak lagi dibuka untuk tamu. Terima kasih atas doa dan kehadiran Anda.</p>
       </div>
     );
   }
