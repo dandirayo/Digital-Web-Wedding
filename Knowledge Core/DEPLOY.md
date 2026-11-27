@@ -1,8 +1,44 @@
 # Occasio — Panduan Server, Update, Rollback, dan Pemulihan
 
-Status: **template belum diuji di server nyata.** Semua perintah di bawah belum dijalankan pada VPS atau mini server karena hosting belum dipilih. Uji setiap langkah pada server percobaan sebelum dipakai untuk klien, lalu perbaiki dokumen ini bila ada yang berbeda. Deployment hanya dilakukan setelah pemilik menyetujui (lihat batas kerja di [roadmap-production.md](roadmap-production.md)).
+Status: **template belum diuji di server nyata.** Semua perintah di bawah belum dijalankan pada VPS atau mini server karena hosting belum dipilih. Uji setiap langkah pada server percobaan sebelum dipakai untuk klien, lalu perbaiki dokumen ini bila ada yang berbeda. Deployment hanya dilakukan setelah pemilik menyetujui (lihat [roadmap-dan-keputusan.md](roadmap-dan-keputusan.md)). Bagian 0 (GitHub Pages) sudah berlaku; bagian 1 sampai 9 untuk tahap P2.
 
 Panduan teknis backend, environment, dan batas upload ada di [BACKEND.md](BACKEND.md). Dokumen ini hanya mengatur operasional server.
+
+## 0. Tahap sementara: GitHub Pages (etalase)
+
+Keputusan pemilik 27 November 2026: sampai kerangka, rencana, dan implementasi matang, website memakai GitHub Pages. Server (VPS atau mini PC) dibeli setelahnya.
+
+**Batas teknis yang tidak bisa diakali.** GitHub Pages hanya menyajikan file statis. Bagian Occasio yang butuh server tidak bisa berjalan di Pages:
+
+| Bagian | Di GitHub Pages | Alasan |
+| --- | --- | --- |
+| Website publik (`index.html`, galeri, privasi, syarat) | **Bisa** | File statis |
+| Galeri template (gambar dan deskripsi) | **Bisa** | Data bawaan `assets/js/data/templates.js` |
+| Paket, FAQ, testimoni dari admin | Tampil versi bawaan `config.js`, bukan data admin | Data admin dibaca dari server |
+| Form konsultasi ke inbox owner | **Tidak**; dialihkan ke WhatsApp | Butuh API dan database |
+| Dashboard owner dan klien, login | **Tidak** | Next.js server + SQLite |
+| Undangan `/wedding/...`, RSVP, ucapan | **Tidak** | Butuh API, database, dan token tamu |
+| Unggah media | **Tidak** | Butuh disk server |
+
+Jadi "semua di Pages" tidak mungkin tanpa menulis ulang aplikasi menjadi layanan lain (database awan pihak ketiga), yang bertentangan dengan keputusan 8 November 2026 (backend sendiri dengan SQLite). Selama tahap Pages, dashboard dan undangan tetap dijalankan di laptop untuk pengujian.
+
+**Mode etalase (sudah dikerjakan 27 November 2026).** Saat website dibuka dari host selain localhost dan server Occasio tidak menjawab, website otomatis masuk mode etalase:
+
+- Tombol "Dashboard" dan "Masuk Dashboard" disembunyikan; tautan dashboard di teks menjadi teks biasa.
+- Tautan "Preview Wedding" diarahkan ke `gallery.html`.
+- Form konsultasi membuka WhatsApp berisi ringkasan brief bila `whatsappNumber` di `assets/js/config.js` sudah diisi nomor asli; bila belum, menampilkan "Konsultasi online belum dibuka" dan draft tetap tersimpan di perangkat.
+- Dibuka dari localhost, mode etalase tidak aktif sehingga pengujian lokal tetap normal.
+
+**Yang tidak ikut tersaji.** `_config.yml` di root repo mengecualikan `wedding-platform`, `Knowledge Core`, berkas catatan, dan log dari situs Pages. Bila Pages diatur memakai GitHub Actions (bukan build Jekyll bawaan), pastikan langkah build juga hanya menyalin file website publik.
+
+**Langkah pemilik untuk menayangkan** (di GitHub, bukan dari laptop kantor ini):
+
+1. Isi `whatsappNumber` dan `contactLabel` di `assets/js/config.js` dengan nomor bisnis asli (format `62...`).
+2. Di GitHub: Settings > Pages > Source: "Deploy from a branch", branch `main`, folder `/ (root)`.
+3. Buka alamat Pages, cek tidak ada tautan `localhost` yang terlihat dan form konsultasi membuka WhatsApp.
+4. Alamat Pages untuk repo proyek berada di subfolder (`/<nama-repo>/`). Semua tautan website memakai path relatif, jadi tetap jalan; cek ulang bila menambah halaman baru.
+
+**Pindah dari Pages ke server.** Saat server online, isi `managementBaseUrl` dan `demoWeddingUrl` di `config.js` dengan alamat `https://app.<domain>`. Website akan mendeteksi server menjawab dan mode etalase mati dengan sendirinya. Website publik boleh tetap di Pages atau dipindah ke server (bagian 3 langkah 10).
 
 ## 1. Arsitektur yang disarankan
 
@@ -91,6 +127,28 @@ Lakukan sebagai pengguna biasa dengan sudo, bukan root langsung.
     HSTS baru ditambahkan **setelah** HTTPS terbukti jalan di kedua nama host. Karena folder repo disajikan sebagai file statis, pastikan hanya file website publik yang terjangkau (jangan sajikan `wedding-platform/data`, `.git`, atau `Knowledge Core`). Cara aman: salin hanya `index.html`, `gallery.html`, `privacy.html`, `terms.html`, `404.html`, `robots.txt`, `sitemap.xml`, dan folder `assets/` ke folder terpisah (mis. `/srv/occasio-public`) dan arahkan `root` ke sana.
 11. **Website publik.** Sebelum disalin, ganti semua nilai lokal (lihat bagian 4).
 12. **Cek:** `curl https://app.domain-anda.com/api/health` harus menjawab `{"ok":true,...}`; buka `/login` dan masuk sebagai owner.
+
+### 3b. Jalur mini PC di rumah
+
+Keputusan server masih terbuka (VPS atau mini PC, keputusan K1 revisi 27 November 2026). Langkah aplikasi di bagian 3 sama untuk keduanya; yang berbeda adalah cara server dijangkau dari internet dan risikonya.
+
+| Hal | VPS | Mini PC di rumah |
+| --- | --- | --- |
+| Biaya | Sewa bulanan | Beli perangkat sekali + listrik |
+| Ketersediaan | Pusat data, listrik dan internet stabil | Bergantung listrik dan internet rumah; mati lampu = undangan tidak bisa dibuka |
+| Akses dari internet | IP publik langsung | Butuh IP publik + port forwarding, **atau** tunnel (disarankan) |
+| Perawatan | Penyedia mengurus perangkat keras | Pemilik mengurus perangkat, pendingin, cadangan daya |
+| Cadangan | Snapshot penyedia (bila ada) + backup sendiri | Backup sendiri ke lokasi lain wajib |
+
+Rekomendasi bila memilih mini PC:
+
+1. **Pakai tunnel keluar** (mis. layanan tunnel dari penyedia DNS/CDN) daripada membuka port router. Tunnel tidak membuka port masuk di jaringan rumah dan sekaligus menyediakan HTTPS. Pilih dan pelajari layanannya saat P2; dokumen ini belum menguji penyedia tertentu.
+2. Pasang UPS kecil agar mati listrik singkat tidak memutus layanan dan merusak database.
+3. Gunakan sistem operasi Linux khusus untuk server ini; jangan dipakai bersama untuk keperluan lain.
+4. Backup harian tetap disalin ke luar rumah (bagian 5).
+5. Setelah memakai tunnel, aplikasi tetap mendengarkan `127.0.0.1:3001`. Bila tunnel tidak meneruskan header `Host` asli, pengecekan origin akan menolak login; uji login segera setelah tunnel dipasang.
+
+Mini PC di rumah cocok untuk pilot dengan sedikit order. Untuk acara klien yang tidak boleh gagal, VPS lebih aman. Keputusan diambil di P2.
 
 ## 4. Nilai lokal yang harus diganti di website publik
 

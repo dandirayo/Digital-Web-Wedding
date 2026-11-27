@@ -7,6 +7,8 @@ export const siteConfig = {
   contactLabel: "WhatsApp belum diset",
   demoWeddingUrl: "http://localhost:3001/wedding/sheila-yoga",
   publishYear: "2026",
+  // Diisi main.js: true bila server Occasio menjawab, false bila tidak. null = belum diperiksa.
+  appAvailable: null,
   showPublicPrices: false,
   consultationDraftKey: "occasio_consultation_draft_v1",
   priceDisclaimer:
@@ -89,6 +91,26 @@ export function isPublicUrlConfigured() {
   } catch {
     return false;
   }
+}
+
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+/**
+ * Mode etalase: website tampil tanpa server Occasio (misalnya di GitHub Pages).
+ * Tombol yang butuh server diarahkan ulang/disembunyikan dan form konsultasi memakai WhatsApp.
+ * Di komputer pengembang (halaman dibuka dari localhost) mode ini tidak aktif agar pengujian tetap normal.
+ */
+export function isShowcaseMode() {
+  if (siteConfig.appAvailable === true) return false;
+  const pageIsLocal = LOCAL_HOSTS.includes(window.location.hostname) || window.location.protocol === "file:";
+  if (pageIsLocal) return false;
+  let appIsLocal = true;
+  try {
+    appIsLocal = LOCAL_HOSTS.includes(new URL(siteConfig.managementBaseUrl).hostname);
+  } catch {
+    appIsLocal = true;
+  }
+  return appIsLocal || siteConfig.appAvailable === false;
 }
 
 export function buildManagementUrl(path = "") {

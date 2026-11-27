@@ -477,3 +477,14 @@
 .faq-answer[hidden] {
   display: none;
 }
+
+/* Mode etalase (tanpa server, mis. GitHub Pages): tombol dashboard disembunyikan,
+   tautan dashboard di dalam teks tampil sebagai teks biasa. */
+[data-site-mode="showcase"] .btn[data-management-link] {
+  display: none;
+}
+
+[data-site-mode="showcase"] [data-management-link][aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.6;
+}

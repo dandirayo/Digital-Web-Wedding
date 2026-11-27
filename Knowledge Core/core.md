@@ -26,6 +26,7 @@ Baca file ini pada setiap sesi pekerjaan, lalu dokumen terkait. Folder `docs` da
 - 8 November 2026: contoh Sheila & Yoga menjadi materi demo; sasaran konten dapat diedit melalui admin dan dipakai pada semua tema.
 - 8 November 2026: **Supabase dihentikan**. Library, adapter, schema/migration, dan script setup lama dihapus dari aplikasi. Gunakan API Next.js + SQLite bawaan Node.js 24.
 - Hosting belum dipilih. Pemilik mengutamakan biaya awal rendah, kemudian upgrade. VPS atau mini server dipilih setelah alur lokal selesai.
+- 27 November 2026: website publik sementara di **GitHub Pages** (mode etalase); server (VPS atau mini PC di rumah) dibeli setelah kerangka, rencana, dan implementasi matang. Keputusan K1 sampai K9 dicatat di [roadmap-dan-keputusan.md](roadmap-dan-keputusan.md).
 - Laptop kantor: tidak mengubah OS/firewall/security, tidak memasang software sistem, dan server hanya localhost.
 
 ## Peta sistem aktif
@@ -168,6 +169,11 @@ White-label/SaaS vendor ditunda sampai layanan per acara terbukti.
 - [[business-model-occasio|Detail baseline bisnis]]
 - [[roadmap-production|Roadmap produk; bagian backend lama sudah digantikan]]
 - [[audit-aplikasi-g1|Audit UX historis]]
+- [PRD: kebutuhan produk, status fitur, roadmap](PRD-occasio.md)
+- [Roadmap dan log keputusan](roadmap-dan-keputusan.md)
+- [Spesifikasi teknis celah P1](spek-teknis-p1.md)
+- [SOP operasional order](SOP-operasional.md)
+- [Rencana uji dan checklist rilis](rencana-uji.md)
 - [Runbook backend aktif](BACKEND.md)
 - [Panduan server, update, rollback](DEPLOY.md)
 - [Template prompt sesi kerja (debug, audit, QA)](PROMPT-TEMPLATE.md)

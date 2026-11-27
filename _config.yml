@@ -1,0 +1,10 @@
+# Konfigurasi GitHub Pages (Jekyll).
+# Website publik Occasio hanya file statis di root repo. Folder di bawah ini TIDAK boleh ikut tersaji:
+# kode aplikasi, dokumen internal (Knowledge Core berisi keputusan bisnis), dan catatan lokal.
+exclude:
+  - wedding-platform
+  - "Knowledge Core"
+  - INSTALL_GUIDE.txt
+  - ANALISIS_PROYEK_SIMPLE.txt
+  - "*.log"
+  - README.md

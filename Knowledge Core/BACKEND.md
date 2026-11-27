@@ -58,6 +58,8 @@ Folder `backups/` tidak di-commit. Simpan salinannya di perangkat lain secara be
 6. Pelunasan terverifikasi → **Publikasikan undangan**. Masa berlaku terisi otomatis.
 7. Pantau RSVP/ucapan/check-in; jalankan `backup` sebelum dan sesudah hari acara.
 
+SOP lengkap termasuk refund, pindah jadwal, dan retensi: [SOP-operasional.md](SOP-operasional.md).
+
 ## Pemeriksaan
 
 ```powershell
@@ -70,6 +72,7 @@ pnpm.cmd build
 Test backend menggunakan SQLite in-memory dan tidak mengubah data demo.
 Test persistensi memakai file sementara terpisah dan menghapus file test setelah selesai.
 Saat dev server aktif, jalankan `node tests/http-smoke.mjs` untuk smoke test API memakai akun contoh; greeting uji dikembalikan ke nilai semula.
+Uji API lengkap dengan peran berbeda (server dev harus jalan; data uji berawalan "QA" dibuat lalu dihapus): `node tests/api/qa-order-flow.mjs` (alur satu order, 87 cek) dan `node tests/api/qa-accounts-expiry.mjs` (akun klien dan kedaluwarsa, 28 cek). Rencana uji lengkap: [rencana-uji.md](rencana-uji.md).
 
 ## Persiapan VPS / mini server
 

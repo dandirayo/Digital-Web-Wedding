@@ -1,10 +1,74 @@
 # Occasio — Productized Wedding Service
 
-Versi: baseline bisnis 1.0 · 8 September 2026
+Versi: baseline bisnis 1.1 · 27 November 2026 (menambah bagian 0: breakdown dan arah; isi bagian 1 sampai 13 tetap baseline 1.0 tanggal 8 September 2026)
 
 Dokumen ini merevisi `business-model-ocassio.md` yang diberikan pemilik. Ejaan merek diseragamkan menjadi **Occasio**, mengikuti aplikasi dan judul dokumen asal. Nama merek tetap perlu dikonfirmasi sebelum publikasi.
 
 Status: **baseline G0 disetujui pemilik pada 8 September 2026** untuk menjadi acuan development. Persetujuan ini bukan pernyataan bahwa fitur telah tersedia dan tidak mengizinkan deployment atau pembelian layanan. Harga adalah baseline internal yang akan divalidasi melalui pencatatan biaya dan pilot sebelum menjadi harga jual final. Roadmap pelaksanaannya ada di [roadmap-production.md](roadmap-production.md).
+
+## 0. Breakdown model bisnis dan arah (27 November 2026)
+
+Bagian ini merangkum bagian 1 sampai 13 menjadi satu gambaran untuk mengambil keputusan. Kebutuhan fitur dan statusnya ada di [PRD-occasio.md](PRD-occasio.md).
+
+### 0.1 Satu kalimat
+
+Occasio menerima pesanan undangan pernikahan digital per acara, mengerjakannya dengan proses yang tercatat (bayar, produksi, setujui, publish), dan memberi pasangan satu tempat untuk mengelola tamu dan RSVP.
+
+### 0.2 Business Model Canvas
+
+| Blok | Isi untuk Occasio |
+| --- | --- |
+| Segmen pelanggan | Pasangan yang akan menikah dan ingin undangan digital rapi dengan pengelolaan tamu. Rilis pertama: kebutuhan sederhana (Basic). Berikutnya: pengelolaan tamu intensif dan QR (Premium), lalu pendampingan venue (Signature). |
+| Proposisi nilai | Proses pesan yang jelas dari konsultasi sampai publish; undangan dengan link pribadi per tamu dan RSVP berbatas jumlah orang; satu workspace untuk data, tamu, persetujuan, dan tagihan; isi undangan dapat diubah owner kapan saja tanpa developer. |
+| Kanal | Website publik dengan form konsultasi; WhatsApp sebagai kanal lanjutan; portofolio dan testimoni dari klien yang memberi izin. Iklan berbayar belum dipakai sebelum harga final. |
+| Hubungan pelanggan | Layanan dibantu (bukan swalayan): owner menindaklanjuti setiap lead, chat per event, persetujuan versi tertulis. |
+| Arus pendapatan | Paket per event (Basic, Premium, Signature), add-on (tambahan kuota, perpanjangan masa aktif, putaran revisi, domain khusus, penyesuaian visual, layanan venue), perpanjangan. Tanpa langganan bulanan di tahap ini. |
+| Sumber daya utama | Aplikasi Occasio (sudah ada: dashboard, tema, RSVP, tagihan, persetujuan), katalog template, waktu kerja owner, server dengan disk permanen. |
+| Aktivitas utama | Menindaklanjuti lead, menyiapkan konten dan media, mengelola revisi, memverifikasi pembayaran, publish, dukungan selama masa aktif. |
+| Mitra utama | Penyedia server dan domain; nanti, untuk Signature: petugas lepas dan penyewaan perangkat. Vendor pernikahan (WO, venue, fotografer) sebagai sumber rujukan adalah peluang yang belum diuji. |
+| Struktur biaya | Biaya langsung per order: jam kerja produksi dan komunikasi, revisi, penyimpanan media, biaya transfer; untuk Signature ditambah petugas, transportasi, perangkat. Biaya tetap: server, domain, perangkat lunak, pemasaran. Rumus kontribusi di bagian 8. |
+
+### 0.3 Posisi dan pembeda
+
+Pembeda yang bisa dibuktikan dengan aplikasi sekarang, bukan klaim pemasaran:
+
+- **Link pribadi per tamu dengan batas jumlah orang.** RSVP yang dikirim ulang tidak menggandakan hitungan, dan tamu tidak bisa melihat daftar tamu lain.
+- **Persetujuan versi dan gerbang publish.** Undangan baru terbuka setelah pasangan menyetujui versi tertentu dan tagihan lunas, sehingga tidak ada undangan salah ketik yang terlanjur tersebar.
+- **Semua isi bisa diubah owner dari dashboard**, termasuk paket, harga tampilan, dan isi website publik.
+
+Yang tidak dijadikan pembeda: harga paling murah, jumlah template terbanyak, atau "tanpa batas". Harga belum divalidasi dan kuota sengaja dibatasi (bagian 4).
+
+### 0.4 Unit ekonomi yang harus dibuktikan pilot
+
+Angka di bagian 8 adalah asumsi uji, bukan data. Pilot harus menjawab tiga angka:
+
+1. **Jam kerja per order Basic** (konsultasi, produksi, revisi, dukungan).
+2. **Biaya langsung per order** selain jam kerja (server per event, transfer, media).
+3. **Konversi lead ke DP** dari kanal yang dipakai.
+
+Dari tiga angka itu harga Basic dinilai ulang: harga harus menutup biaya langsung ditambah kontribusi yang ditargetkan pemilik. Bila tidak, ubah harga atau kurangi scope, jangan menambah order dengan harga yang sama.
+
+### 0.5 Arah, tahap demi tahap
+
+| Tahap | Tujuan | Syarat pindah ke tahap berikutnya |
+| --- | --- | --- |
+| 1. Siap pilot (sekarang) | Celah P1 di PRD selesai: kuota galeri dan revisi, aktivasi akun klien, kebijakan refund/retensi, uji HP | Semua gerbang kualitas PRD §3 lulus |
+| 2. Online | Hosting, domain, HTTPS, backup terjadwal | Checklist `DEPLOY.md` §9 tercentang |
+| 3. Pilot berbayar | 1 sampai 3 order Basic nyata | Jam kerja dan biaya tercatat; testimoni didapat |
+| 4. Harga final dan pemasaran | Tetapkan harga jual, mulai promosi rutin | Kontribusi per order positif sesuai target |
+| 5. Premium | QR check-in dan peran petugas | Check-in lolos uji perangkat dan koneksi lemah |
+| 6. Signature | Layanan venue | D02 disahkan, simulasi venue lolos |
+| 7. Opsi lanjutan | Otomasi pesan, add-on visual, white-label | Ada bukti permintaan dan kapasitas |
+
+### 0.6 Yang sengaja tidak dikejar sekarang
+
+SaaS swalayan untuk vendor lain, aplikasi HP, payment gateway, pengiriman WhatsApp otomatis, dan desain dari nol. Semuanya menambah biaya dan risiko sebelum satu order Basic terbukti menguntungkan.
+
+### 0.7 Keputusan terbuka paling penting
+
+Diputuskan pada 27 November 2026: server dipilih nanti antara VPS dan mini PC di rumah, dibeli setelah kerangka, rencana, dan implementasi matang; sementara website publik memakai GitHub Pages (K1, K9); Basic memakai tema standar dengan tema unik sebagai add-on berbayar (K3); klien boleh memilih musik sendiri (K4); refund sebagian, yaitu DP kembali penuh bila batal sebelum produksi, 50% DP bila batal setelah produksi, dan pindah tanggal gratis satu kali bila minimal 14 hari sebelum acara (K5/D05); akses akun klien lewat link aktivasi dengan reset password sebagai cadangan (K8).
+
+Diputuskan juga: data tamu dan media disimpan 3 bulan setelah masa aktif habis dan bisa diperpanjang (K6/D06); penerimaan order selama pilot tanpa batas (K7), dengan catatan jam kerja per order dicatat sejak awal; domain memakai `.com` (K2). Masih terbuka: nama domain dan pilihan server. Rincian dan dampaknya ada di PRD §14.
 
 ## 1. Model bisnis dan hasil yang dijual
 
@@ -179,7 +243,7 @@ DP membantu arus kas untuk pesanan; bukan berarti seluruh DP adalah keuntungan y
 
 ## 9. Retensi dan layanan setelah acara
 
-Baseline development: setelah akses publik kedaluwarsa, workspace menyediakan ekspor read-only selama 30 hari. Sebelum retensi berakhir, kirim pemberitahuan dan sediakan perpanjangan atau ekspor. Jadwal penghapusan media, data tamu, cadangan, serta penyimpanan catatan transaksi ditetapkan terpisah dalam kebijakan final sebelum pilot berbayar.
+Keputusan pemilik 27 November 2026: setelah akses publik kedaluwarsa, data tamu dan media tetap tersedia selama 3 bulan (ekspor read-only), lalu dihapus kecuali klien memperpanjang. Sebelum retensi berakhir, kirim pemberitahuan dan sediakan perpanjangan atau ekspor. Jadwal penghapusan media, data tamu, cadangan, serta penyimpanan catatan transaksi ditetapkan terpisah dalam kebijakan final sebelum pilot berbayar.
 
 Foto, chat, daftar tamu, dan rekening memiliki akses sesuai tujuan. Materi klien tidak otomatis menjadi portofolio. Kebijakan pembatalan, retensi, dan penggunaan materi perlu selesai sebelum menerima order berbayar.
 
@@ -207,7 +271,7 @@ Kapasitas penjualan mengikuti jumlah jam produksi yang tersedia dan slot kru/per
 | D03 | Harga dan kontribusi minimum | Basic Rp799.000; Premium Rp1.490.000; Signature Rp2.990.000 | Disahkan sebagai baseline internal; harga jual final menunggu validasi biaya/pilot |
 | D04 | Kuota, revisi, waktu kerja | Gunakan tabel bagian 4 dan definisinya | Disahkan sebagai baseline development |
 | D05 | Pembayaran, pembatalan, perubahan jadwal | DP 50%, lunas sebelum publish; aturan pengecualian tertulis | Alur pembayaran disahkan; kebijakan refund/pembatalan wajib selesai sebelum pilot berbayar |
-| D06 | Retensi, ekspor, izin materi | Akses sesuai masa paket; ekspor read-only 30 hari setelah expired | Disahkan sebagai baseline development; jadwal hapus final sebelum pilot berbayar |
+| D06 | Retensi, ekspor, izin materi | Akses sesuai masa paket; data tersimpan 3 bulan setelah expired, bisa diperpanjang | Disahkan sebagai baseline development; jadwal hapus final sebelum pilot berbayar |
 | D07 | Kanal konsultasi dan penanggung jawab | Chat privat calon klien dan klien; WA opsional | Disahkan sebagai baseline G0 |
 | D08 | Cakupan rilis pertama | Basic lebih dulu, Premium lalu Signature setelah gerbang kualitas masing-masing | Disahkan sebagai baseline G0 |
 | D09 | Infrastruktur dan online | Putuskan setelah uji; deployment manual dengan persetujuan pemilik | Auto-deploy tidak diizinkan |

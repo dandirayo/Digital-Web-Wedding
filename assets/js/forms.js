@@ -1,4 +1,4 @@
-import { buildManagementUrl, buildWhatsappUrl, isWhatsappConfigured, sanitizeText, siteConfig } from "./config.js";
+import { buildManagementUrl, buildWhatsappUrl, isShowcaseMode, isWhatsappConfigured, sanitizeText, siteConfig } from "./config.js";
 import { closeModal, openModal, showToast } from "./modal.js";
 import { templates } from "./data/templates.js";
 
@@ -79,6 +79,25 @@ export function openConsultationForm(templateId = "", trigger = null) {
 
     const data = getFormData(form);
     const whatsappUrl = buildWhatsappUrl(buildConsultationMessage(data));
+
+    // Mode etalase (tanpa server): brief tidak bisa disimpan ke inbox, jadi langsung ke WhatsApp.
+    if (isShowcaseMode()) {
+      if (whatsappUrl) {
+        window.open(whatsappUrl, "_blank", "noopener");
+        localStorage.removeItem(siteConfig.consultationDraftKey);
+        dirty = false;
+        submitted = true;
+        showToast("Lanjutkan konsultasi di WhatsApp.");
+        closeModal({ force: true });
+      } else {
+        submit.disabled = false;
+        submit.classList.remove("is-loading");
+        status.className = "form-status error field-wide";
+        status.textContent = "Konsultasi online belum dibuka. Draft Anda tersimpan di perangkat ini.";
+      }
+      return;
+    }
+
     const whatsappTab = whatsappUrl ? window.open("", "_blank") : null;
 
     sendLead(data)

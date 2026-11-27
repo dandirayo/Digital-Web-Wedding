@@ -1,4 +1,4 @@
-import { buildManagementUrl, isPublicUrlConfigured, siteConfig } from "./config.js";
+import { buildManagementUrl, isPublicUrlConfigured, isShowcaseMode, siteConfig } from "./config.js";
 
 export function setupProductionData() {
   renderPackages();
@@ -103,14 +103,28 @@ function renderFooterData() {
 }
 
 function renderDemoLinks() {
+  const showcase = isShowcaseMode();
   document.querySelectorAll("[data-demo-wedding-link]").forEach((element) => {
-    element.setAttribute("href", siteConfig.demoWeddingUrl);
+    // Mode etalase: demo undangan butuh server, jadi arahkan ke galeri template statis.
+    element.setAttribute("href", showcase ? "gallery.html" : siteConfig.demoWeddingUrl);
+    if (showcase) element.removeAttribute("target");
+    else element.setAttribute("target", "_blank");
   });
 }
 
 function renderManagementLinks() {
+  const showcase = isShowcaseMode();
+  document.documentElement.dataset.siteMode = showcase ? "showcase" : "app";
   document.querySelectorAll("[data-management-link]").forEach((element) => {
-    element.setAttribute("href", buildManagementUrl());
+    if (showcase) {
+      element.removeAttribute("href");
+      element.setAttribute("aria-disabled", "true");
+      element.setAttribute("title", "Dashboard dibuka setelah server Occasio online");
+    } else {
+      element.setAttribute("href", buildManagementUrl());
+      element.removeAttribute("aria-disabled");
+      element.removeAttribute("title");
+    }
   });
 }
 

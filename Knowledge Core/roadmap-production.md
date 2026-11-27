@@ -1,5 +1,8 @@
 # Occasio — Roadmap Development sampai Siap Operasional
 
+> [!warning] Catatan historis (September 2026)
+> Rencana di dokumen ini digantikan oleh [roadmap-dan-keputusan.md](roadmap-dan-keputusan.md) dan [PRD-occasio.md](PRD-occasio.md) sejak 27 November 2026. Bagian kondisi awal dan penjelasan tahap 0 sampai 2 dipertahankan sebagai riwayat.
+
 Versi: baseline pelaksanaan 1.0 · 8 September 2026
 
 Dokumen ini merevisi `roadmap-production.md` dari pemilik. Acuan komersial: [business-model-occasio.md](business-model-occasio.md). Seluruh pekerjaan di bawah merupakan rencana, kecuali temuan kondisi kode yang dinyatakan eksplisit.

@@ -4,6 +4,7 @@ import { setupModal } from "./modal.js";
 import { setupNavigation } from "./navigation.js";
 import { setupProductionData } from "./production-data.js";
 import { loadRemoteSite } from "./remote-site.js";
+import { siteConfig } from "./config.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   setupProductionData();
@@ -16,9 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Isi bawaan tampil lebih dulu; bila server menjawab, tampilan diperbarui dari data admin.
   loadRemoteSite().then((loaded) => {
-    if (!loaded) return;
+    siteConfig.appAvailable = loaded;
+    // Tautan dashboard/demo dan mode etalase dihitung ulang setelah ketersediaan server diketahui.
     setupProductionData();
-    refreshTemplateViews();
+    if (loaded) refreshTemplateViews();
   });
 });
 
